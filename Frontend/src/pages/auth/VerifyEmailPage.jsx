@@ -130,7 +130,7 @@ export default function VerifyEmailPage() {
                     id="code"
                     type="text"
                     inputMode="numeric"
-                    maxLength={6}
+                    maxLength={8}
                     autoComplete="one-time-code"
                     placeholder="••••••"
                     style={{

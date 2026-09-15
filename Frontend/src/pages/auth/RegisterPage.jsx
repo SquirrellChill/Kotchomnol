@@ -1,11 +1,23 @@
+
 import React, { useState } from 'react';
-import { ArrowLeft, KeyRound, ShieldCheck, Eye, EyeOff } from 'lucide-react';
+import {
+  ArrowLeft,
+  KeyRound,
+  ShieldCheck,
+  Eye,
+  EyeOff,
+} from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
+
 import TelegramLoginButton from './TelegramLoginButton';
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
-import { getErrorMessage, register } from '../../services/authService';
-import '../dashboard/ChangePasswordScreen.css';
+import {
+  getErrorMessage,
+  register,
+} from '../../services/authService';
+
+import './RegisterPage.css';
 
 const emptyForm = {
   firstName: '',
@@ -18,183 +30,430 @@ const emptyForm = {
 
 export default function RegisterPage() {
   const navigate = useNavigate();
-  const { login, loginWithTelegram } = useAuth();
+
+  const {
+    login,
+    loginWithGoogle,
+    loginWithTelegram,
+  } = useAuth();
+
   const { language, t } = useLanguage();
   const isKm = language !== 'en';
 
+  // Form state
   const [formData, setFormData] = useState(emptyForm);
+
+  // UI state
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
   const [error, setError] = useState('');
   const [fieldErrors, setFieldErrors] = useState({});
+
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
+
+  // --------------------------------------------------
+  // INPUT CHANGE
+  // --------------------------------------------------
 
   const handleChange = (event) => {
-    setFormData({ ...formData, [event.target.name]: event.target.value });
-    setFieldErrors((current) => ({ ...current, [event.target.name]: '' }));
+    const { name, value } = event.target;
+
+    setFormData((current) => ({
+      ...current,
+      [name]: value,
+    }));
+
+    setFieldErrors((current) => ({
+      ...current,
+      [name]: '',
+    }));
+
+    setError('');
   };
+
+  // --------------------------------------------------
+  // VALIDATION
+  // --------------------------------------------------
 
   const validateForm = () => {
     const nextErrors = {};
-    if (!formData.firstName.trim()) nextErrors.firstName = t('fieldRequired');
-    if (!formData.lastName.trim()) nextErrors.lastName = t('fieldRequired');
-    if (!formData.phoneNumber.trim()) nextErrors.phoneNumber = t('fieldRequired');
-    if (formData.phoneNumber.trim() && !/^[+\d][\d\s().-]{6,}$/.test(formData.phoneNumber.trim())) {
+
+    if (!formData.firstName.trim()) {
+      nextErrors.firstName = t('fieldRequired');
+    }
+
+    if (!formData.lastName.trim()) {
+      nextErrors.lastName = t('fieldRequired');
+    }
+
+    if (!formData.phoneNumber.trim()) {
+      nextErrors.phoneNumber = t('fieldRequired');
+    }
+
+    if (
+      formData.phoneNumber.trim() &&
+      !/^[+\d][\d\s().-]{6,}$/.test(
+        formData.phoneNumber.trim()
+      )
+    ) {
       nextErrors.phoneNumber = t('invalidPhone');
     }
-    if (!formData.email.trim()) nextErrors.email = t('fieldRequired');
-    if (formData.email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email.trim())) {
+
+    if (!formData.email.trim()) {
+      nextErrors.email = t('fieldRequired');
+    }
+
+    if (
+      formData.email.trim() &&
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(
+        formData.email.trim()
+      )
+    ) {
       nextErrors.email = t('invalidEmail');
     }
-    if (!formData.password) nextErrors.password = t('fieldRequired');
-    if (formData.password && formData.password.length < 8) nextErrors.password = t('passwordTooShort');
-    if (!formData.confirmPassword) nextErrors.confirmPassword = t('fieldRequired');
-    if (formData.password && formData.confirmPassword && formData.password !== formData.confirmPassword) {
+
+    if (!formData.password) {
+      nextErrors.password = t('fieldRequired');
+    }
+
+    if (
+      formData.password &&
+      formData.password.length < 8
+    ) {
+      nextErrors.password = t('passwordTooShort');
+    }
+
+    if (!formData.confirmPassword) {
+      nextErrors.confirmPassword = t('fieldRequired');
+    }
+
+    if (
+      formData.password &&
+      formData.confirmPassword &&
+      formData.password !== formData.confirmPassword
+    ) {
       nextErrors.confirmPassword = t('passwordsNoMatch');
     }
+
     return nextErrors;
   };
 
+  // --------------------------------------------------
+  // BACKEND FIELD ERRORS
+  // --------------------------------------------------
+
   const fieldErrorsFromBackend = (message) => {
     const lower = String(message || '').toLowerCase();
-    if (lower.includes('email') && (lower.includes('exist') || lower.includes('registered') || lower.includes('taken'))) {
-      return { email: t('emailAlreadyRegistered') };
+
+    if (
+      lower.includes('email') &&
+      (
+        lower.includes('exist') ||
+        lower.includes('registered') ||
+        lower.includes('taken')
+      )
+    ) {
+      return {
+        email: t('emailAlreadyRegistered'),
+      };
     }
-    if (lower.includes('phone') && (lower.includes('exist') || lower.includes('registered') || lower.includes('taken'))) {
-      return { phoneNumber: t('phoneAlreadyRegistered') };
+
+    if (
+      lower.includes('phone') &&
+      (
+        lower.includes('exist') ||
+        lower.includes('registered') ||
+        lower.includes('taken')
+      )
+    ) {
+      return {
+        phoneNumber: t('phoneAlreadyRegistered'),
+      };
     }
-    if (lower.includes('email')) return { email: message };
-    if (lower.includes('phone')) return { phoneNumber: message };
-    if (lower.includes('password')) return { password: message };
+
+    if (lower.includes('email')) {
+      return {
+        email: message,
+      };
+    }
+
+    if (lower.includes('phone')) {
+      return {
+        phoneNumber: message,
+      };
+    }
+
+    if (lower.includes('password')) {
+      return {
+        password: message,
+      };
+    }
+
     return {};
   };
 
+  // --------------------------------------------------
+  // NORMAL REGISTER
+  // --------------------------------------------------
+
   const handleSubmit = async (event) => {
     event.preventDefault();
+
     setError('');
 
     const validationErrors = validateForm();
+
     setFieldErrors(validationErrors);
-    if (Object.keys(validationErrors).length) return;
+
+    if (Object.keys(validationErrors).length > 0) {
+      return;
+    }
 
     setLoading(true);
 
     try {
       const response = await register(formData);
-      const requiresEmailVerification = response.data?.data?.requires_email_verification !== false;
+
+      const requiresEmailVerification =
+        response.data?.data?.requires_email_verification !== false;
+
+      // --------------------------------------------
+      // EMAIL VERIFICATION REQUIRED
+      // --------------------------------------------
+
       if (requiresEmailVerification) {
-        // Carry the password forward so VerifyEmailPage can log the user in
-        // automatically right after the code is confirmed — no separate
-        // login step needed.
         navigate('/verify-email', {
-          state: { email: formData.email, password: formData.password },
+          state: {
+            email: formData.email,
+            password: formData.password,
+          },
         });
+
         return;
       }
 
-      // No email verification required — sign the user in immediately and
-      // drop them straight into the app instead of the login screen.
+      // --------------------------------------------
+      // NO EMAIL VERIFICATION
+      // --------------------------------------------
+
       try {
-        await login({ email: formData.email, password: formData.password });
+        await login({
+          email: formData.email,
+          password: formData.password,
+        });
+
         navigate('/dashboard');
       } catch {
-        // If auto-login fails for any reason, fall back to the login page
-        // with the account already created.
-        navigate('/login', { state: { registered: true, email: formData.email } });
+        navigate('/login', {
+          state: {
+            registered: true,
+            email: formData.email,
+          },
+        });
       }
     } catch (err) {
       const message = getErrorMessage(err);
-      const backendFieldErrors = fieldErrorsFromBackend(message);
+
+      const backendFieldErrors =
+        fieldErrorsFromBackend(message);
+
       setFieldErrors(backendFieldErrors);
-      setError(Object.keys(backendFieldErrors).length ? '' : message);
+
+      if (
+        Object.keys(backendFieldErrors).length === 0
+      ) {
+        setError(message);
+      }
     } finally {
       setLoading(false);
     }
   };
 
+  // --------------------------------------------------
+  // GOOGLE LOGIN
+  // --------------------------------------------------
+
+  const handleGoogleLogin = async () => {
+    setError('');
+    setGoogleLoading(true);
+
+    try {
+      await loginWithGoogle();
+
+      // Supabase will redirect the browser to Google.
+      // No navigate() is needed here.
+    } catch (err) {
+      setError(getErrorMessage(err));
+      setGoogleLoading(false);
+    }
+  };
+
+  // --------------------------------------------------
+  // TELEGRAM LOGIN
+  // --------------------------------------------------
+
   const handleTelegramAuth = async (telegramUser) => {
     setError('');
+
     try {
       await loginWithTelegram(telegramUser);
+
       navigate('/dashboard');
     } catch (err) {
       setError(getErrorMessage(err));
     }
   };
 
+  // --------------------------------------------------
+  // RENDER
+  // --------------------------------------------------
+
   return (
-    <div className="auth-page-container">
-      <div className="pwd-split-wrapper font-kantumruy" style={{ width: '100%', maxWidth: '940px' }}>
-        <div className="pwd-top-nav">
-          <button type="button" className="pwd-back-btn" onClick={() => navigate('/login')}>
+    <div className="register-page">
+      <div className="register-wrapper">
+
+        {/* BACK BUTTON */}
+        <div className="register-top-nav">
+          <button
+            type="button"
+            className="register-back-button"
+            onClick={() => navigate('/login')}
+          >
             <ArrowLeft size={16} />
-            <span>{t('backToSignIn') || 'Back to Sign In'}</span>
+
+            <span>
+              {t('backToSignIn') || 'Back to Sign In'}
+            </span>
           </button>
         </div>
 
-        <div className="pwd-auth-card">
-          <div className="pwd-card-banner">
-            <div>
-              <div className="pwd-icon-badge">
+        {/* MAIN CARD */}
+        <div className="register-card">
+
+          {/* LEFT / BANNER */}
+          <div className="register-banner">
+
+            <div className="register-banner-content">
+
+              <div className="register-icon-badge">
                 <KeyRound size={22} />
               </div>
-              <span className="pwd-brand-text">KOTCHOMNOL</span>
-              <h2 className="pwd-banner-title">
+
+              <span className="register-brand">
+                KOTCHOMNOL
+              </span>
+
+              <h1 className="register-title">
                 {t('createAccount') || 'Create Account'}
+              </h1>
+
+              <p className="register-description">
+                {t('signInSubtitle') ||
+                  'Sign up to manage your sales voice records and track revenue.'}
+              </p>
+
+            </div>
+
+            <div className="register-security">
+              <ShieldCheck size={16} />
+
+              <span>
+                Encrypted &amp; Secure authentication
+              </span>
+            </div>
+
+          </div>
+
+          {/* RIGHT / FORM */}
+          <div className="register-body">
+
+            <div className="register-form-header">
+              <h2>
+                {t('signUp') || 'Sign Up'}
               </h2>
-              <p className="pwd-banner-desc">
-                {t('signInSubtitle') || 'Sign up to manage your sales voice records and track revenue.'}
+
+              <p>
+                {t('enterDetails') ||
+                  'Enter your details to create your workspace.'}
               </p>
             </div>
 
-            <div className="pwd-banner-footer">
-              <ShieldCheck size={16} />
-              <span>Encrypted & Secure authentication</span>
-            </div>
-          </div>
+            {/* GENERAL ERROR */}
+            {error && (
+              <div className="register-error">
+                {error}
+              </div>
+            )}
 
-          <div className="pwd-card-body" style={{ padding: '26px 30px' }}>
-            <div className="pwd-form-header" style={{ marginBottom: '12px' }}>
-              <h3>{t('signUp') || 'Sign Up'}</h3>
-              <p>{t('enterDetails') || 'Enter your details to create your workspace.'}</p>
-            </div>
+            <div className="register-form-container">
 
-            {error && <div className="pwd-alert-error">{error}</div>}
+              <form
+                onSubmit={handleSubmit}
+                className="register-form"
+              >
 
-            <div className="pwd-form-embed">
-              <form onSubmit={handleSubmit} style={{ gap: '10px' }}>
-                {/* First Name & Last Name */}
-                <div className="pwd-form-grid-2">
-                  <div>
-                    <label htmlFor="firstName">{t('firstName') || 'First Name'}</label>
+                {/* FIRST NAME + LAST NAME */}
+                <div className="register-grid-2">
+
+                  <div className="register-field">
+
+                    <label htmlFor="firstName">
+                      {t('firstName') || 'First Name'}
+                    </label>
+
                     <input
                       id="firstName"
                       type="text"
                       name="firstName"
                       value={formData.firstName}
                       onChange={handleChange}
-                      required
+                      autoComplete="given-name"
                     />
-                    {fieldErrors.firstName && <span style={{ color: '#ef4444', fontSize: '11px' }}>{fieldErrors.firstName}</span>}
+
+                    {fieldErrors.firstName && (
+                      <span className="register-field-error">
+                        {fieldErrors.firstName}
+                      </span>
+                    )}
+
                   </div>
-                  <div>
-                    <label htmlFor="lastName">{t('lastName') || 'Last Name'}</label>
+
+                  <div className="register-field">
+
+                    <label htmlFor="lastName">
+                      {t('lastName') || 'Last Name'}
+                    </label>
+
                     <input
                       id="lastName"
                       type="text"
                       name="lastName"
                       value={formData.lastName}
                       onChange={handleChange}
-                      required
+                      autoComplete="family-name"
                     />
-                    {fieldErrors.lastName && <span style={{ color: '#ef4444', fontSize: '11px' }}>{fieldErrors.lastName}</span>}
+
+                    {fieldErrors.lastName && (
+                      <span className="register-field-error">
+                        {fieldErrors.lastName}
+                      </span>
+                    )}
+
                   </div>
+
                 </div>
 
-                {/* Phone & Email */}
-                <div className="pwd-form-grid-2">
-                  <div>
-                    <label htmlFor="phoneNumber">{t('phoneNumber') || 'Phone Number'}</label>
+                {/* PHONE + EMAIL */}
+                <div className="register-grid-2">
+
+                  <div className="register-field">
+
+                    <label htmlFor="phoneNumber">
+                      {t('phoneNumber') || 'Phone Number'}
+                    </label>
+
                     <input
                       id="phoneNumber"
                       type="tel"
@@ -202,12 +461,23 @@ export default function RegisterPage() {
                       placeholder="+855 12 345 678"
                       value={formData.phoneNumber}
                       onChange={handleChange}
-                      required
+                      autoComplete="tel"
                     />
-                    {fieldErrors.phoneNumber && <span style={{ color: '#ef4444', fontSize: '11px' }}>{fieldErrors.phoneNumber}</span>}
+
+                    {fieldErrors.phoneNumber && (
+                      <span className="register-field-error">
+                        {fieldErrors.phoneNumber}
+                      </span>
+                    )}
+
                   </div>
-                  <div>
-                    <label htmlFor="email">{t('emailAddress') || 'Email Address'}</label>
+
+                  <div className="register-field">
+
+                    <label htmlFor="email">
+                      {t('emailAddress') || 'Email Address'}
+                    </label>
+
                     <input
                       id="email"
                       type="email"
@@ -215,82 +485,227 @@ export default function RegisterPage() {
                       placeholder="name@example.com"
                       value={formData.email}
                       onChange={handleChange}
-                      required
+                      autoComplete="email"
                     />
-                    {fieldErrors.email && <span style={{ color: '#ef4444', fontSize: '11px' }}>{fieldErrors.email}</span>}
+
+                    {fieldErrors.email && (
+                      <span className="register-field-error">
+                        {fieldErrors.email}
+                      </span>
+                    )}
+
                   </div>
+
                 </div>
 
-                {/* Password & Confirm Password */}
-                <div className="pwd-form-grid-2">
-                  <div>
-                    <label htmlFor="password">{t('password') || 'Password'}</label>
-                    <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                {/* PASSWORD + CONFIRM PASSWORD */}
+                <div className="register-grid-2">
+
+                  <div className="register-field">
+
+                    <label htmlFor="password">
+                      {t('password') || 'Password'}
+                    </label>
+
+                    <div className="register-password-wrapper">
+
                       <input
                         id="password"
-                        type={showPassword ? 'text' : 'password'}
+                        type={
+                          showPassword
+                            ? 'text'
+                            : 'password'
+                        }
                         name="password"
                         placeholder="••••••••"
-                        className="pwd-input-with-toggle"
                         value={formData.password}
                         onChange={handleChange}
-                        required
+                        autoComplete="new-password"
                       />
+
                       <button
                         type="button"
-                        className="pwd-toggle-btn"
-                        onClick={() => setShowPassword(!showPassword)}
+                        className="register-password-toggle"
+                        onClick={() =>
+                          setShowPassword(
+                            !showPassword
+                          )
+                        }
+                        aria-label={
+                          showPassword
+                            ? 'Hide password'
+                            : 'Show password'
+                        }
                       >
-                        {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                        {showPassword ? (
+                          <EyeOff size={16} />
+                        ) : (
+                          <Eye size={16} />
+                        )}
                       </button>
+
                     </div>
-                    {fieldErrors.password && <span style={{ color: '#ef4444', fontSize: '11px' }}>{fieldErrors.password}</span>}
+
+                    {fieldErrors.password && (
+                      <span className="register-field-error">
+                        {fieldErrors.password}
+                      </span>
+                    )}
+
                   </div>
 
-                  <div>
-                    <label htmlFor="confirmPassword">{t('confirmPassword') || 'Confirm Password'}</label>
-                    <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                  <div className="register-field">
+
+                    <label htmlFor="confirmPassword">
+                      {t('confirmPassword') ||
+                        'Confirm Password'}
+                    </label>
+
+                    <div className="register-password-wrapper">
+
                       <input
                         id="confirmPassword"
-                        type={showConfirmPassword ? 'text' : 'password'}
+                        type={
+                          showConfirmPassword
+                            ? 'text'
+                            : 'password'
+                        }
                         name="confirmPassword"
                         placeholder="••••••••"
-                        className="pwd-input-with-toggle"
                         value={formData.confirmPassword}
                         onChange={handleChange}
-                        required
+                        autoComplete="new-password"
                       />
+
                       <button
                         type="button"
-                        className="pwd-toggle-btn"
-                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                        className="register-password-toggle"
+                        onClick={() =>
+                          setShowConfirmPassword(
+                            !showConfirmPassword
+                          )
+                        }
+                        aria-label={
+                          showConfirmPassword
+                            ? 'Hide password'
+                            : 'Show password'
+                        }
                       >
-                        {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                        {showConfirmPassword ? (
+                          <EyeOff size={16} />
+                        ) : (
+                          <Eye size={16} />
+                        )}
                       </button>
+
                     </div>
-                    {fieldErrors.confirmPassword && <span style={{ color: '#ef4444', fontSize: '11px' }}>{fieldErrors.confirmPassword}</span>}
+
+                    {fieldErrors.confirmPassword && (
+                      <span className="register-field-error">
+                        {fieldErrors.confirmPassword}
+                      </span>
+                    )}
+
                   </div>
+
                 </div>
 
-                <button type="submit" disabled={loading} style={{ marginTop: '4px' }}>
-                  {loading ? (t('registering') || 'Registering...') : (t('register') || 'Register')}
+                {/* REGISTER BUTTON */}
+                <button
+                  type="submit"
+                  className="register-submit-button"
+                  disabled={loading || googleLoading}
+                >
+                  {loading
+                    ? t('registering') ||
+                      'Registering...'
+                    : t('register') || 'Register'}
                 </button>
+
               </form>
 
-              <div className="pwd-divider" style={{ margin: '4px 0 8px' }}>
-                <div className="pwd-divider-line" />
-                <span className="pwd-divider-text">{isKm ? 'ឬ' : (t('or') || 'OR')}</span>
-                <div className="pwd-divider-line" />
+              {/* DIVIDER */}
+              <div className="register-divider">
+                <div className="register-divider-line" />
+
+                <span>
+                  {isKm
+                    ? 'ឬ'
+                    : t('or') || 'OR'}
+                </span>
+
+                <div className="register-divider-line" />
               </div>
 
-              <TelegramLoginButton onAuth={handleTelegramAuth} onError={setError} />
-
-              <div className="pwd-footer-link" style={{ marginTop: '8px' }}>
-                {t('alreadyAccount') || 'Already have an account?'}{' '}
-                <Link to="/login">{t('signIn') || 'Sign In'}</Link>
+              {/* TELEGRAM */}
+              <div className="register-social-button">
+                <TelegramLoginButton
+                  onAuth={handleTelegramAuth}
+                  onError={setError}
+                />
               </div>
+
+              {/* GOOGLE */}
+              <button
+                type="button"
+                className="google-login-button"
+                onClick={handleGoogleLogin}
+                disabled={
+                  googleLoading || loading
+                }
+              >
+
+                <svg
+                  className="google-icon"
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                >
+                  <path
+                    fill="#4285F4"
+                    d="M21.35 12.23c0-.79-.07-1.55-.2-2.28H12v4.32h5.23a4.47 4.47 0 0 1-1.94 2.94v2.45h3.14c1.84-1.69 2.92-4.18 2.92-7.43z"
+                  />
+
+                  <path
+                    fill="#34A853"
+                    d="M12 21.99c2.63 0 4.84-.87 6.45-2.33l-3.14-2.45c-.87.58-1.98.93-3.31.93-2.54 0-4.69-1.72-5.46-4.03H3.3v2.53A9.74 9.74 0 0 0 12 21.99z"
+                  />
+
+                  <path
+                    fill="#FBBC05"
+                    d="M6.54 14.11A5.86 5.86 0 0 1 6.23 12c0-.73.13-1.44.31-2.11V7.36H3.3A9.99 9.99 0 0 0 2 12c0 1.61.39 3.13 1.3 4.64l3.24-2.53z"
+                  />
+
+                  <path
+                    fill="#EA4335"
+                    d="M12 5.86c1.43 0 2.72.49 3.73 1.45l2.8-2.8C16.84 2.92 14.63 2 12 2a9.74 9.74 0 0 0-8.7 5.36l3.24 2.53C7.31 7.58 9.46 5.86 12 5.86z"
+                  />
+                </svg>
+
+                <span>
+                  {googleLoading
+                    ? 'Connecting to Google...'
+                    : 'Continue with Google'}
+                </span>
+
+              </button>
+
+              {/* LOGIN LINK */}
+              <div className="register-footer">
+                <span>
+                  {t('alreadyAccount') ||
+                    'Already have an account?'}
+                </span>
+
+                <Link to="/login">
+                  {t('signIn') || 'Sign In'}
+                </Link>
+              </div>
+
             </div>
           </div>
+
         </div>
       </div>
     </div>

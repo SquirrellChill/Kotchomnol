@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 
 export default function TelegramLoginButton({ onAuth, onError }) {
   useEffect(() => {
-    const clientId = Number(import.meta.env.VITE_TELEGRAM_CLIENT_ID);
+    const clientId = Number(import.meta.env.VITE_TELEGRAM_BOT_ID);
 
     console.log('Telegram Client ID:', clientId);
 

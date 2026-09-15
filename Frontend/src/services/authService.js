@@ -48,27 +48,6 @@ export const changePassword = ({ currentPassword, newPassword }) =>
     new_password: newPassword,
   });
 
-export const requestPasswordChangeOTP = ({ currentPassword }) =>
-  nodeApi.post('/auth/change-password/request-otp', {
-    current_password: currentPassword,
-  });
-
-export const verifyChangePasswordWithOTP = ({ currentPassword, code, newPassword }) =>
-  nodeApi.post('/auth/change-password/verify', {
-    current_password: currentPassword,
-    code,
-    new_password: newPassword,
-  });
-
-export const requestForgotCurrentPasswordOTP = ({ email }) =>
-  nodeApi.post('/auth/change-password/forgot-current-otp', { email });
-
-export const resetWithOtpAuthenticated = ({ code, newPassword }) =>
-  nodeApi.post('/auth/change-password/reset-with-otp', {
-    code,
-    new_password: newPassword,
-  });
-
 export const verifyEmail = ({ email, code }) =>
   nodeApi.post('/auth/verify-email', { email, code });
 

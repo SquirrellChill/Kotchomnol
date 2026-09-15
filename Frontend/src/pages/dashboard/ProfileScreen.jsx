@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react';
+
+import React, { useEffect, useRef, useState } from 'react';
 import {
   ArrowLeft,
   Check,
@@ -15,6 +16,7 @@ import {
   Shield,
   Smile,
   Sun,
+  Upload,
   User,
   X
 } from 'lucide-react';
@@ -23,15 +25,34 @@ import MobileAppShell from '../../components/dashboard/MobileAppShell';
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { useTheme } from '../../context/ThemeContext';
-import { updateMe } from '../../services/authService';
+import {
+  updateMe,
+  uploadAvatar
+} from '../../services/authService';
 import { buildDashboardProfile } from '../../utils/profile';
 import './ProfileSettings.css';
 
 const CARTOON_AVATARS = [
-  { id: 'girl-short', url: '/avatars/avatar-1.png', label: 'Girl Short Hair' },
-  { id: 'boy-clean',  url: '/avatars/avatar-2.png', label: 'Boy Clean' },
-  { id: 'girl-long',   url: '/avatars/avatar-3.jpg', label: 'Girl Long Hair' },
-  { id: 'boy-beard',  url: '/avatars/avatar-4.jpg', label: 'Boy Beard' },
+  {
+    id: 'girl-short',
+    url: '/avatars/avatar-1.png',
+    label: 'Girl Short Hair'
+  },
+  {
+    id: 'boy-clean',
+    url: '/avatars/avatar-2.png',
+    label: 'Boy Clean'
+  },
+  {
+    id: 'girl-long',
+    url: '/avatars/avatar-3.jpg',
+    label: 'Girl Long Hair'
+  },
+  {
+    id: 'boy-beard',
+    url: '/avatars/avatar-4.jpg',
+    label: 'Boy Beard'
+  },
 ];
 
 const profileFallback = {
@@ -48,25 +69,51 @@ export default function ProfileScreen() {
   const { user, updateUser, logout } = useAuth();
   const { language, toggleLanguage, t } = useLanguage();
   const { theme, toggleTheme } = useTheme();
+
   const isKm = language !== 'en';
 
-  const profile = buildDashboardProfile(user, profileFallback);
+  const profile = buildDashboardProfile(
+    user,
+    profileFallback
+  );
+
   const [isEditing, setIsEditing] = useState(false);
   const [showAvatarPicker, setShowAvatarPicker] = useState(false);
   const [savingAvatar, setSavingAvatar] = useState(false);
-    
+
+  const avatarFileInputRef = useRef(null);
+
   const [mobileView, setMobileView] = useState('menu');
 
-  // Instant local avatar state so UI updates immediately without waiting for edge cache
+  /*
+   * Avatar priority:
+   * 1. Uploaded/local profile picture
+   * 2. avatar_url
+   * 3. Google avatar
+   * 4. Default cartoon avatar
+   */
   const [selectedAvatar, setSelectedAvatar] = useState(
-    () => user?.profile_picture || CARTOON_AVATARS[0].url
+    () =>
+      user?.profile_picture ||
+      user?.avatar_url ||
+      user?.user_metadata?.avatar_url ||
+      CARTOON_AVATARS[0].url
   );
 
   useEffect(() => {
-    if (user?.profile_picture) {
-      setSelectedAvatar(user.profile_picture);
+    const avatar =
+      user?.profile_picture ||
+      user?.avatar_url ||
+      user?.user_metadata?.avatar_url;
+
+    if (avatar) {
+      setSelectedAvatar(avatar);
     }
-  }, [user?.profile_picture]);
+  }, [
+    user?.profile_picture,
+    user?.avatar_url,
+    user?.user_metadata?.avatar_url,
+  ]);
 
   const activeAvatar = selectedAvatar;
 
@@ -78,10 +125,17 @@ export default function ProfileScreen() {
   });
 
   const [saving, setSaving] = useState(false);
-  const [status, setStatus] = useState({ type: '', message: '' });
+
+  const [status, setStatus] = useState({
+    type: '',
+    message: ''
+  });
 
   const handleChange = (e) => {
-    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+    setForm((prev) => ({
+      ...prev,
+      [e.target.name]: e.target.value
+    }));
   };
 
   const handleCancel = () => {
@@ -91,82 +145,275 @@ export default function ProfileScreen() {
       phoneNumber: profile.phone || '',
       email: profile.email || '',
     });
-    setStatus({ type: '', message: '' });
+
+    setStatus({
+      type: '',
+      message: ''
+    });
+
     setIsEditing(false);
   };
 
   const handleSave = async (e) => {
     e.preventDefault();
+
     setSaving(true);
-    setStatus({ type: '', message: '' });
+
+    setStatus({
+      type: '',
+      message: ''
+    });
 
     try {
       const response = await updateMe({
         ...form,
         profile_picture: activeAvatar,
       });
+
       const updated = response.data?.data?.user;
+
       if (updated) {
         updateUser({
           ...updated,
-          profile_picture: updated.profile_picture || activeAvatar,
+          profile_picture:
+            updated.profile_picture || activeAvatar,
         });
       }
-      setStatus({ 
-        type: 'success', 
-        message: t('profileUpdated') || (isKm ? 'បានធ្វើបច្ចុប្បន្នភាពគណនីដោយជោគជ័យ' : 'Profile updated successfully.')
+
+      setStatus({
+        type: 'success',
+        message:
+          t('profileUpdated') ||
+          (isKm
+            ? 'បានធ្វើបច្ចុប្បន្នភាពគណនីដោយជោគជ័យ'
+            : 'Profile updated successfully.')
       });
+
       setIsEditing(false);
     } catch (err) {
-      const errMsg = err?.response?.data?.detail || t('unableProfile') || (isKm ? 'មិនអាចធ្វើបច្ចុប្បន្នភាពគណនីបានទេ' : 'Unable to update profile.');
-      setStatus({ type: 'error', message: errMsg });
+      const errMsg =
+        err?.response?.data?.detail ||
+        t('unableProfile') ||
+        (isKm
+          ? 'មិនអាចធ្វើបច្ចុប្បន្នភាពគណនីបានទេ'
+          : 'Unable to update profile.');
+
+      setStatus({
+        type: 'error',
+        message: errMsg
+      });
     } finally {
       setSaving(false);
     }
   };
 
+  /*
+   * Select one of the existing cartoon avatars.
+   */
   const handleSelectAvatar = async (avatarUrl) => {
     setSavingAvatar(true);
-    // 1. Optimistic Update: Change avatar on screen immediately
+
+    // Optimistic update
     setSelectedAvatar(avatarUrl);
 
     try {
       const payload = {
-        firstName: form.firstName || profile.firstName || '',
-        lastName: form.lastName || profile.lastName || '',
-        phoneNumber: form.phoneNumber || profile.phone || '',
-        email: form.email || profile.email || user?.email,
+        firstName:
+          form.firstName ||
+          profile.firstName ||
+          '',
+
+        lastName:
+          form.lastName ||
+          profile.lastName ||
+          '',
+
+        phoneNumber:
+          form.phoneNumber ||
+          profile.phone ||
+          '',
+
+        email:
+          form.email ||
+          profile.email ||
+          user?.email,
+
         profile_picture: avatarUrl,
       };
 
       const response = await updateMe(payload);
-      const updatedUser = response?.data?.data?.user;
-      
-      // 2. Ensure auth context persists selected avatar URL even if backend returns null
+
+      const updatedUser =
+        response?.data?.data?.user;
+
       if (updatedUser) {
         updateUser({
           ...updatedUser,
-          profile_picture: updatedUser.profile_picture || avatarUrl,
+          profile_picture:
+            updatedUser.profile_picture ||
+            avatarUrl,
         });
       } else {
-        updateUser({ ...user, profile_picture: avatarUrl });
+        updateUser({
+          ...user,
+          profile_picture: avatarUrl,
+        });
       }
 
       setShowAvatarPicker(false);
+
       setStatus({
         type: 'success',
-        message: isKm ? 'បានផ្លាស់ប្តូររូបតំណាងតុក្កតាដោយជោគជ័យ' : 'Avatar updated successfully!',
+        message: isKm
+          ? 'បានផ្លាស់ប្តូររូបតំណាងតុក្កតាដោយជោគជ័យ'
+          : 'Avatar updated successfully!',
       });
     } catch (err) {
-      console.error('Failed to update avatar:', err);
-      // Revert back on error
-      setSelectedAvatar(user?.profile_picture || CARTOON_AVATARS[0].url);
+      console.error(
+        'Failed to update avatar:',
+        err
+      );
+
+      setSelectedAvatar(
+        user?.profile_picture ||
+        CARTOON_AVATARS[0].url
+      );
+
       setStatus({
         type: 'error',
-        message: isKm ? 'មិនអាចប្តូររូបតំណាងបានទេ' : 'Unable to change avatar.',
+        message: isKm
+          ? 'មិនអាចប្តូររូបតំណាងបានទេ'
+          : 'Unable to change avatar.',
       });
     } finally {
       setSavingAvatar(false);
+    }
+  };
+
+  /*
+   * Upload a personal profile photo.
+   */
+  const handleUploadAvatar = async (event) => {
+    const file = event.target.files?.[0];
+
+    if (!file) {
+      return;
+    }
+
+    const allowedTypes = [
+      'image/jpeg',
+      'image/png',
+      'image/webp',
+    ];
+
+    if (!allowedTypes.includes(file.type)) {
+      setStatus({
+        type: 'error',
+        message: isKm
+          ? 'សូមជ្រើសរើសរូបភាព JPG, PNG ឬ WEBP។'
+          : 'Please select a JPG, PNG, or WEBP image.',
+      });
+
+      event.target.value = '';
+      return;
+    }
+
+    // 5 MB maximum
+    const maxSize = 5 * 1024 * 1024;
+
+    if (file.size > maxSize) {
+      setStatus({
+        type: 'error',
+        message: isKm
+          ? 'ទំហំរូបភាពត្រូវតែតិចជាង 5MB។'
+          : 'Image size must be less than 5MB.',
+      });
+
+      event.target.value = '';
+      return;
+    }
+
+    setSavingAvatar(true);
+
+    setStatus({
+      type: '',
+      message: ''
+    });
+
+    try {
+      const response = await uploadAvatar(file);
+
+      const updatedUser =
+        response?.data?.data?.user;
+
+      if (!updatedUser) {
+        throw new Error(
+          'Server did not return updated user information.'
+        );
+      }
+
+      const newAvatarUrl =
+        updatedUser.profile_picture;
+
+      if (!newAvatarUrl) {
+        throw new Error(
+          'Server did not return the uploaded avatar URL.'
+        );
+      }
+
+      /*
+       * Backend returns something like:
+       * /uploads/avatars/abc123.jpg
+       *
+       * Convert it to:
+       * http://127.0.0.1:8000/uploads/avatars/abc123.jpg
+       */
+      const backendUrl =
+        import.meta.env.VITE_API_URL ||
+        'http://127.0.0.1:8000';
+
+      const fullAvatarUrl =
+        newAvatarUrl.startsWith('http')
+          ? newAvatarUrl
+          : `${backendUrl}${newAvatarUrl}`;
+
+      // Immediately show uploaded image
+      setSelectedAvatar(fullAvatarUrl);
+
+      // Save to AuthContext/localStorage
+      updateUser({
+        ...updatedUser,
+        profile_picture: fullAvatarUrl,
+      });
+
+      // Close modal
+      setShowAvatarPicker(false);
+
+      setStatus({
+        type: 'success',
+        message: isKm
+          ? 'បានប្តូររូបភាពប្រវត្តិរូបដោយជោគជ័យ។'
+          : 'Avatar updated successfully!',
+      });
+    } catch (err) {
+      console.error(
+        'Failed to upload avatar:',
+        err
+      );
+
+      setStatus({
+        type: 'error',
+        message:
+          err?.response?.data?.detail ||
+          (isKm
+            ? 'មិនអាចប្តូររូបភាពប្រវត្តិរូបបានទេ។'
+            : 'Unable to change avatar.'),
+      });
+    } finally {
+      setSavingAvatar(false);
+
+      // Allow selecting the same file again
+      event.target.value = '';
     }
   };
 
@@ -176,257 +423,495 @@ export default function ProfileScreen() {
   };
 
   return (
-    <MobileAppShell activeTab="profile" showBottomNav={true}>
+    <MobileAppShell
+      activeTab="profile"
+      showBottomNav={true}
+    >
       <div className="settings-page-wrapper">
+
         {mobileView === 'account_details' && (
           <div className="settings-topbar mobile-only-bar">
-            <button 
-              className="settings-back-btn" 
-              type="button" 
+            <button
+              className="settings-back-btn"
+              type="button"
               onClick={() => {
                 setMobileView('menu');
                 setIsEditing(false);
               }}
             >
               <ArrowLeft size={18} />
-              <span>{t('menu') || (isKm ? 'ម៉ឺនុយ' : 'Menu')}</span>
+              <span>
+                {t('menu') ||
+                  (isKm ? 'ម៉ឺនុយ' : 'Menu')}
+              </span>
             </button>
           </div>
         )}
 
         <div className="settings-layout">
-          {/* MENU CARD */}
-          <aside className={`settings-sidebar ${mobileView === 'menu' ? 'mobile-visible' : 'mobile-hidden'}`}>
+
+          {/* =====================================================
+              LEFT MENU CARD
+              ===================================================== */}
+          <aside
+            className={`settings-sidebar ${
+              mobileView === 'menu'
+                ? 'mobile-visible'
+                : 'mobile-hidden'
+            }`}
+          >
             <div className="sidebar-profile-header">
+
               <div className="sidebar-avatar-wrap">
+
                 <div className="avatar-img-container">
-                  <img 
-                    src={activeAvatar} 
-                    alt="Cartoon Profile Avatar" 
-                    className="cartoon-avatar-main" 
+                  <img
+                    src={activeAvatar}
+                    alt="Profile Avatar"
+                    className="cartoon-avatar-main"
                   />
                 </div>
+
                 <button
                   type="button"
                   className="avatar-edit-badge"
-                  onClick={() => setShowAvatarPicker(true)}
-                  title={isKm ? 'ផ្លាស់ប្តូររូបតុក្កតា' : 'Change Cartoon Avatar'}
+                  onClick={() =>
+                    setShowAvatarPicker(true)
+                  }
+                  title={
+                    isKm
+                      ? 'ប្តូររូបភាពប្រវត្តិរូប'
+                      : 'Change profile picture'
+                  }
                 >
                   <Smile size={16} />
                 </button>
+
+                {/* Hidden file picker */}
+                <input
+                  ref={avatarFileInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  onChange={handleUploadAvatar}
+                  style={{ display: 'none' }}
+                />
+
               </div>
-              <h2 className="sidebar-user-name">{profile.name}</h2>
+
+              <h2 className="sidebar-user-name">
+                {profile.name}
+              </h2>
+
             </div>
 
-            <nav className="settings-nav-menu" aria-label="Settings navigation">
-              <button 
-                type="button" 
+            <nav
+              className="settings-nav-menu"
+              aria-label="Settings navigation"
+            >
+
+              <button
+                type="button"
                 className="settings-nav-item"
-                onClick={() => navigate('/dashboard/go-pro')}
+                onClick={() =>
+                  navigate('/dashboard/go-pro')
+                }
               >
                 <Crown size={18} />
+
                 <div className="nav-item-dual">
-                  <span>{t('goPro') || (isKm ? 'ក្លាយជា Pro' : 'Go Pro')}</span>
-                  <ChevronRight size={16} className="mobile-chevron" />
+                  <span>
+                    {t('goPro') ||
+                      (isKm
+                        ? 'ក្លាយជា Pro'
+                        : 'Go Pro')}
+                  </span>
+
+                  <ChevronRight
+                    size={16}
+                    className="mobile-chevron"
+                  />
                 </div>
               </button>
 
-              <button 
-                type="button" 
+              <button
+                type="button"
                 className="settings-nav-item"
-                onClick={() => setMobileView('account_details')}
+                onClick={() =>
+                  setMobileView('account_details')
+                }
               >
                 <User size={18} />
+
                 <div className="nav-item-dual">
-                  <span>{t('myAccount') || (isKm ? 'គណនីរបស់ខ្ញុំ' : 'My Account')}</span>
-                  <ChevronRight size={16} className="mobile-chevron" />
+                  <span>
+                    {t('myAccount') ||
+                      (isKm
+                        ? 'គណនីរបស់ខ្ញុំ'
+                        : 'My Account')}
+                  </span>
+
+                  <ChevronRight
+                    size={16}
+                    className="mobile-chevron"
+                  />
                 </div>
               </button>
 
-              <button 
-                type="button" 
+              <button
+                type="button"
                 className="settings-nav-item"
-                onClick={() => navigate('/dashboard/profile/change-password')}
+                onClick={() =>
+                  navigate(
+                    '/dashboard/profile/change-password'
+                  )
+                }
               >
                 <Lock size={18} />
+
                 <div className="nav-item-dual">
-                  <span>{t('changePassword') || (isKm ? 'ផ្លាស់ប្តូរលេខសម្ងាត់' : 'Change password')}</span>
-                  <ChevronRight size={16} className="mobile-chevron" />
+                  <span>
+                    {t('changePassword') ||
+                      (isKm
+                        ? 'ផ្លាស់ប្តូរលេខសម្ងាត់'
+                        : 'Change password')}
+                  </span>
+
+                  <ChevronRight
+                    size={16}
+                    className="mobile-chevron"
+                  />
                 </div>
               </button>
 
-              <button 
-                type="button" 
+              <button
+                type="button"
                 className="settings-nav-item"
                 onClick={toggleLanguage}
               >
                 <Languages size={18} />
+
                 <div className="nav-item-dual">
-                  <span>{t('language') || (isKm ? 'ភាសា' : 'Language')}</span>
-                  <span className="lang-tag">{language === 'en' ? 'KH' : 'EN'}</span>
+                  <span>
+                    {t('language') ||
+                      (isKm
+                        ? 'ភាសា'
+                        : 'Language')}
+                  </span>
+
+                  <span className="lang-tag">
+                    {language === 'en'
+                      ? 'KH'
+                      : 'EN'}
+                  </span>
                 </div>
               </button>
 
-              <button 
-                type="button" 
+              <button
+                type="button"
                 className="settings-nav-item"
                 onClick={toggleTheme}
               >
-                {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+                {theme === 'dark'
+                  ? <Sun size={18} />
+                  : <Moon size={18} />}
+
                 <div className="nav-item-dual">
-                  <span>{t('theme') || (isKm ? 'ទម្រង់' : 'Theme')}</span>
-                  <span className="theme-tag">{theme === 'dark' ? 'LIGHT' : 'DARK'}</span>
+                  <span>
+                    {t('theme') ||
+                      (isKm
+                        ? 'ទម្រង់'
+                        : 'Theme')}
+                  </span>
+
+                  <span className="theme-tag">
+                    {theme === 'dark'
+                      ? 'LIGHT'
+                      : 'DARK'}
+                  </span>
                 </div>
               </button>
 
-              <button 
-                type="button" 
+              <button
+                type="button"
                 className="settings-nav-item"
                 onClick={() => navigate('/')}
               >
                 <Globe2 size={18} />
+
                 <div className="nav-item-dual">
-                  <span>{t('backToWebsite') || (isKm ? 'ត្រឡប់ទៅគេហទំព័រដើម' : 'Back to Website')}</span>
-                  <ChevronRight size={16} className="mobile-chevron" />
+                  <span>
+                    {t('backToWebsite') ||
+                      (isKm
+                        ? 'ត្រឡប់ទៅគេហទំព័រដើម'
+                        : 'Back to Website')}
+                  </span>
+
+                  <ChevronRight
+                    size={16}
+                    className="mobile-chevron"
+                  />
                 </div>
               </button>
 
               <div className="settings-nav-divider" />
 
-              <button 
-                type="button" 
+              <button
+                type="button"
                 className="settings-nav-item logout-item"
                 onClick={handleLogout}
               >
                 <LogOut size={18} />
-                <span>{t('logout') || (isKm ? 'ចាកចេញ' : 'Log out')}</span>
+
+                <span>
+                  {t('logout') ||
+                    (isKm
+                      ? 'ចាកចេញ'
+                      : 'Log out')}
+                </span>
               </button>
+
             </nav>
           </aside>
 
-          {/* ACCOUNT DETAILS PANEL */}
-          <main className={`settings-content-panel ${mobileView === 'account_details' ? 'mobile-visible' : 'mobile-hidden'}`}>
+          {/* =====================================================
+              RIGHT ACCOUNT DETAILS PANEL
+              ===================================================== */}
+          <main
+            className={`settings-content-panel ${
+              mobileView === 'account_details'
+                ? 'mobile-visible'
+                : 'mobile-hidden'
+            }`}
+          >
+
             <header className="content-card-header">
+
               <div className="header-icon-shield">
                 <Shield size={24} />
               </div>
+
               <div className="header-text-block">
-                <h1>{t('myAccount') || (isKm ? 'គណនីរបស់ខ្ញុំ' : 'My Account')}</h1>
+                <h1>
+                  {t('myAccount') ||
+                    (isKm
+                      ? 'គណនីរបស់ខ្ញុំ'
+                      : 'My Account')}
+                </h1>
+
                 <p>
-                  {isKm 
-                    ? 'គ្រប់គ្រងព័ត៌មានផ្ទាល់ខ្លួន និងអត្តសញ្ញាណប្រព័ន្ធរបស់អ្នក។' 
+                  {isKm
+                    ? 'គ្រប់គ្រងព័ត៌មានផ្ទាល់ខ្លួន និងអត្តសញ្ញាណប្រព័ន្ធរបស់អ្នក។'
                     : 'Manage your personal details and system identity.'}
                 </p>
               </div>
 
               {!isEditing && (
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   className="edit-toggle-btn"
-                  onClick={() => setIsEditing(true)}
+                  onClick={() =>
+                    setIsEditing(true)
+                  }
                 >
                   <Pencil size={15} />
-                  <span>{t('edit') || (isKm ? 'កែសម្រួល' : 'Edit')}</span>
+
+                  <span>
+                    {t('edit') ||
+                      (isKm
+                        ? 'កែសម្រួល'
+                        : 'Edit')}
+                  </span>
                 </button>
               )}
+
             </header>
 
             {status.message && (
-              <div className={`settings-alert-banner ${status.type}`}>
+              <div
+                className={`settings-alert-banner ${status.type}`}
+              >
                 {status.message}
               </div>
             )}
 
             {!isEditing ? (
               <div className="profile-view-container">
+
                 <div className="view-grid">
+
                   <div className="info-display-tile">
-                    <span className="info-tile-label">{t('firstName') || (isKm ? 'នាមត្រកូល / ឈ្មោះ' : 'First Name')}</span>
-                    <strong className="info-tile-value">{profile.firstName || '—'}</strong>
+                    <span className="info-tile-label">
+                      {t('firstName') ||
+                        (isKm
+                          ? 'នាមត្រកូល / ឈ្មោះ'
+                          : 'First Name')}
+                    </span>
+
+                    <strong className="info-tile-value">
+                      {profile.firstName || '—'}
+                    </strong>
                   </div>
 
                   <div className="info-display-tile">
-                    <span className="info-tile-label">{t('lastName') || (isKm ? 'គោត្តនាម' : 'Last Name')}</span>
-                    <strong className="info-tile-value">{profile.lastName || '—'}</strong>
+                    <span className="info-tile-label">
+                      {t('lastName') ||
+                        (isKm
+                          ? 'គោត្តនាម'
+                          : 'Last Name')}
+                    </span>
+
+                    <strong className="info-tile-value">
+                      {profile.lastName || '—'}
+                    </strong>
+                  </div>
+
+                </div>
+
+                <div className="info-display-tile full-width">
+                  <span className="info-tile-label">
+                    {t('emailAddress') ||
+                      (isKm
+                        ? 'អាសយដ្ឋានអ៊ីមែល'
+                        : 'Email Address')}
+                  </span>
+
+                  <div className="info-tile-iconic">
+                    <Mail
+                      size={16}
+                      className="info-icon"
+                    />
+
+                    <strong className="info-tile-value">
+                      {profile.email || '—'}
+                    </strong>
                   </div>
                 </div>
 
                 <div className="info-display-tile full-width">
-                  <span className="info-tile-label">{t('emailAddress') || (isKm ? 'អាសយដ្ឋានអ៊ីមែល' : 'Email Address')}</span>
-                  <div className="info-tile-iconic">
-                    <Mail size={16} className="info-icon" />
-                    <strong className="info-tile-value">{profile.email || '—'}</strong>
-                  </div>
-                </div>
+                  <span className="info-tile-label">
+                    {t('phoneNumber') ||
+                      (isKm
+                        ? 'លេខទូរស័ព្ទ'
+                        : 'Phone Number')}
+                  </span>
 
-                <div className="info-display-tile full-width">
-                  <span className="info-tile-label">{t('phoneNumber') || (isKm ? 'លេខទូរស័ព្ទ' : 'Phone Number')}</span>
                   <div className="info-tile-iconic">
-                    <Phone size={16} className="info-icon" />
-                    <strong className="info-tile-value">{profile.phone || '—'}</strong>
+                    <Phone
+                      size={16}
+                      className="info-icon"
+                    />
+
+                    <strong className="info-tile-value">
+                      {profile.phone || '—'}
+                    </strong>
                   </div>
                 </div>
 
                 <div className="view-info-footer">
                   <p>
-                    {isKm 
-                      ? 'ចុចប៊ូតុង «កែសម្រួល» ខាងលើនៅពេលណាដែលអ្នកចង់ធ្វើបច្ចុប្បន្នភាពលេខទូរស័ព្ទ ឬឈ្មោះរបស់អ្នក។' 
+                    {isKm
+                      ? 'ចុចប៊ូតុង «កែសម្រួល» ខាងលើនៅពេលណាដែលអ្នកចង់ធ្វើបច្ចុប្បន្នភាពលេខទូរស័ព្ទ ឬឈ្មោះរបស់អ្នក។'
                       : 'Click "Edit" above whenever you need to update your phone number or name.'}
                   </p>
                 </div>
+
               </div>
             ) : (
-              <form className="reference-form" onSubmit={handleSave}>
+
+              <form
+                className="reference-form"
+                onSubmit={handleSave}
+              >
+
                 <div className="form-row-grid">
+
                   <div className="floating-field">
-                    <label htmlFor="firstName">{t('firstName') || (isKm ? 'នាមត្រកូល / ឈ្មោះ' : 'First Name')}</label>
-                    <input 
+                    <label htmlFor="firstName">
+                      {t('firstName') ||
+                        (isKm
+                          ? 'នាមត្រកូល / ឈ្មោះ'
+                          : 'First Name')}
+                    </label>
+
+                    <input
                       id="firstName"
-                      name="firstName" 
-                      value={form.firstName} 
-                      onChange={handleChange} 
-                      placeholder={isKm ? 'ឈ្មោះ' : 'First Name'}
-                      required 
+                      name="firstName"
+                      value={form.firstName}
+                      onChange={handleChange}
+                      placeholder={
+                        isKm
+                          ? 'ឈ្មោះ'
+                          : 'First Name'
+                      }
+                      required
                     />
                   </div>
 
                   <div className="floating-field">
-                    <label htmlFor="lastName">{t('lastName') || (isKm ? 'គោត្តនាម' : 'Last Name')}</label>
-                    <input 
+                    <label htmlFor="lastName">
+                      {t('lastName') ||
+                        (isKm
+                          ? 'គោត្តនាម'
+                          : 'Last Name')}
+                    </label>
+
+                    <input
                       id="lastName"
-                      name="lastName" 
-                      value={form.lastName} 
-                      onChange={handleChange} 
-                      placeholder={isKm ? 'គោត្តនាម' : 'Last Name'}
-                      required 
+                      name="lastName"
+                      value={form.lastName}
+                      onChange={handleChange}
+                      placeholder={
+                        isKm
+                          ? 'គោត្តនាម'
+                          : 'Last Name'
+                      }
+                      required
                     />
                   </div>
+
                 </div>
 
                 <div className="floating-field full-width">
-                  <label htmlFor="email">{t('emailAddress') || (isKm ? 'អាសយដ្ឋានអ៊ីមែល' : 'Email Address')}</label>
-                  <input 
+                  <label htmlFor="email">
+                    {t('emailAddress') ||
+                      (isKm
+                        ? 'អាសយដ្ឋានអ៊ីមែល'
+                        : 'Email Address')}
+                  </label>
+
+                  <input
                     id="email"
-                    type="email" 
-                    name="email" 
-                    value={form.email} 
-                    onChange={handleChange} 
+                    type="email"
+                    name="email"
+                    value={form.email}
+                    onChange={handleChange}
                     placeholder="yourname@domain.com"
                   />
                 </div>
 
                 <div className="floating-field full-width">
-                  <label htmlFor="phoneNumber">{t('phoneNumber') || (isKm ? 'លេខទូរស័ព្ទ' : 'Phone Number')}</label>
+                  <label htmlFor="phoneNumber">
+                    {t('phoneNumber') ||
+                      (isKm
+                        ? 'លេខទូរស័ព្ទ'
+                        : 'Phone Number')}
+                  </label>
+
                   <div className="phone-prefix-input">
-                    <span className="phone-tag">🇰🇭 +855</span>
-                    <input 
+
+                    <span className="phone-tag">
+                      🇰🇭 +855
+                    </span>
+
+                    <input
                       id="phoneNumber"
-                      name="phoneNumber" 
-                      value={form.phoneNumber} 
-                      onChange={handleChange} 
+                      name="phoneNumber"
+                      value={form.phoneNumber}
+                      onChange={handleChange}
                       placeholder="71 995 6996"
-                      required 
+                      required
                     />
+
                   </div>
                 </div>
 
@@ -437,69 +922,185 @@ export default function ProfileScreen() {
                 </p>
 
                 <div className="form-actions-group">
-                  <button className="settings-primary-btn" type="submit" disabled={saving}>
-                    {saving ? (t('saving') || (isKm ? 'កំពុងរក្សាទុក...' : 'Saving...')) : (t('saveChanges') || (isKm ? 'រក្សាទុកការផ្លាស់ប្តូរ' : 'Save Changes'))}
+
+                  <button
+                    className="settings-primary-btn"
+                    type="submit"
+                    disabled={saving}
+                  >
+                    {saving
+                      ? (
+                        t('saving') ||
+                        (isKm
+                          ? 'កំពុងរក្សាទុក...'
+                          : 'Saving...')
+                      )
+                      : (
+                        t('saveChanges') ||
+                        (isKm
+                          ? 'រក្សាទុកការផ្លាស់ប្តូរ'
+                          : 'Save Changes')
+                      )}
                   </button>
-                  <button 
-                    className="settings-cancel-btn" 
-                    type="button" 
+
+                  <button
+                    className="settings-cancel-btn"
+                    type="button"
                     disabled={saving}
                     onClick={handleCancel}
                   >
-                    {t('cancel') || (isKm ? 'បោះបង់' : 'Cancel')}
+                    {t('cancel') ||
+                      (isKm
+                        ? 'បោះបង់'
+                        : 'Cancel')}
                   </button>
+
                 </div>
+
               </form>
             )}
+
           </main>
         </div>
       </div>
 
-      {/* CARTOON AVATAR SELECTION MODAL */}
+      {/* =========================================================
+          AVATAR MODAL
+          ========================================================= */}
       {showAvatarPicker && (
-        <div className="avatar-modal-backdrop" onClick={() => setShowAvatarPicker(false)}>
-          <div className="avatar-modal-card" onClick={(e) => e.stopPropagation()}>
+        <div
+          className="avatar-modal-backdrop"
+          onClick={() =>
+            setShowAvatarPicker(false)
+          }
+        >
+          <div
+            className="avatar-modal-card"
+            onClick={(e) =>
+              e.stopPropagation()
+            }
+          >
+
             <div className="avatar-modal-header">
+
               <div>
-                <h3>{isKm ? 'ជ្រើសរើសរូបតុក្កតា' : 'Select Cartoon Avatar'}</h3>
-                <p>{isKm ? 'ជ្រើសរើសរូបតំណាងគំនូរជីវចលដែលអ្នកចូលចិត្ត' : 'Choose an animated profile avatar:'}</p>
+                <h3>
+                  {isKm
+                    ? 'ជ្រើសរើសរូបប្រវត្តិរូប'
+                    : 'Choose Profile Picture'}
+                </h3>
+
+                <p>
+                  {isKm
+                    ? 'បង្ហោះរូបផ្ទាល់ខ្លួន ឬជ្រើសរើសរូបតុក្កតា'
+                    : 'Upload your own photo or choose a cartoon avatar'}
+                </p>
               </div>
-              <button 
-                type="button" 
-                className="avatar-close-btn" 
-                onClick={() => setShowAvatarPicker(false)}
+
+              <button
+                type="button"
+                className="avatar-close-btn"
+                onClick={() =>
+                  setShowAvatarPicker(false)
+                }
               >
                 <X size={18} />
               </button>
+
+            </div>
+
+            {/* =====================================================
+                UPLOAD PERSONAL PHOTO
+                ===================================================== */}
+            <button
+              type="button"
+              className="avatar-upload-button"
+              onClick={() =>
+                avatarFileInputRef.current?.click()
+              }
+              disabled={savingAvatar}
+            >
+              <Upload size={18} />
+
+              <span>
+                {savingAvatar
+                  ? (
+                    isKm
+                      ? 'កំពុងផ្ទុក...'
+                      : 'Uploading...'
+                  )
+                  : (
+                    isKm
+                      ? 'ជ្រើសរើសរូបភាពពីឧបករណ៍'
+                      : 'Upload Photo'
+                  )}
+              </span>
+            </button>
+
+            <div className="avatar-upload-hint">
+              {isKm
+                ? 'JPG, PNG ឬ WEBP • អតិបរមា 5MB'
+                : 'JPG, PNG or WEBP • Maximum 5MB'}
+            </div>
+
+            {/* =====================================================
+                CARTOON AVATARS
+                ===================================================== */}
+            <div className="avatar-section-label">
+              {isKm
+                ? 'ឬជ្រើសរើសរូបតុក្កតា'
+                : 'Or choose a cartoon avatar'}
             </div>
 
             <div className="cartoon-avatar-grid">
+
               {CARTOON_AVATARS.map((avatar) => {
-                const isSelected = activeAvatar === avatar.url;
+
+                const isSelected =
+                  activeAvatar === avatar.url;
+
                 return (
                   <button
                     key={avatar.id}
                     type="button"
-                    className={`cartoon-choice-item ${isSelected ? 'selected' : ''}`}
-                    onClick={() => handleSelectAvatar(avatar.url)}
+                    className={`cartoon-choice-item ${
+                      isSelected
+                        ? 'selected'
+                        : ''
+                    }`}
+                    onClick={() =>
+                      handleSelectAvatar(
+                        avatar.url
+                      )
+                    }
                     disabled={savingAvatar}
                     title={avatar.label}
                   >
+
                     <div className="modal-avatar-img-wrap">
-                      <img src={avatar.url} alt={avatar.label} />
+                      <img
+                        src={avatar.url}
+                        alt={avatar.label}
+                      />
                     </div>
+
                     {isSelected && (
                       <div className="avatar-check-indicator">
                         <Check size={14} />
                       </div>
                     )}
+
                   </button>
                 );
               })}
+
             </div>
+
           </div>
         </div>
       )}
+
     </MobileAppShell>
   );
 }
+
