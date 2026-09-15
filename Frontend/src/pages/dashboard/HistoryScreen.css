@@ -13,7 +13,10 @@
 }
 
 .analytics-title {
-  font-size: 24px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 20px;
   font-weight: 700;
   color: var(--color-text-dark);
   margin: 0 0 4px;
@@ -21,6 +24,23 @@
 
 html[data-theme='dark'] .analytics-title {
   color: #ffffff;
+}
+
+.analytics-title-icon-badge {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  background-color: rgba(126, 34, 206, 0.1);
+  color: #7e22ce;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+html[data-theme='dark'] .analytics-title-icon-badge {
+  background-color: rgba(168, 85, 247, 0.15);
+  color: #c084fc;
 }
 
 .analytics-sub {

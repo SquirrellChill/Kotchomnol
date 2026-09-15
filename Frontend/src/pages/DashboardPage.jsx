@@ -177,6 +177,9 @@ export default function DashboardPage() {
         <header className="dash-header">
           <div>
             <h1 className="dash-header-title">
+              <span className="dash-header-title-icon-badge">
+                <Home size={18} />
+              </span>
               {isKm ? `សូមស្វាគមន៍ ${firstName}!` : `Welcome back, ${firstName}!`}
             </h1>
             <p className="dash-header-sub">

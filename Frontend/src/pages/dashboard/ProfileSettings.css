@@ -274,9 +274,9 @@ html[data-theme='dark'] .settings-nav-divider {
 }
 
 .header-icon-shield {
-  width: 44px;
-  height: 44px;
-  border-radius: 14px;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
   background-color: rgba(126, 34, 206, 0.1);
   color: #7e22ce;
   border: 1px solid rgba(126, 34, 206, 0.15);

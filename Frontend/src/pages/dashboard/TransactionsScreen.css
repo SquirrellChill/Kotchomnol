@@ -112,13 +112,13 @@ html[data-theme='dark'] .export-action-bar {
 }
 
 .export-btn.pdf-btn {
-  background-color: rgba(16, 185, 129, 0.1);
-  color: #059669;
-  border-color: rgba(16, 185, 129, 0.2);
+  background-color: rgba(79, 70, 229, 0.1);
+  color: #4f46e5;
+  border-color: rgba(79, 70, 229, 0.2);
 }
 
 .export-btn.pdf-btn:hover {
-  background-color: #059669;
+  background-color: #4f46e5;
   color: #ffffff;
 }
 
@@ -271,11 +271,11 @@ html[data-theme='dark'] .footer-qty strong {
 .footer-totals-col .grand-usd {
   font-size: 15px;
   font-weight: 800;
-  color: #15803d;
+  color: #4338ca;
 }
 
 html[data-theme='dark'] .footer-totals-col .grand-usd {
-  color: #34d399;
+  color: #a5b4fc;
 }
 
 .footer-totals-col .grand-khr {
@@ -391,7 +391,7 @@ html[data-theme='dark'] .records-count-pill {
 }
 
 .records-summary-card.usd-summary-card {
-  background: linear-gradient(135deg, #15803d 0%, #16a34a 100%);
+  background: linear-gradient(135deg, #4338ca 0%, #4f46e5 100%);
 }
 
 .summary-currency-label {
@@ -545,7 +545,7 @@ html[data-theme='dark'] .records-table thead th {
 
 .records-table-usd {
   font-weight: 700;
-  color: #15803d;
+  color: #4338ca;
 }
 
 .records-table-khr {

@@ -443,7 +443,12 @@ export default function VoiceScreen() {
       <div className="add-sale-wrapper font-kantomruy">
         {/* Header Title */}
         <div className="add-sale-header">
-          <h1>{isKm ? 'បន្ថែមការលក់ថ្មី' : 'Add New Sale'}</h1>
+          <h1>
+            <span className="add-sale-title-icon-badge">
+              <Mic size={18} />
+            </span>
+            {isKm ? 'បន្ថែមការលក់ថ្មី' : 'Add New Sale'}
+          </h1>
           <p>{isKm ? 'កត់ត្រាការលក់តាមរយៈសំឡេង ឬបញ្ចូលដោយដៃ' : 'Record sale items via voice recognition or enter them manually.'}</p>
         </div>
 

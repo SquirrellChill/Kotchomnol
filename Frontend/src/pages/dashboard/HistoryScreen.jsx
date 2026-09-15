@@ -219,6 +219,9 @@ export default function HistoryScreen() {
         <div className="analytics-header">
           <div>
             <h1 className="analytics-title">
+              <span className="analytics-title-icon-badge">
+                <BarChart3 size={18} />
+              </span>
               {isKm ? 'ផ្ទាំងគ្រប់គ្រង & ការវិភាគ' : 'Dashboard & Analytics'}
             </h1>
             <p className="analytics-sub">

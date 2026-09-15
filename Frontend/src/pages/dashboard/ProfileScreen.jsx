@@ -292,7 +292,7 @@ export default function ProfileScreen() {
           <main className={`settings-content-panel ${mobileView === 'account_details' ? 'mobile-visible' : 'mobile-hidden'}`}>
             <header className="content-card-header">
               <div className="header-icon-shield">
-                <Shield size={24} />
+                <Shield size={18} />
               </div>
               <div className="header-text-block">
                 <h1>{t('myAccount') || (isKm ? 'គណនីរបស់ខ្ញុំ' : 'My Account')}</h1>
