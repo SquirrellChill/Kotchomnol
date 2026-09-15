@@ -147,3 +147,27 @@ def count_sales(db: Session, user_id: int, start_date: date, end_date: date) -> 
         .scalar()
         or 0
     )
+
+def product_history(db: Session, user_id: int) -> list[tuple[str, int, date]]:
+    """Every distinct product description this seller has entered before.
+
+    Grouped in SQL rather than in Python so this stays cheap as a seller's
+    sales history grows — only distinct descriptions travel over the wire,
+    not every line item ever written. Joined through Sale to enforce the same
+    per-user ownership boundary every other query in this file uses; a
+    seller's typed history should never leak into another seller's
+    suggestions.
+    """
+    rows = (
+        db.query(
+            SaleItem.description,
+            func.count(SaleItem.sale_item_id),
+            func.max(Sale.sale_date),
+        )
+        .join(Sale, Sale.sale_id == SaleItem.sale_id)
+        .filter(Sale.user_id == user_id)
+        .group_by(SaleItem.description)
+        .all()
+    )
+    return [(description, count, last_used) for description, count, last_used in rows]
+

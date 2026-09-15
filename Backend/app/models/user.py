@@ -1,6 +1,6 @@
 from sqlalchemy import BigInteger, Boolean, Column, DateTime, Integer, String, TIMESTAMP, func
 from sqlalchemy.orm import relationship
-
+from sqlalchemy.dialects.postgresql import UUID
 from app.core.database import Base
 
 
@@ -16,6 +16,12 @@ class User(Base):
 
     # Profile Avatar
     profile_picture = Column(String(500), nullable=True)
+
+    # Links this profile row to its Supabase auth.users record. Every user
+    # has one — including Telegram logins, which get a Supabase "shadow"
+    # account created via the admin API (see auth_telegram.py) so that
+    # get_current_user only ever has to verify one kind of JWT.
+    supabase_user_id = Column(UUID(as_uuid=True), nullable=True, unique=True, index=True)
 
     # Email Verification
     is_verified = Column(Boolean, nullable=False, default=False)
