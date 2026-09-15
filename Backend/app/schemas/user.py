@@ -28,7 +28,11 @@ class ForgotPasswordRequest(BaseModel):
 
 
 class ResetPasswordRequest(BaseModel):
-    token: str
+    """access_token comes from Supabase's password-recovery email link —
+    the frontend lands on a page with it in the URL fragment after the
+    seller taps the link, then posts it here along with the new password."""
+
+    access_token: str
     password: str = Field(min_length=8)
 
 
@@ -42,16 +46,6 @@ class UpdateProfileRequest(BaseModel):
 
 class ChangePasswordRequest(BaseModel):
     current_password: str
-    new_password: str = Field(min_length=8)
-
-
-class RequestPasswordChangeOTPRequest(BaseModel):
-    current_password: str
-
-
-class VerifyChangePasswordRequest(BaseModel):
-    current_password: str
-    code: str = Field(min_length=6, max_length=6)
     new_password: str = Field(min_length=8)
 
 

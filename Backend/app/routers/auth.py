@@ -1,16 +1,41 @@
-from datetime import datetime, timedelta, timezone
+"""Authentication endpoints.
+
+Supabase Auth handles:
+- User registration
+- Email verification
+- Login
+- Password reset
+
+FastAPI handles:
+- Local user profile synchronization
+- Phone number validation
+- Profile updates
+- Avatar uploads
+- Authenticated password changes
+"""
+
 import os
 import shutil
 
-from fastapi import APIRouter, BackgroundTasks, Depends, File, HTTPException, UploadFile, status
-from pydantic import BaseModel, EmailStr, Field
+from fastapi import (
+    APIRouter,
+    Depends,
+    File,
+    HTTPException,
+    UploadFile,
+    status,
+)
+from gotrue.errors import AuthApiError
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from app.core.config import settings
 from app.core.database import get_db
 from app.core.dependencies import get_current_user
-from app.core.security import create_access_token, hash_password, verify_password
+from app.core.security import decode_supabase_token
+from app.core.supabase_client import (
+    get_supabase,
+    get_supabase_admin,
+)
 from app.models.user import User
 from app.repositories import user_repository as user_repo
 from app.schemas.user import (
@@ -18,273 +43,425 @@ from app.schemas.user import (
     ForgotPasswordRequest,
     LoginRequest,
     RegisterRequest,
-    RequestPasswordChangeOTPRequest,
     ResendVerificationRequest,
     ResetPasswordRequest,
     UpdateProfileRequest,
     UserOut,
-    VerifyChangePasswordRequest,
     VerifyEmailRequest,
 )
-from app.services.email_service import (
-    send_password_change_otp_email,
-    send_password_reset_email,
-    send_verification_email,
-)
-from app.services.token_service import (
-    generate_reset_token,
-    generate_verification_code,
-    hash_code,
-    hash_token,
+
+
+router = APIRouter(
+    prefix="/auth",
+    tags=["auth"],
 )
 
-router = APIRouter(prefix="/auth", tags=["auth"])
 
 UPLOAD_DIR = "uploads/avatars"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 
-class AuthenticatedResetVerifyRequest(BaseModel):
-    code: str = Field(..., min_length=6, max_length=6)
-    new_password: str = Field(..., min_length=8)
-
-
-class AuthenticatedForgotOTPRequest(BaseModel):
-    email: EmailStr
-
+# ============================================================
+# REGISTER
+# ============================================================
 
 @router.post("/register")
 def register(
     payload: RegisterRequest,
-    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
 ):
+    """
+    Register a new user through Supabase Auth.
+
+    Supabase sends the email verification email.
+
+    The local users table stores the user's profile.
+    """
+
+    # --------------------------------------------------------
+    # Check phone number
+    # --------------------------------------------------------
+
     if payload.phone_number:
-        phone_user = user_repo.find_user_by_phone_number(db, payload.phone_number)
-        if phone_user and phone_user.email != payload.email:
+        phone_user = user_repo.find_user_by_phone_number(
+            db,
+            payload.phone_number,
+        )
+
+        if (
+            phone_user
+            and phone_user.email != payload.email
+        ):
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
-                detail="This phone number is already registered with another account.",
+                detail=(
+                    "This phone number is already "
+                    "registered with another account."
+                ),
             )
 
-    existing_user = user_repo.find_user_by_email(db, payload.email)
-
-    if existing_user:
-        if existing_user.is_verified:
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail="An account with this email already exists.",
-            )
-
-        existing_user.first_name = payload.first_name
-        existing_user.last_name = payload.last_name
-        existing_user.phone_number = payload.phone_number
-        existing_user.password_hash = hash_password(payload.password)
-        existing_user.email_verification_attempts = 0
-        existing_user.email_verification_locked_until = None
-
-        if settings.REQUIRE_EMAIL_VERIFICATION:
-            code, hashed_code, expires_at = generate_verification_code()
-            existing_user.email_verification_code = hashed_code
-            existing_user.email_verification_expires = expires_at
-
-            try:
-                user_repo.save_user(db, existing_user)
-            except IntegrityError:
-                db.rollback()
-                raise HTTPException(
-                    status_code=status.HTTP_409_CONFLICT,
-                    detail="This phone number is already registered with another account.",
-                )
-
-            background_tasks.add_task(
-                send_verification_email, existing_user.email, code, existing_user.first_name
-            )
-
-            return {
-                "success": True,
-                "message": "Account already exists but is unverified. A new verification code has been sent to your email.",
-                "data": {"requires_email_verification": True},
-            }
-
-        try:
-            user_repo.save_user(db, existing_user)
-        except IntegrityError:
-            db.rollback()
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail="This phone number is already registered with another account.",
-            )
-
-        return {
-            "success": True,
-            "message": "Account updated. You can sign in now.",
-            "data": {"requires_email_verification": False},
-        }
+    # --------------------------------------------------------
+    # Create Supabase Auth account
+    # --------------------------------------------------------
 
     try:
-        user = user_repo.create_user(
-            db,
-            first_name=payload.first_name,
-            last_name=payload.last_name,
-            phone_number=payload.phone_number,
-            email=payload.email,
-            password_hash=hash_password(payload.password),
+        result = get_supabase().auth.sign_up(
+            {
+                "email": payload.email,
+                "password": payload.password,
+                "options": {
+                    "data": {
+                        "first_name": payload.first_name,
+                        "last_name": payload.last_name,
+                    }
+                },
+            }
         )
-    except IntegrityError:
-        db.rollback()
+
+    except AuthApiError as exc:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail="An account with this phone number or email already exists.",
+            detail=exc.message,
+        ) from exc
+
+    # --------------------------------------------------------
+    # Make sure Supabase returned a user
+    # --------------------------------------------------------
+
+    if not result.user:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Unable to create account.",
         )
 
-    if settings.REQUIRE_EMAIL_VERIFICATION:
-        code, hashed_code, expires_at = generate_verification_code()
-        user.email_verification_code = hashed_code
-        user.email_verification_expires = expires_at
-        user_repo.save_user(db, user)
+    supabase_user_id = result.user.id
 
-        background_tasks.add_task(send_verification_email, user.email, code, user.first_name)
+    # --------------------------------------------------------
+    # Check whether local profile already exists
+    # --------------------------------------------------------
 
-        return {
-            "success": True,
-            "message": "Registration successful. Please check your email for your verification code.",
-            "data": {"requires_email_verification": True},
-        }
+    existing_user = user_repo.find_user_by_email(
+        db,
+        payload.email,
+    )
+
+    if existing_user:
+
+        existing_user.first_name = (
+            payload.first_name
+        )
+
+        existing_user.last_name = (
+            payload.last_name
+        )
+
+        existing_user.phone_number = (
+            payload.phone_number
+        )
+
+        existing_user.supabase_user_id = (
+            supabase_user_id
+        )
+
+        try:
+            user_repo.save_user(
+                db,
+                existing_user,
+            )
+
+        except IntegrityError:
+            db.rollback()
+
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=(
+                    "This phone number is already "
+                    "registered with another account."
+                ),
+            )
+
+    else:
+
+        # ----------------------------------------------------
+        # Create local profile
+        # ----------------------------------------------------
+
+        try:
+            user_repo.create_user(
+                db,
+                first_name=payload.first_name,
+                last_name=payload.last_name,
+                phone_number=payload.phone_number,
+                email=payload.email,
+                supabase_user_id=supabase_user_id,
+            )
+
+        except IntegrityError:
+            db.rollback()
+
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=(
+                    "An account with this phone number "
+                    "or email already exists."
+                ),
+            )
+
+    # --------------------------------------------------------
+    # IMPORTANT:
+    #
+    # Supabase Auth sends the verification email.
+    # We do NOT call email_service.py here.
+    # --------------------------------------------------------
 
     return {
         "success": True,
-        "message": "Registration successful. You can sign in now.",
-        "data": {"requires_email_verification": False},
+        "message": (
+            "Registration successful. "
+            "Please check your email for "
+            "your verification code."
+        ),
+        "data": {
+            "requires_email_verification": True
+        },
     }
 
 
+# ============================================================
+# VERIFY EMAIL
+# ============================================================
 @router.post("/verify-email")
-def verify_email(payload: VerifyEmailRequest, db: Session = Depends(get_db)):
-    user = user_repo.find_user_by_email(db, payload.email)
+def verify_email(
+    payload: VerifyEmailRequest,
+    db: Session = Depends(get_db),
+):
+    """
+    Verify a user's email using the Supabase signup OTP.
+    """
 
-    if not user:
-        raise HTTPException(status_code=400, detail="Invalid email or verification code.")
+    email = payload.email.strip().lower()
+    code = payload.code.strip()
 
-    if user.is_verified:
-        return {"success": True, "message": "Email is already verified."}
+    if not email:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Email is required.",
+        )
 
-    now = datetime.now(timezone.utc)
+    if not code:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Verification code is required.",
+        )
 
-    if user.email_verification_locked_until:
-        locked_until = user.email_verification_locked_until
-        if locked_until.tzinfo is None:
-            locked_until = locked_until.replace(tzinfo=timezone.utc)
-        if locked_until > now:
+    try:
+        result = get_supabase().auth.verify_otp(
+            {
+                "email": email,
+                "token": code,
+                "type": "signup",
+            }
+        )
+
+    except AuthApiError as exc:
+        message = str(exc.message).lower()
+
+        if "expired" in message:
             raise HTTPException(
-                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-                detail="Too many failed attempts. Please try again later.",
-            )
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=(
+                    "This verification code has expired. "
+                    "Please request a new code."
+                ),
+            ) from exc
 
-    if user.email_verification_expires:
-        expires_at = user.email_verification_expires
-        if expires_at.tzinfo is None:
-            expires_at = expires_at.replace(tzinfo=timezone.utc)
-        if expires_at < now:
+        if "invalid" in message:
             raise HTTPException(
-                status_code=400, detail="Verification code has expired. Please request a new code."
-            )
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=(
+                    "Invalid verification code. "
+                    "Please check the latest code in your email."
+                ),
+            ) from exc
 
-    if hash_code(payload.code) != user.email_verification_code:
-        user.email_verification_attempts += 1
-        if user.email_verification_attempts >= 5:
-            user.email_verification_locked_until = now + timedelta(minutes=15)
-            user.email_verification_attempts = 0
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=exc.message,
+        ) from exc
 
-        user_repo.save_user(db, user)
-        raise HTTPException(status_code=400, detail="Invalid verification code.")
+    # --------------------------------------------------------
+    # Mark local user as verified
+    # --------------------------------------------------------
 
-    user.is_verified = True
-    user.email_verification_code = None
-    user.email_verification_expires = None
-    user.email_verification_attempts = 0
-    user.email_verification_locked_until = None
-    user_repo.save_user(db, user)
+    user = user_repo.find_user_by_email(
+        db,
+        email,
+    )
 
-    return {"success": True, "message": "Email verified successfully."}
+    if user:
+        user.is_verified = True
 
+        user_repo.save_user(
+            db,
+            user,
+        )
+
+    return {
+        "success": True,
+        "message": "Email verified successfully.",
+    }# ============================================================
+# RESEND VERIFICATION
+# ============================================================
 
 @router.post("/resend-verification")
 def resend_verification(
     payload: ResendVerificationRequest,
-    background_tasks: BackgroundTasks,
-    db: Session = Depends(get_db),
 ):
-    user = user_repo.find_user_by_email(db, payload.email)
+    """
+    Resend Supabase signup verification OTP.
+    """
 
-    generic_response = {
-        "success": True,
-        "message": "If the account exists and is not verified, a verification code has been sent.",
-    }
+    email = payload.email.strip().lower()
 
-    if not settings.REQUIRE_EMAIL_VERIFICATION:
-        return generic_response
-
-    if not user or user.is_verified:
-        return generic_response
-
-    now = datetime.now(timezone.utc)
-    if user.email_verification_expires:
-        expires_at = user.email_verification_expires
-        if expires_at.tzinfo is None:
-            expires_at = expires_at.replace(tzinfo=timezone.utc)
-
-        remaining_seconds = (expires_at - now).total_seconds()
-        if remaining_seconds > 14 * 60:
-            raise HTTPException(
-                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-                detail="Please wait before requesting another verification code.",
-            )
-
-    code, hashed_code, expires_at = generate_verification_code()
-    user.email_verification_code = hashed_code
-    user.email_verification_expires = expires_at
-    user.email_verification_attempts = 0
-    user_repo.save_user(db, user)
-
-    background_tasks.add_task(send_verification_email, user.email, code, user.first_name)
-
-    return generic_response
-
-
-@router.post("/login")
-def login(payload: LoginRequest, db: Session = Depends(get_db)):
-    user = user_repo.find_user_by_email(db, payload.email)
-
-    if not user or not verify_password(payload.password, user.password_hash):
-        raise HTTPException(status_code=401, detail="Invalid email or password.")
-
-    if settings.REQUIRE_EMAIL_VERIFICATION and not user.is_verified:
-        raise HTTPException(
-            status_code=403, detail="Please verify your email before logging in."
+    try:
+        get_supabase().auth.resend(
+            {
+                "type": "signup",
+                "email": email,
+            }
         )
 
-    token = create_access_token({"id": user.user_id})
+    except AuthApiError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=exc.message,
+        ) from exc
+
+    return {
+        "success": True,
+        "message": (
+            "A new verification code has been sent "
+            "to your email."
+        ),
+    }
+# ============================================================
+# LOGIN
+# ============================================================
+
+@router.post("/login")
+def login(
+    payload: LoginRequest,
+    db: Session = Depends(get_db),
+):
+    """
+    Login through Supabase Auth.
+    """
+
+    try:
+        result = (
+            get_supabase()
+            .auth
+            .sign_in_with_password(
+                {
+                    "email": payload.email,
+                    "password": payload.password,
+                }
+            )
+        )
+
+    except AuthApiError as exc:
+
+        # User hasn't verified email
+        if "confirm" in exc.message.lower():
+
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=(
+                    "Please verify your email "
+                    "before logging in."
+                ),
+            ) from exc
+
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid email or password.",
+        ) from exc
+
+    # --------------------------------------------------------
+    # Find local profile
+    # --------------------------------------------------------
+
+    user = user_repo.find_user_by_supabase_id(
+        db,
+        result.user.id,
+    )
+
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=(
+                "No profile found for this account."
+            ),
+        )
+
+    # --------------------------------------------------------
+    # Synchronize verification status
+    # --------------------------------------------------------
+
+    if not user.is_verified:
+
+        user.is_verified = True
+
+        user_repo.save_user(
+            db,
+            user,
+        )
 
     return {
         "success": True,
         "message": "Login successful",
         "data": {
-            "token": token,
+            "token": result.session.access_token,
             "user": UserOut.model_validate(user),
         },
     }
 
 
-@router.post("/logout")
-def logout(current_user: User = Depends(get_current_user)):
-    return {"success": True, "message": "Logged out successfully"}
+# ============================================================
+# LOGOUT
+# ============================================================
 
+@router.post("/logout")
+def logout(
+    current_user: User = Depends(get_current_user),
+):
+    return {
+        "success": True,
+        "message": "Logged out successfully",
+    }
+
+
+# ============================================================
+# GET CURRENT USER
+# ============================================================
 
 @router.get("/me")
-def get_me(current_user: User = Depends(get_current_user)):
-    return {"success": True, "data": {"user": UserOut.model_validate(current_user)}}
+def get_me(
+    current_user: User = Depends(get_current_user),
+):
+    return {
+        "success": True,
+        "data": {
+            "user": UserOut.model_validate(
+                current_user
+            )
+        },
+    }
 
+
+# ============================================================
+# UPDATE PROFILE
+# ============================================================
 
 @router.put("/me")
 def update_me(
@@ -292,44 +469,121 @@ def update_me(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    if payload.email and payload.email != current_user.email:
-        existing = user_repo.find_user_by_email(db, payload.email)
-        if existing and existing.user_id != current_user.user_id:
+    """
+    Update the local profile.
+
+    Changing email here does not change the
+    Supabase Auth email.
+    """
+
+    # --------------------------------------------------------
+    # Check email
+    # --------------------------------------------------------
+
+    if (
+        payload.email
+        and payload.email != current_user.email
+    ):
+        existing = user_repo.find_user_by_email(
+            db,
+            payload.email,
+        )
+
+        if (
+            existing
+            and existing.user_id
+            != current_user.user_id
+        ):
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
-                detail="An account with this email already exists.",
-            )
-    if payload.phone_number != current_user.phone_number:
-        existing = user_repo.find_user_by_phone_number(db, payload.phone_number)
-        if existing and existing.user_id != current_user.user_id:
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail="An account with this phone number already exists.",
+                detail=(
+                    "An account with this email "
+                    "already exists."
+                ),
             )
 
-    current_user.first_name = payload.first_name
-    current_user.last_name = payload.last_name
-    current_user.phone_number = payload.phone_number
+    # --------------------------------------------------------
+    # Check phone
+    # --------------------------------------------------------
+
+    if (
+        payload.phone_number
+        != current_user.phone_number
+    ):
+        existing = (
+            user_repo.find_user_by_phone_number(
+                db,
+                payload.phone_number,
+            )
+        )
+
+        if (
+            existing
+            and existing.user_id
+            != current_user.user_id
+        ):
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=(
+                    "An account with this phone number "
+                    "already exists."
+                ),
+            )
+
+    # --------------------------------------------------------
+    # Update profile
+    # --------------------------------------------------------
+
+    current_user.first_name = (
+        payload.first_name
+    )
+
+    current_user.last_name = (
+        payload.last_name
+    )
+
+    current_user.phone_number = (
+        payload.phone_number
+    )
+
     current_user.email = payload.email
 
     if payload.profile_picture is not None:
-        current_user.profile_picture = payload.profile_picture
+        current_user.profile_picture = (
+            payload.profile_picture
+        )
 
     try:
-        saved_user = user_repo.save_user(db, current_user)
+        saved_user = user_repo.save_user(
+            db,
+            current_user,
+        )
+
     except IntegrityError:
         db.rollback()
+
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail="A user with these details already exists.",
+            detail=(
+                "A user with these details "
+                "already exists."
+            ),
         )
 
     return {
         "success": True,
         "message": "Profile updated successfully",
-        "data": {"user": UserOut.model_validate(saved_user)},
+        "data": {
+            "user": UserOut.model_validate(
+                saved_user
+            )
+        },
     }
 
+
+# ============================================================
+# UPLOAD AVATAR
+# ============================================================
 
 @router.post("/me/avatar")
 def upload_avatar(
@@ -337,231 +591,251 @@ def upload_avatar(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    ext = os.path.splitext(file.filename)[1].lower()
-    if ext not in [".jpg", ".jpeg", ".png", ".webp"]:
+    """
+    Upload profile avatar.
+    """
+
+    ext = os.path.splitext(
+        file.filename or ""
+    )[1].lower()
+
+    allowed_extensions = [
+        ".jpg",
+        ".jpeg",
+        ".png",
+        ".webp",
+    ]
+
+    if ext not in allowed_extensions:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Only image files (.jpg, .jpeg, .png, .webp) are allowed.",
+            detail=(
+                "Only image files "
+                "(.jpg, .jpeg, .png, .webp) "
+                "are allowed."
+            ),
         )
 
-    file_name = f"user_{current_user.user_id}{ext}"
-    file_path = os.path.join(UPLOAD_DIR, file_name)
+    file_name = (
+        f"user_{current_user.user_id}{ext}"
+    )
+
+    file_path = os.path.join(
+        UPLOAD_DIR,
+        file_name,
+    )
 
     with open(file_path, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
+        shutil.copyfileobj(
+            file.file,
+            buffer,
+        )
 
-    avatar_url = f"/uploads/avatars/{file_name}"
+    avatar_url = (
+        f"/uploads/avatars/{file_name}"
+    )
+
     current_user.profile_picture = avatar_url
-    user_repo.save_user(db, current_user)
+
+    user_repo.save_user(
+        db,
+        current_user,
+    )
 
     return {
         "success": True,
         "message": "Avatar updated successfully",
-        "data": {"user": UserOut.model_validate(current_user)},
+        "data": {
+            "user": UserOut.model_validate(
+                current_user
+            )
+        },
     }
 
 
-@router.post("/change-password/request-otp")
-def request_change_password_otp(
-    payload: RequestPasswordChangeOTPRequest,
-    background_tasks: BackgroundTasks,
+# ============================================================
+# CHANGE PASSWORD
+# ============================================================
+
+@router.post("/change-password")
+def change_password(
+    payload: ChangePasswordRequest,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    if not current_user.password_hash:
+    """
+    Change password for an authenticated user.
+
+    First verifies the current password through
+    Supabase Auth, then updates the new password
+    using the Supabase Admin API.
+    """
+
+    if not current_user.email:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="This account does not have a password set.",
+            detail=(
+                "This account has no password-based "
+                "login to change."
+            ),
         )
 
-    if not verify_password(payload.current_password, current_user.password_hash):
+    if not current_user.supabase_user_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=(
+                "This account is not linked "
+                "to Supabase Auth."
+            ),
+        )
+
+    # --------------------------------------------------------
+    # Verify current password
+    # --------------------------------------------------------
+
+    try:
+        get_supabase().auth.sign_in_with_password(
+            {
+                "email": current_user.email,
+                "password": payload.current_password,
+            }
+        )
+
+    except AuthApiError as exc:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Current password is incorrect.",
+        ) from exc
+
+    # --------------------------------------------------------
+    # Update password
+    # --------------------------------------------------------
+
+    try:
+        get_supabase_admin().auth.admin.update_user_by_id(
+            str(current_user.supabase_user_id),
+            {
+                "password": payload.new_password
+            },
         )
 
-    code, hashed_code, expires_at = generate_verification_code()
-    current_user.email_verification_code = hashed_code
-    current_user.email_verification_expires = expires_at
-    current_user.email_verification_attempts = 0
-    user_repo.save_user(db, current_user)
-
-    background_tasks.add_task(
-        send_password_change_otp_email,
-        current_user.email,
-        code,
-        current_user.first_name,
-    )
+    except AuthApiError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=exc.message,
+        ) from exc
 
     return {
         "success": True,
-        "message": "Verification code has been sent to your registered email.",
+        "message": "Password changed successfully.",
     }
 
 
-@router.post("/change-password/verify")
-def verify_and_change_password(
-    payload: VerifyChangePasswordRequest,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
-    if not current_user.password_hash:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="This account does not have a password set.",
-        )
-
-    if not verify_password(payload.current_password, current_user.password_hash):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Current password is incorrect.",
-        )
-
-    now = datetime.now(timezone.utc)
-    if not current_user.email_verification_expires or not current_user.email_verification_code:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="No active verification code found. Please request a new one.",
-        )
-
-    expires_at = current_user.email_verification_expires
-    if expires_at.tzinfo is None:
-        expires_at = expires_at.replace(tzinfo=timezone.utc)
-
-    if expires_at < now:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Verification code has expired. Please request a new one.",
-        )
-
-    if hash_code(payload.code.strip()) != current_user.email_verification_code:
-        current_user.email_verification_attempts += 1
-        user_repo.save_user(db, current_user)
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid verification code.",
-        )
-
-    current_user.password_hash = hash_password(payload.new_password)
-    current_user.email_verification_code = None
-    current_user.email_verification_expires = None
-    current_user.email_verification_attempts = 0
-    user_repo.save_user(db, current_user)
-
-    return {"success": True, "message": "Password changed successfully."}
-
-
-@router.post("/change-password/forgot-current-otp")
-def request_forgot_current_password_otp(
-    payload: AuthenticatedForgotOTPRequest,
-    background_tasks: BackgroundTasks,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
-    if payload.email.strip().lower() != current_user.email.strip().lower():
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="The email entered does not match your registered account email.",
-        )
-
-    code, hashed_code, expires_at = generate_verification_code()
-    current_user.email_verification_code = hashed_code
-    current_user.email_verification_expires = expires_at
-    current_user.email_verification_attempts = 0
-    user_repo.save_user(db, current_user)
-
-    background_tasks.add_task(
-        send_password_change_otp_email,
-        current_user.email,
-        code,
-        current_user.first_name,
-    )
-
-    return {
-        "success": True,
-        "message": f"Verification code sent to {current_user.email}",
-    }
-
-
-@router.post("/change-password/reset-with-otp")
-def reset_with_otp_authenticated(
-    payload: AuthenticatedResetVerifyRequest,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
-    now = datetime.now(timezone.utc)
-    if not current_user.email_verification_expires or not current_user.email_verification_code:
-        raise HTTPException(status_code=400, detail="No active verification code found.")
-
-    expires_at = current_user.email_verification_expires
-    if expires_at.tzinfo is None:
-        expires_at = expires_at.replace(tzinfo=timezone.utc)
-
-    if expires_at < now:
-        raise HTTPException(status_code=400, detail="Verification code has expired.")
-
-    if hash_code(payload.code.strip()) != current_user.email_verification_code:
-        current_user.email_verification_attempts += 1
-        user_repo.save_user(db, current_user)
-        raise HTTPException(status_code=400, detail="Invalid verification code.")
-
-    current_user.password_hash = hash_password(payload.new_password)
-    current_user.email_verification_code = None
-    current_user.email_verification_expires = None
-    current_user.email_verification_attempts = 0
-    user_repo.save_user(db, current_user)
-
-    return {"success": True, "message": "Password reset successfully!"}
-
+# ============================================================
+# FORGOT PASSWORD
+# ============================================================
 
 @router.post("/forgot-password")
 def forgot_password(
     payload: ForgotPasswordRequest,
-    background_tasks: BackgroundTasks,
-    db: Session = Depends(get_db),
 ):
-    user = user_repo.find_user_by_email(db, payload.email)
-    generic_response = {"success": True, "message": "If email exists, reset link sent."}
+    """
+    Ask Supabase to send the password reset email.
+    """
 
-    if not user:
-        return generic_response
+    generic_response = {
+        "success": True,
+        "message": (
+            "If email exists, reset link sent."
+        ),
+    }
 
-    token, hashed_token, expires_at = generate_reset_token()
-    user.password_reset_token = hashed_token
-    user.password_reset_expires = expires_at
-    user_repo.save_user(db, user)
+    try:
+        get_supabase().auth.reset_password_for_email(
+            payload.email
+        )
 
-    background_tasks.add_task(
-        send_password_reset_email, user.email, token, user.first_name
-    )
+    except AuthApiError:
+        # Don't reveal whether the email exists.
+        pass
 
     return generic_response
 
 
+# ============================================================
+# RESET PASSWORD
+# ============================================================
+
 @router.post("/reset-password")
-def reset_password(payload: ResetPasswordRequest, db: Session = Depends(get_db)):
-    hashed_token = hash_token(payload.token)
-    user = user_repo.find_user_by_reset_token_hash(db, hashed_token)
+def reset_password(
+    payload: ResetPasswordRequest,
+    db: Session = Depends(get_db),
+):
+    """
+    Reset password using the Supabase
+    password recovery access token.
+    """
 
-    if not user or not user.password_reset_expires:
-        raise HTTPException(status_code=400, detail="Token invalid or expired.")
+    # --------------------------------------------------------
+    # Decode and validate token
+    # --------------------------------------------------------
 
-    expires_at = user.password_reset_expires
-    if expires_at.tzinfo is None:
-        expires_at = expires_at.replace(tzinfo=timezone.utc)
+    try:
+        claims = decode_supabase_token(
+            payload.access_token
+        )
 
-    if expires_at < datetime.now(timezone.utc):
-        raise HTTPException(status_code=400, detail="Token invalid or expired.")
+    except Exception as exc:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Token invalid or expired.",
+        ) from exc
 
-    user.password_hash = hash_password(payload.password)
-    user.password_reset_token = None
-    user.password_reset_expires = None
-    user_repo.save_user(db, user)
+    supabase_user_id = claims.get("sub")
 
-    new_token = create_access_token({"id": user.user_id})
+    if not supabase_user_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Token invalid or expired.",
+        )
+
+    # --------------------------------------------------------
+    # Update Supabase password
+    # --------------------------------------------------------
+
+    try:
+        get_supabase_admin().auth.admin.update_user_by_id(
+            supabase_user_id,
+            {
+                "password": payload.password
+            },
+        )
+
+    except AuthApiError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=exc.message,
+        ) from exc
+
+    # --------------------------------------------------------
+    # Find local profile
+    # --------------------------------------------------------
+
+    user = user_repo.find_user_by_supabase_id(
+        db,
+        supabase_user_id,
+    )
+
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No profile found for this account.",
+        )
 
     return {
         "success": True,
         "message": "Password reset successful",
-        "data": {"token": new_token},
+        "data": {
+            "token": payload.access_token
+        },
     }

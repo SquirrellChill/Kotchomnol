@@ -14,13 +14,33 @@ from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
-    # e.g. mysql+pymysql://user:password@host:3306/kotchomnol
-    DATABASE_URL: str = "mysql+pymysql://root:password@localhost:3306/kotchomnol"
+    # Supabase connection string, e.g.
+    # postgresql+psycopg2://postgres.xxxx:password@aws-x-region.pooler.supabase.com:5432/postgres
+    # (Project Settings > Database > Connection string > URI, swapped to the
+    # psycopg2 dialect prefix SQLAlchemy expects).
+    DATABASE_URL: str = "postgresql+psycopg2://postgres:password@localhost:5432/postgres"
     BACKEND_BASE_URL: str = "http://127.0.0.1:8000"
     SECRET_KEY: str = "change-me"
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24  # 1 day
     REQUIRE_EMAIL_VERIFICATION: bool = True
+
+    # --- Supabase --------------------------------------------------------
+    # Auth is now owned by Supabase: signup, email verification, password
+    # reset, and JWT issuance all go through it instead of the hand-rolled
+    # OTP/JWT code in token_service.py and security.py. Those files are kept
+    # for reference but are no longer called from the auth routes.
+    SUPABASE_URL: str = ""
+    SUPABASE_ANON_KEY: str = ""
+    # Service-role key. Bypasses row-level security — used ONLY for the
+    # Telegram shadow-account admin calls in auth_telegram.py. Never send
+    # this to a frontend.
+    SUPABASE_SERVICE_ROLE_KEY: str = ""
+    # Same secret Supabase signs its own JWTs with (Project Settings > API >
+    # JWT Settings). get_current_user verifies every request against this,
+    # and Telegram logins mint tokens signed with it too, so both paths
+    # produce a JWT indistinguishable from one Supabase issued itself.
+    SUPABASE_JWT_SECRET: str = ""
 
     # SMTP. Leave MAIL_SERVER blank to print emails to the console instead.
     # These were previously declared twice, and the second set had no
@@ -119,7 +139,9 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
-
+print("SUPABASE_URL:", settings.SUPABASE_URL)
+print("SUPABASE_ANON_KEY configured:", bool(settings.SUPABASE_ANON_KEY))
+print("SUPABASE_SERVICE_ROLE_KEY configured:", bool(settings.SUPABASE_SERVICE_ROLE_KEY))
 
 # ==========================================================================
 # Record schema — domain facts, not settings.
