@@ -251,7 +251,7 @@ html[data-theme='dark'] .landing-brand-icon {
   position: fixed;
   top: 72px; 
   right: 0;
-  width: min(80vw, 260px);
+  width: min(75vw, 220px);
   height: auto;
   max-height: calc(100vh - 84px);
   background-color: #ffffff;
@@ -263,8 +263,8 @@ html[data-theme='dark'] .landing-brand-icon {
   border-bottom: 1px solid rgba(126, 34, 206, 0.12);
   display: flex;
   flex-direction: column;
-  padding: 12px 14px 18px;
-  gap: 10px;
+  padding: 16px 14px 18px;
+  gap: 8px;
   transform: translateX(100%);
   transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   overflow-y: auto;
@@ -280,38 +280,10 @@ html[data-theme='dark'] .landing-brand-icon {
   transform: translateX(0);
 }
 
-.drawer-header-row {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  padding: 4px 6px 10px;
-  border-bottom: 1px solid rgba(126, 34, 206, 0.1);
-  border-top-left-radius: 16px;
-}
-
-.drawer-x-btn {
-  width: 28px;
-  height: 28px;
-  border-radius: 8px;
-  border: 1px solid rgba(126, 34, 206, 0.18);
-  background-color: #faf7fd;
-  color: #7e22ce;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.drawer-x-btn:hover {
-  background-color: #f3e8ff;
-  border-color: #7e22ce;
-}
-
 .drawer-nav-links {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
 }
 
 .drawer-nav-links a {
@@ -329,36 +301,58 @@ html[data-theme='dark'] .landing-brand-icon {
   color: #7e22ce;
 }
 
-.drawer-list-btn {
-  width: 100%;
+/* Vertical Up-to-Down, Frameless Theme & Flag Controls */
+.drawer-icon-vertical-btn {
   display: flex;
   align-items: center;
-  gap: 8px;
+  justify-content: flex-start;
   padding: 8px 10px;
-  border-radius: 10px;
-  border: none;
   background: transparent;
-  color: #1e1b4b;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  text-align: left;
-  transition: background-color 0.15s ease, color 0.15s ease;
-}
-
-.drawer-list-btn:hover {
-  background-color: #f5f2fb;
+  border: none;
+  box-shadow: none;
   color: #7e22ce;
+  cursor: pointer;
+  border-radius: 10px;
+  transition: background-color 0.15s ease;
+  width: 100%;
 }
 
-/* Mobile Drawer Auth Section */
+.drawer-icon-vertical-btn:hover {
+  background-color: #f5f2fb;
+  border: none;
+}
+
+/* Mobile Drawer Auth Section with Purple App Button */
 .drawer-auth-section {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  padding-top: 14px;
-  margin-top: 10px;
-  border-top: 1px solid rgba(126, 34, 206, 0.12);
+  padding-top: 12px;
+  margin-top: 6px;
+  border-top: 1px solid rgba(126, 34, 206, 0.1);
+}
+
+.drawer-primary-btn {
+  width: 100%;
+  padding: 11px 16px;
+  border-radius: 12px;
+  border: none;
+  font-size: 14px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+  background: #7c3aed;
+  color: #ffffff;
+  box-shadow: 0 4px 14px rgba(124, 58, 237, 0.35);
+  transition: transform 0.15s ease, background-color 0.15s ease;
+}
+
+.drawer-primary-btn:hover {
+  background: #6d28d9;
+  transform: translateY(-1px);
 }
 
 .drawer-signin-btn {
@@ -379,20 +373,6 @@ html[data-theme='dark'] .landing-brand-icon {
   background-color: #f5f2fb;
   color: #7e22ce;
   border-color: #7e22ce;
-}
-
-.drawer-primary-btn {
-  width: 100%;
-  padding: 11px 16px;
-  border-radius: 12px;
-  border: none;
-  font-size: 14px;
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  cursor: pointer;
 }
 
 /* ==========================================================================
@@ -717,7 +697,7 @@ html[data-theme='dark'] .landing-brand-icon {
 }
 
 /* ==========================================================================
-   3-Column Immersive Feature Cards (Local Assets in /features/)
+   3-Column Immersive Feature Cards
    ========================================================================== */
 .landing-features-section {
   position: relative;
@@ -785,7 +765,6 @@ html[data-theme='dark'] .landing-brand-icon {
   box-shadow: 0 24px 44px -6px rgba(126, 34, 206, 0.28);
 }
 
-/* Background Image Layer */
 .photo-card-bg {
   position: absolute;
   inset: 0;
@@ -799,7 +778,6 @@ html[data-theme='dark'] .landing-brand-icon {
   transform: scale(1.05);
 }
 
-/* Local Image Paths inside public/features/ */
 .card-bg-1 {
   background-image: url('/features/voice-entry.jpg');
   background-position: center top;
@@ -815,7 +793,6 @@ html[data-theme='dark'] .landing-brand-icon {
   background-position: center center;
 }
 
-/* Deep Purple High-Contrast Card Gradient */
 .photo-card-gradient {
   position: absolute;
   inset: 0;
@@ -829,7 +806,6 @@ html[data-theme='dark'] .landing-brand-icon {
   z-index: 1;
 }
 
-/* Top Card Text */
 .photo-card-top {
   position: relative;
   z-index: 2;
@@ -865,7 +841,6 @@ html[data-theme='dark'] .landing-brand-icon {
   margin: 0;
 }
 
-/* Floating UI Badges at Bottom */
 .photo-card-bottom {
   position: relative;
   z-index: 2;
@@ -883,7 +858,6 @@ html[data-theme='dark'] .landing-brand-icon {
   color: #1e1b4b;
 }
 
-/* Badge 1: Voice Wave */
 .voice-ui-badge {
   display: flex;
   flex-direction: column;
@@ -956,7 +930,6 @@ html[data-theme='dark'] .landing-brand-icon {
   padding: 1px;
 }
 
-/* Badge 2: Chart */
 .chart-ui-badge {
   display: flex;
   flex-direction: column;
@@ -1039,7 +1012,6 @@ html[data-theme='dark'] .landing-brand-icon {
   margin-top: 2px;
 }
 
-/* Badge 3: Security */
 .security-ui-badge {
   display: flex;
   align-items: center;
@@ -1232,7 +1204,7 @@ html[data-theme='dark'] .landing-brand-icon {
 }
 
 /* ==========================================================================
-   FAQ Section (Rounded Rectangle Photo Card)
+   FAQ Section
    ========================================================================== */
 .landing-faq-section {
   padding: 60px 0;
@@ -1301,7 +1273,6 @@ html[data-theme='dark'] .landing-brand-icon {
   }
 }
 
-/* Full Rounded Rectangle Card */
 .faq-visual-card {
   position: relative;
   width: 100%;
@@ -1577,7 +1548,6 @@ html[data-theme='dark'] .footer-brand-icon {
   margin: 0;
 }
 
-/* Borderless, Frameless Social Icons */
 .footer-social-row {
   display: flex;
   align-items: center;
@@ -1652,7 +1622,7 @@ html[data-theme='dark'] .footer-brand-icon {
 }
 
 /* ==========================================================================
-   Dark Theme Overrides (html[data-theme='dark'])
+   Dark Theme Overrides
    ========================================================================== */
 html[data-theme='dark'] .landing-page {
   background-color: #06030e !important;
@@ -1701,7 +1671,6 @@ html[data-theme='dark'] .section-title-wrap p {
   color: #94a3b8 !important;
 }
 
-/* Dark mode photo cards & glass badges */
 html[data-theme='dark'] .photo-card {
   border-color: rgba(168, 85, 247, 0.25) !important;
   box-shadow: 0 16px 36px -8px rgba(0, 0, 0, 0.6) !important;
@@ -1789,7 +1758,6 @@ html[data-theme='dark'] .footer-links-col a {
   color: #94a3b8 !important;
 }
 
-/* Frameless social icons in dark mode */
 html[data-theme='dark'] .footer-contact-icon-btn {
   color: #94a3b8;
 }
@@ -1798,7 +1766,6 @@ html[data-theme='dark'] .footer-contact-icon-btn:hover {
   color: #c084fc;
 }
 
-/* Borderless Theme & Lang Buttons in Dark Mode */
 html[data-theme='dark'] .landing-theme-btn,
 html[data-theme='dark'] .landing-lang-btn {
   background: transparent;
@@ -1814,7 +1781,29 @@ html[data-theme='dark'] .landing-lang-btn:hover {
   border: none;
 }
 
-/* Dark mode drawer auth overrides */
+/* Dark mode drawer overrides */
+html[data-theme='dark'] .landing-drawer-panel {
+  background-color: #0f0a1f;
+  border-color: rgba(168, 85, 247, 0.2);
+}
+
+html[data-theme='dark'] .drawer-nav-links a {
+  color: #ffffff;
+}
+
+html[data-theme='dark'] .drawer-nav-links a:hover {
+  background-color: rgba(168, 85, 247, 0.14);
+  color: #c084fc;
+}
+
+html[data-theme='dark'] .drawer-icon-vertical-btn {
+  color: #c084fc;
+}
+
+html[data-theme='dark'] .drawer-icon-vertical-btn:hover {
+  background-color: rgba(168, 85, 247, 0.14);
+}
+
 html[data-theme='dark'] .drawer-auth-section {
   border-top-color: rgba(168, 85, 247, 0.18);
 }

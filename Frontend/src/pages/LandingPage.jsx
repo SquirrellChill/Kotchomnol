@@ -117,7 +117,7 @@ const content = {
     feat2Desc: 'Clear revenue summaries with automated daily reports that are effortless to track.',
     feat3Title: 'Secure Account Workspace',
     feat3Desc: 'Your shop data is securely saved with cloud infrastructure and access protection.',
-    feat1BadgeVoiceText: 'លក់ទឹកសុទ្ធបាន 5 ដប',
+    feat1BadgeVoiceText: 'លក់ទឹកសុទ្ធ 5 ដប',
     feat1BadgeResultText: 'Sold 5 bottles of water',
     feat2BadgeToday: 'Today',
     feat2BadgeRevenue: "Today's Revenue",
@@ -419,8 +419,8 @@ export default function LandingPage() {
                 aria-label="Toggle language"
               >
                 <img
-                  src={language === 'en' ? 'https://flagcdn.com/w40/gb.png' : 'https://flagcdn.com/w40/kh.png'}
-                  alt={language === 'en' ? 'Khmer' : 'English'}
+                  src={language === 'km' ? 'https://flagcdn.com/w40/kh.png' : 'https://flagcdn.com/w40/gb.png'}
+                  alt={language === 'km' ? 'Khmer' : 'English'}
                   width="22"
                   height="16"
                   style={{ borderRadius: '3px', objectFit: 'cover', display: 'block' }}
@@ -428,7 +428,7 @@ export default function LandingPage() {
               </button>
             </div>
 
-            {/* Desktop Auth Buttons (Hidden on mobile) */}
+            {/* Desktop Auth Buttons */}
             <div className="landing-auth-buttons">
               {isLoggedIn ? (
                 <button 
@@ -477,19 +477,8 @@ export default function LandingPage() {
         onClick={closeMenu}
       />
 
-      {/* Mobile Drawer Menu */}
+      {/* Mobile Drawer Menu (No cross button, vertical frameless items) */}
       <aside className={`landing-drawer-panel ${mobileMenuOpen ? 'open' : ''}`}>
-        <div className="drawer-header-row">
-          <button 
-            type="button" 
-            className="drawer-x-btn" 
-            onClick={closeMenu}
-            aria-label="Close menu"
-          >
-            <X size={18} />
-          </button>
-        </div>
-
         <nav className="drawer-nav-links">
           <a href="#top" onClick={() => { closeMenu(); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>
             {txt.navHome}
@@ -498,24 +487,33 @@ export default function LandingPage() {
           <a href="#pricing" onClick={(e) => handleNavClick(e, 'pricing')}>{txt.navPricing}</a>
           <a href="#faq" onClick={(e) => handleNavClick(e, 'faq')}>{txt.navFaq}</a>
 
+          {/* Theme Button (Listed vertically, icon only, frameless) */}
           <button 
             type="button" 
-            className="drawer-list-btn" 
+            className="drawer-icon-vertical-btn" 
             onClick={toggleTheme}
+            aria-label="Toggle theme mode"
           >
-            {theme === 'dark' ? <Sun size={17} /> : <Moon size={17} />}
-            <span>{theme === 'dark' ? 'Light Mode' : 'Dark Mode'}</span>
+            {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
           </button>
 
+          {/* Language Flag (Listed vertically, flag only, frameless) */}
           <button 
             type="button" 
-            className="drawer-list-btn" 
+            className="drawer-icon-vertical-btn" 
             onClick={toggleLanguage}
+            aria-label="Toggle language"
           >
-            <span>{language === 'en' ? 'KH Khmer' : 'EN English'}</span>
+            <img
+              src={language === 'km' ? 'https://flagcdn.com/w40/kh.png' : 'https://flagcdn.com/w40/gb.png'}
+              alt={language === 'km' ? 'Khmer' : 'English'}
+              width="24"
+              height="17"
+              style={{ borderRadius: '3px', objectFit: 'cover', display: 'block' }}
+            />
           </button>
 
-          {/* Auth Actions Inside Mobile Drawer */}
+          {/* Auth Section with Primary Purple App Button */}
           <div className="drawer-auth-section">
             {isLoggedIn ? (
               <button 
@@ -839,7 +837,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* FAQ Section (Rounded Rectangle Photo Card) */}
+      {/* FAQ Section */}
       <section id="faq" className="landing-faq-section">
         <div className="landing-container">
           <div className="faq-layout">

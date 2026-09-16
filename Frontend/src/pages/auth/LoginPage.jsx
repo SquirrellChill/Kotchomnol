@@ -292,7 +292,7 @@ export default function LoginPage() {
                       />
                     </svg>
 
-                    {t('continueWithGoogle') ||
+                    {t('Continue With Google') ||
                       'Continue with Google'}
                   </>
                 )}

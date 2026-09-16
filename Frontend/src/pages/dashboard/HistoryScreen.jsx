@@ -181,7 +181,7 @@ export default function HistoryScreen() {
     };
   }, [sales, period, isKm]);
 
-  // Precompute pixel-accurate points for the SVG line chart.
+  // Precompute pixel-accurate points for the SVG line chart
   const chartPoints = useMemo(() => {
     const width = 700;
     const height = 260;
@@ -253,47 +253,47 @@ export default function HistoryScreen() {
           </button>
         </div>
 
-        {/* 2-Column x 2-Row Stat Cards */}
+        {/* 4-Column Stat Cards Across 1 Row */}
         <div className="analytics-four-grid">
-          {/* Row 1, Col 1: Total in KHR */}
+          {/* Card 1: Total in KHR */}
           <div className="stat-tile-card">
             <div className="stat-icon-wrap amber">
               <Coins size={22} />
             </div>
-            <div>
+            <div className="stat-tile-content">
               <span className="stat-tile-label">{isKm ? 'សរុបជារៀល (KHR)' : 'Total in KHR'}</span>
               <h3 className="stat-tile-val text-amber">{Math.round(totalKHR).toLocaleString()} ៛</h3>
             </div>
           </div>
 
-          {/* Row 1, Col 2: Total in USD */}
+          {/* Card 2: Total in USD */}
           <div className="stat-tile-card">
             <div className="stat-icon-wrap emerald">
               <DollarSign size={22} />
             </div>
-            <div>
+            <div className="stat-tile-content">
               <span className="stat-tile-label">{isKm ? 'សរុបជាដុល្លារ (USD)' : 'Total in USD'}</span>
               <h3 className="stat-tile-val text-emerald">${totalUSD.toFixed(2)}</h3>
             </div>
           </div>
 
-          {/* Row 2, Col 1: Products Sold (Taller Column Style) */}
-          <div className="stat-tile-card column-tile">
+          {/* Card 3: Products Sold */}
+          <div className="stat-tile-card">
             <div className="stat-icon-wrap violet">
-              <Package size={26} />
+              <Package size={22} />
             </div>
-            <div>
+            <div className="stat-tile-content">
               <span className="stat-tile-label">{isKm ? 'មុខទំនិញលក់បាន' : 'Products Sold'}</span>
               <h3 className="stat-tile-val">{totalProductsSold} {isKm ? 'ឯកតា' : 'items'}</h3>
             </div>
           </div>
 
-          {/* Row 2, Col 2: Transactions (Taller Column Style) */}
-          <div className="stat-tile-card column-tile">
+          {/* Card 4: Transactions */}
+          <div className="stat-tile-card">
             <div className="stat-icon-wrap indigo">
-              <ShoppingCart size={26} />
+              <ShoppingCart size={22} />
             </div>
-            <div>
+            <div className="stat-tile-content">
               <span className="stat-tile-label">{isKm ? 'ចំនួនប្រតិបត្តិការ' : 'Transactions'}</span>
               <h3 className="stat-tile-val">{salesCount} {isKm ? 'លើក' : 'records'}</h3>
             </div>
