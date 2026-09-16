@@ -7,9 +7,19 @@ one sessionmaker, and a declarative Base that all models inherit from.
 """
 
 from sqlalchemy import create_engine
+from sqlalchemy.engine import make_url
 from sqlalchemy.orm import sessionmaker, declarative_base
 
 from app.core.config import settings
+
+db_url = make_url(settings.DATABASE_URL)
+
+print("=== DATABASE DEBUG ===")
+print("DB USER:", db_url.username)
+print("DB HOST:", db_url.host)
+print("DB PORT:", db_url.port)
+print("DB NAME:", db_url.database)
+print("======================")
 
 # pool_pre_ping=True avoids "MySQL server has gone away" errors on
 # long-lived connections (same idea as Sequelize's `pool` options).
