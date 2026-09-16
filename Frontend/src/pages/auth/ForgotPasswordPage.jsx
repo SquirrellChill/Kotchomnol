@@ -61,7 +61,7 @@ export default function ForgotPasswordPage() {
 
             <div className="pwd-banner-footer">
               <ShieldCheck size={16} />
-              <span>Encrypted & Secure authentication</span>
+              <span>{t('encryptedSecureAuth')}</span>
             </div>
           </div>
 

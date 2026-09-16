@@ -31,22 +31,22 @@ const CARTOON_AVATARS = [
   {
     id: 'girl-short',
     url: '/avatars/avatar-1.png',
-    label: 'Girl Short Hair'
+    labelKey: 'avatarGirlShortHair'
   },
   {
     id: 'boy-clean',
     url: '/avatars/avatar-2.png',
-    label: 'Boy Clean'
+    labelKey: 'avatarBoyClean'
   },
   {
     id: 'girl-long',
     url: '/avatars/avatar-3.jpg',
-    label: 'Girl Long Hair'
+    labelKey: 'avatarGirlLongHair'
   },
   {
     id: 'boy-beard',
     url: '/avatars/avatar-4.jpg',
-    label: 'Boy Beard'
+    labelKey: 'avatarBoyBeard'
   },
 ];
 
@@ -313,7 +313,7 @@ export default function ProfileScreen() {
                 <div className="avatar-img-container">
                   <img
                     src={activeAvatar}
-                    alt="Profile Avatar"
+                    alt={t('profileAvatarAlt')}
                     className="cartoon-avatar-main"
                   />
                 </div>
@@ -343,7 +343,7 @@ export default function ProfileScreen() {
 
             <nav
               className="settings-nav-menu"
-              aria-label="Settings navigation"
+              aria-label={t('settingsNavigation')}
             >
 
               <button
@@ -859,13 +859,13 @@ export default function ProfileScreen() {
                       )
                     }
                     disabled={savingAvatar}
-                    title={avatar.label}
+                    title={t(avatar.labelKey)}
                   >
 
                     <div className="modal-avatar-img-wrap">
                       <img
                         src={avatar.url}
-                        alt={avatar.label}
+                        alt={t(avatar.labelKey)}
                       />
                     </div>
 

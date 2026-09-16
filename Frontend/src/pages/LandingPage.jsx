@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { 
-  Sun, Moon, Mic, BarChart3, ShieldCheck, Menu, X, 
-  Check, Mail, ChevronDown, ArrowRight, ShoppingCart, 
-  FileText 
+import {
+  Sun, Moon, Mic, BarChart3, ShieldCheck, Menu, X,
+  Check, Mail, ChevronDown, ArrowRight, ShoppingCart,
+  FileText
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
@@ -99,6 +99,9 @@ const content = {
     heroBtnSecondaryAuth: 'ទំព័រដើម',
     heroBtnSecondaryGuest: 'ចូលគណនី',
     heroDisclaimer: 'គ្មានទិន្នន័យក្លែងក្លាយ​ ការលក់ដែលបានបញ្ជាក់ត្រូវបានរក្សាទុកតាមគណនីរបស់អ្នក។',
+    heroTag1: 'AI សំឡេង',
+    heroTag2: 'KHR ⇄ USD',
+    heroTag3: 'ធ្វើសមកាលកម្មលើ Cloud',
     revLabel: 'ចំណូលថ្ងៃនេះ',
     revBadge: 'ផ្សាយផ្ទាល់',
     revUsd: 'សមមូល: $10.25',
@@ -109,22 +112,22 @@ const content = {
     statTime: 'ពេលកត់ត្រាជាមធ្យម',
     statCurrency: 'គាំទ្រទ្វេដង',
     statCloud: 'Cloud Safe',
-    featuresTitle: 'Key Capabilities',
-    featuresSub: 'Built for the daily speed of local businesses',
-    feat1Title: 'Khmer & English Voice Entry',
-    feat1Desc: 'Record spoken sales, answer follow-ups if needed, and review extracted items before saving.',
-    feat2Title: 'Saved Sales Revenue Tracking',
-    feat2Desc: 'Clear revenue summaries with automated daily reports that are effortless to track.',
-    feat3Title: 'Secure Account Workspace',
-    feat3Desc: 'Your shop data is securely saved with cloud infrastructure and access protection.',
+    featuresTitle: 'សមត្ថភាពសំខាន់ៗ',
+    featuresSub: 'រចនាឡើងសម្រាប់ល្បឿនប្រតិបត្តិការប្រចាំថ្ងៃរបស់អាជីវកម្មក្នុងស្រុក',
+    feat1Title: 'កត់ត្រាដោយសំឡេងខ្មែរ និងអង់គ្លេស',
+    feat1Desc: 'ថតការលក់ដោយសំឡេង ឆ្លើយសំណួរបន្ថែមបើចាំបាច់ ហើយពិនិត្យទំនិញដែលបានដកស្រង់មុនរក្សាទុក។',
+    feat2Title: 'តាមដានចំណូលពីការលក់ដែលបានរក្សាទុក',
+    feat2Desc: 'សង្ខេបចំណូលច្បាស់លាស់ ជាមួយរបាយការណ៍ប្រចាំថ្ងៃស្វ័យប្រវត្តិ ងាយស្រួលតាមដាន។',
+    feat3Title: 'កន្លែងការងារគណនីមានសុវត្ថិភាព',
+    feat3Desc: 'ទិន្នន័យហាងរបស់អ្នកត្រូវបានរក្សាទុកដោយសុវត្ថិភាព ជាមួយហេដ្ឋារចនាសម្ព័ន្ធ Cloud និងការការពារការចូលប្រើ។',
     feat1BadgeVoiceText: 'លក់ទឹកសុទ្ធ 5 ដប',
     feat1BadgeResultText: 'Sold 5 bottles of water',
-    feat2BadgeToday: 'Today',
-    feat2BadgeRevenue: "Today's Revenue",
-    feat2BadgeSales: 'Sales',
-    feat2BadgeOrders: 'Orders',
-    feat3BadgeTitle: 'Your data is safe',
-    feat3BadgeSub: 'Powered by secure cloud',
+    feat2BadgeToday: 'ថ្ងៃនេះ',
+    feat2BadgeRevenue: 'ចំណូលថ្ងៃនេះ',
+    feat2BadgeSales: 'ការលក់',
+    feat2BadgeOrders: 'ការបញ្ជាទិញ',
+    feat3BadgeTitle: 'ទិន្នន័យរបស់អ្នកមានសុវត្ថិភាព',
+    feat3BadgeSub: 'ដំណើរការដោយ Cloud មានសុវត្ថិភាព',
     pricingTitle: 'គម្រោង និងតម្លៃ',
     pricingSub: 'ចាប់ផ្តើមឥតគិតថ្លៃ ហើយដំឡើងកម្រិតនៅពេលអាជីវកម្មរបស់អ្នករីកចម្រើន',
     pricingPopular: 'ពេញនិយមបំផុត',
@@ -153,6 +156,8 @@ const content = {
     footerTerms: 'លក្ខខណ្ឌ',
     footerPrivacy: 'ឯកជនភាព',
     footerContact: 'ទំនាក់ទំនង',
+    footerColProduct: 'ផលិតផល',
+    footerColCompany: 'ក្រុមហ៊ុន',
     footerCopyright: 'រក្សាសិទ្ធិ 2026 KOTCHOMNOL​ រក្សាសិទ្ធិគ្រប់យ៉ាង',
     footerDesc: 'KOTCHOMNOL ជួយម្ចាស់ហាងកត់ត្រាការលក់ដោយសំឡេង ឬបញ្ចូលដោយដៃ ពិនិត្យទំនិញនីមួយៗ ហើយរក្សាទុកប្រតិបត្តិការដែលបានបញ្ជាក់ទៅក្នុងកំណត់ត្រាចំណូលដែលបានផ្ទៀងផ្ទាត់។',
   },
@@ -178,6 +183,9 @@ const content = {
     heroBtnSecondaryAuth: 'Home',
     heroBtnSecondaryGuest: 'Sign In',
     heroDisclaimer: 'No fake data. Verified sales are saved directly to your account.',
+    heroTag1: 'Voice AI',
+    heroTag2: 'KHR ⇄ USD',
+    heroTag3: 'Cloud Synced',
     revLabel: "Today's Revenue",
     revBadge: 'Live Sync',
     revUsd: 'Equivalent: $10.25',
@@ -232,6 +240,8 @@ const content = {
     footerTerms: 'Terms',
     footerPrivacy: 'Privacy',
     footerContact: 'Contact',
+    footerColProduct: 'Product',
+    footerColCompany: 'Company',
     footerCopyright: '© 2026 KOTCHOMNOL. All rights reserved.',
     footerDesc: 'KOTCHOMNOL helps shop owners log sales via voice or manual entry, review each line item, and store confirmed transactions in a verified ledger.',
   }
@@ -392,7 +402,7 @@ export default function LandingPage() {
           </button>
 
           {/* Desktop Nav Links */}
-          <nav className="landing-nav-links" aria-label="Primary Navigation">
+          <nav className="landing-nav-links" aria-label={activeLang === 'km' ? 'ការរុករកចម្បង' : 'Primary Navigation'}>
             <a href="#top" onClick={() => { closeMenu(); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>
               {txt.navHome}
             </a>
@@ -408,15 +418,15 @@ export default function LandingPage() {
                 type="button" 
                 className="landing-theme-btn" 
                 onClick={toggleTheme}
-                aria-label="Toggle theme mode"
+                aria-label={activeLang === 'km' ? 'ប្តូររបៀបរូបរាង' : 'Toggle theme mode'}
               >
                 {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
               </button>
               <button 
                 type="button" 
-                className="landing-lang-btn" 
+                className="landing-lang-btn"
                 onClick={toggleLanguage}
-                aria-label="Toggle language"
+                aria-label={activeLang === 'km' ? 'ប្តូរភាសា' : 'Toggle language'}
               >
                 <img
                   src={language === 'km' ? 'https://flagcdn.com/w40/kh.png' : 'https://flagcdn.com/w40/gb.png'}
@@ -463,7 +473,7 @@ export default function LandingPage() {
               type="button"
               className="landing-hamburger-btn"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              aria-label="Toggle menu"
+              aria-label={activeLang === 'km' ? 'បើក/បិទម៉ឺនុយ' : 'Toggle menu'}
             >
               {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
             </button>
@@ -490,9 +500,9 @@ export default function LandingPage() {
           {/* Theme Button (Listed vertically, icon only, frameless) */}
           <button 
             type="button" 
-            className="drawer-icon-vertical-btn" 
+            className="drawer-icon-vertical-btn"
             onClick={toggleTheme}
-            aria-label="Toggle theme mode"
+            aria-label={activeLang === 'km' ? 'ប្តូររបៀបរូបរាង' : 'Toggle theme mode'}
           >
             {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
           </button>
@@ -500,9 +510,9 @@ export default function LandingPage() {
           {/* Language Flag (Listed vertically, flag only, frameless) */}
           <button 
             type="button" 
-            className="drawer-icon-vertical-btn" 
+            className="drawer-icon-vertical-btn"
             onClick={toggleLanguage}
-            aria-label="Toggle language"
+            aria-label={activeLang === 'km' ? 'ប្តូរភាសា' : 'Toggle language'}
           >
             <img
               src={language === 'km' ? 'https://flagcdn.com/w40/kh.png' : 'https://flagcdn.com/w40/gb.png'}
@@ -548,16 +558,27 @@ export default function LandingPage() {
 
       {/* Hero Section */}
       <section className="landing-hero-section">
+        <div className="hero-blob hero-blob-violet" aria-hidden="true" />
+        <div className="hero-blob hero-blob-gold" aria-hidden="true" />
+        <div className="hero-blob hero-blob-magenta" aria-hidden="true" />
+        <div className="hero-grain" aria-hidden="true" />
         <div className="landing-container">
           <div className="landing-hero-grid">
             <div className="landing-hero-copy">
               <span className="landing-hero-badge">
+                <Mic size={13} strokeWidth={2.6} />
                 {txt.heroBadge}
               </span>
 
               <h1 className="landing-hero-h1">
                 {txt.heroTitle1}<span className="highlight">{txt.heroTitle2}</span>
               </h1>
+
+              <div className="landing-hero-tags">
+                <span className="hero-tag hero-tag-violet">{txt.heroTag1}</span>
+                <span className="hero-tag hero-tag-gold">{txt.heroTag2}</span>
+                <span className="hero-tag hero-tag-magenta">{txt.heroTag3}</span>
+              </div>
 
               <p className="landing-hero-sub">
                 {txt.heroSub}
@@ -599,8 +620,14 @@ export default function LandingPage() {
 
                 <div className="rev-voice-box">
                   <div className="voice-box-header">
-                    <span>{txt.revVoiceTitle}</span>
-                    <span>{txt.revVoiceStatus}</span>
+                    <span className="voice-box-header-label">
+                      <span className="voice-box-mic-dot"><Mic size={11} strokeWidth={2.6} /></span>
+                      {txt.revVoiceTitle}
+                    </span>
+                    <span className="voice-box-status">
+                      <Check size={11} strokeWidth={3} />
+                      {txt.revVoiceStatus}
+                    </span>
                   </div>
                   <div className="voice-item-row">
                     <span>{txt.revItem1}</span>
@@ -770,6 +797,7 @@ export default function LandingPage() {
       <section id="pricing" className="landing-pricing-section">
         <div className="landing-container">
           <div className="section-title-wrap">
+            <span className="section-eyebrow">{txt.navPricing}</span>
             <h2>{txt.pricingTitle}</h2>
             <p>{txt.pricingSub}</p>
           </div>
@@ -786,12 +814,12 @@ export default function LandingPage() {
                 <span className="pricing-period">{txt.pricingFreePeriod}</span>
               </div>
               <ul className="pricing-features">
-                <li>{activeLang === 'en' ? 'Basic sales recording' : 'ការកត់ត្រាការលក់មូលដ្ឋាន'}</li>
-                <li>{activeLang === 'en' ? 'Manual entry' : 'ការបញ្ចូលដោយដៃ'}</li>
-                <li>{activeLang === 'en' ? 'Limited voice transactions' : 'ប្រតិបត្តិការសំឡេងមានកំណត់'}</li>
-                <li>{activeLang === 'en' ? 'Daily transaction history' : 'ប្រវត្តិប្រតិបត្តិការប្រចាំថ្ងៃ'}</li>
-                <li>{activeLang === 'en' ? 'Basic revenue overview' : 'ទិដ្ឋភាពទូទៅនៃចំណូលមូលដ្ឋាន'}</li>
-                <li>{activeLang === 'en' ? 'Daily report exports (PNG/PDF)' : 'ការនាំចេញរបាយការណ៍ប្រចាំថ្ងៃ (PNG/PDF)'}</li>
+                <li><Check size={15} className="pricing-check" /><span>{activeLang === 'en' ? 'Basic sales recording' : 'ការកត់ត្រាការលក់មូលដ្ឋាន'}</span></li>
+                <li><Check size={15} className="pricing-check" /><span>{activeLang === 'en' ? 'Manual entry' : 'ការបញ្ចូលដោយដៃ'}</span></li>
+                <li><Check size={15} className="pricing-check" /><span>{activeLang === 'en' ? 'Limited voice transactions' : 'ប្រតិបត្តិការសំឡេងមានកំណត់'}</span></li>
+                <li><Check size={15} className="pricing-check" /><span>{activeLang === 'en' ? 'Daily transaction history' : 'ប្រវត្តិប្រតិបត្តិការប្រចាំថ្ងៃ'}</span></li>
+                <li><Check size={15} className="pricing-check" /><span>{activeLang === 'en' ? 'Basic revenue overview' : 'ទិដ្ឋភាពទូទៅនៃចំណូលមូលដ្ឋាន'}</span></li>
+                <li><Check size={15} className="pricing-check" /><span>{activeLang === 'en' ? 'Daily report exports (PNG/PDF)' : 'ការនាំចេញរបាយការណ៍ប្រចាំថ្ងៃ (PNG/PDF)'}</span></li>
               </ul>
               <button
                 type="button"
@@ -814,13 +842,13 @@ export default function LandingPage() {
                 <span className="pricing-period">{txt.pricingStarterPeriod}</span>
               </div>
               <ul className="pricing-features">
-                <li>{activeLang === 'en' ? 'Everything in Free' : 'អ្វីៗគ្រប់យ៉ាងនៅក្នុងគម្រោងឥតគិតថ្លៃ'}</li>
-                <li>{activeLang === 'en' ? 'Unlimited transactions & history (weekly, monthly)' : 'ប្រតិបត្តិការ និងប្រវត្តិគ្មានដែនកំណត់ (ប្រចាំសប្តាហ៍, ប្រចាំខែ)'}</li>
-                <li>{activeLang === 'en' ? 'Voice-to-transaction' : 'ការបញ្ចូលដោយសំឡេង'}</li>
-                <li>{activeLang === 'en' ? 'Revenue tracking' : 'ការតាមដានចំណូល'}</li>
-                <li>{activeLang === 'en' ? 'Best-selling products' : 'ផលិតផលលក់ដាច់បំផុត'}</li>
-                <li>{activeLang === 'en' ? 'Product management' : 'ការគ្រប់គ្រងផលិតផល'}</li>
-                <li>{activeLang === 'en' ? 'Full report exports (PNG/PDF)' : 'ការនាំចេញរបាយការណ៍ពេញលេញ (PNG/PDF)'}</li>
+                <li><Check size={15} className="pricing-check pricing-check-gold" /><span>{activeLang === 'en' ? 'Everything in Free' : 'អ្វីៗគ្រប់យ៉ាងនៅក្នុងគម្រោងឥតគិតថ្លៃ'}</span></li>
+                <li><Check size={15} className="pricing-check pricing-check-gold" /><span>{activeLang === 'en' ? 'Unlimited transactions & history (weekly, monthly)' : 'ប្រតិបត្តិការ និងប្រវត្តិគ្មានដែនកំណត់ (ប្រចាំសប្តាហ៍, ប្រចាំខែ)'}</span></li>
+                <li><Check size={15} className="pricing-check pricing-check-gold" /><span>{activeLang === 'en' ? 'Voice-to-transaction' : 'ការបញ្ចូលដោយសំឡេង'}</span></li>
+                <li><Check size={15} className="pricing-check pricing-check-gold" /><span>{activeLang === 'en' ? 'Revenue tracking' : 'ការតាមដានចំណូល'}</span></li>
+                <li><Check size={15} className="pricing-check pricing-check-gold" /><span>{activeLang === 'en' ? 'Best-selling products' : 'ផលិតផលលក់ដាច់បំផុត'}</span></li>
+                <li><Check size={15} className="pricing-check pricing-check-gold" /><span>{activeLang === 'en' ? 'Product management' : 'ការគ្រប់គ្រងផលិតផល'}</span></li>
+                <li><Check size={15} className="pricing-check pricing-check-gold" /><span>{activeLang === 'en' ? 'Full report exports (PNG/PDF)' : 'ការនាំចេញរបាយការណ៍ពេញលេញ (PNG/PDF)'}</span></li>
               </ul>
               <button
                 type="button"
@@ -869,13 +897,16 @@ export default function LandingPage() {
             </div>
 
             <div className="faq-visual" aria-hidden="true">
+              <div className="faq-visual-glow" />
               <div className="faq-visual-card">
-                <img
-                  src={faqPhoto}
-                  alt="Customer support assistant"
-                  className="faq-photo-img"
-                  loading="lazy"
-                />
+                <div className="faq-photo-frame">
+                  <img
+                    src={faqPhoto}
+                    alt={activeLang === 'km' ? 'ជំនួយការសេវាកម្មអតិថិជន' : 'Customer support assistant'}
+                    className="faq-photo-img"
+                    loading="lazy"
+                  />
+                </div>
               </div>
             </div>
           </div>
@@ -884,24 +915,28 @@ export default function LandingPage() {
 
       {/* Bottom CTA Banner */}
       <section className="landing-cta-banner">
-        <div className="faq-container">
-          <h2>KOTCHOMNOL</h2>
-          <p>{txt.ctaDesc}</p>
-          <button 
-            type="button" 
-            className="cta-white-btn btn-start-free btn-start-free--gold" 
-            onClick={() => navigate(isLoggedIn ? '/dashboard/voice' : '/register')}
-          >
-            <span>{txt.ctaBtn}</span>
-            <ArrowRight size={18} className="btn-start-free-arrow" />
-          </button>
+        <div className="landing-container">
+          <div className="cta-banner-card">
+            <div className="cta-banner-glow cta-banner-glow-a" aria-hidden="true" />
+            <div className="cta-banner-glow cta-banner-glow-b" aria-hidden="true" />
+            <h2>KOTCHOMNOL</h2>
+            <p>{txt.ctaDesc}</p>
+            <button
+              type="button"
+              className="cta-primary-btn"
+              onClick={() => navigate(isLoggedIn ? '/dashboard/voice' : '/register')}
+            >
+              <span>{txt.ctaBtn}</span>
+              <ArrowRight size={18} className="btn-start-free-arrow" />
+            </button>
+          </div>
         </div>
       </section>
 
       {/* Footer */}
       <footer className="landing-footer">
         <div className="landing-container">
-          <div className="footer-top-row">
+          <div className="footer-grid">
             <div className="footer-brand-col">
               <div className="footer-brand-logo">
                 <img src="/logo-mascot.png" alt="KOTCHOMNOL" className="footer-brand-icon" />
@@ -910,56 +945,74 @@ export default function LandingPage() {
               <p className="footer-brand-desc">
                 {txt.footerDesc}
               </p>
-              <div className="footer-social-row">
-                <Link to="/contact" className="footer-contact-icon-btn" aria-label={txt.navContact}>
-                  <Mail size={18} />
-                </Link>
-                <a
-                  href="https://facebook.com/kotchomnol"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="footer-contact-icon-btn"
-                  aria-label="Facebook"
-                >
-                  <FacebookIcon size={18} />
-                </a>
-                <a
-                  href="https://instagram.com/kotchomnol"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="footer-contact-icon-btn"
-                  aria-label="Instagram"
-                >
-                  <InstagramIcon size={18} />
-                </a>
-                <a
-                  href="https://t.me/kotchomnol"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="footer-contact-icon-btn"
-                  aria-label="Telegram"
-                >
-                  <TelegramIcon size={18} />
-                </a>
-                <a
-                  href="https://tiktok.com/@kotchomnol"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="footer-contact-icon-btn"
-                  aria-label="TikTok"
-                >
-                  <TikTokIcon size={18} />
-                </a>
-              </div>
+              <ul className="footer-social-row" aria-label={activeLang === 'km' ? 'បណ្តាញសង្គម' : 'Social media links'}>
+                <li>
+                  <Link to="/contact" className="footer-contact-icon-btn" aria-label={txt.navContact}>
+                    <Mail size={18} />
+                  </Link>
+                </li>
+                <li>
+                  <a
+                    href="https://facebook.com/kotchomnol"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="footer-contact-icon-btn"
+                    aria-label="Facebook"
+                  >
+                    <FacebookIcon size={18} />
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="https://instagram.com/kotchomnol"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="footer-contact-icon-btn"
+                    aria-label="Instagram"
+                  >
+                    <InstagramIcon size={18} />
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="https://t.me/kotchomnol"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="footer-contact-icon-btn"
+                    aria-label="Telegram"
+                  >
+                    <TelegramIcon size={18} />
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="https://tiktok.com/@kotchomnol"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="footer-contact-icon-btn"
+                    aria-label="TikTok"
+                  >
+                    <TikTokIcon size={18} />
+                  </a>
+                </li>
+              </ul>
             </div>
 
-            <div className="footer-links-col">
+            <nav className="footer-link-col" aria-label={txt.footerColProduct}>
+              <span className="footer-col-heading">{txt.footerColProduct}</span>
               <a href="#top" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>{txt.footerHome}</a>
               <a href="#features" onClick={(e) => handleNavClick(e, 'features')}>{txt.footerFeatures}</a>
+              <a href="#pricing" onClick={(e) => handleNavClick(e, 'pricing')}>{txt.navPricing}</a>
+              <a href="#faq" onClick={(e) => handleNavClick(e, 'faq')}>{txt.navFaq}</a>
+            </nav>
+
+            <nav className="footer-link-col" aria-label={txt.footerColCompany}>
+              <span className="footer-col-heading">{txt.footerColCompany}</span>
               <Link to="/about">{txt.footerAbout}</Link>
               <Link to="/terms">{txt.footerTerms}</Link>
               <Link to="/privacy">{txt.footerPrivacy}</Link>
-            </div>
+              <Link to="/contact">{txt.footerContact}</Link>
+            </nav>
           </div>
 
           <div className="footer-bottom-row">
@@ -977,7 +1030,7 @@ export default function LandingPage() {
               type="button"
               className="gopro-modal-close"
               onClick={closeCheckoutModal}
-              aria-label="Close"
+              aria-label={activeLang === 'km' ? 'បិទ' : 'Close'}
             >
               <X size={18} />
             </button>
@@ -1065,7 +1118,7 @@ export default function LandingPage() {
               type="button"
               className="gopro-modal-close"
               onClick={() => setCheckoutError(null)}
-              aria-label="Close"
+              aria-label={activeLang === 'km' ? 'បិទ' : 'Close'}
             >
               <X size={18} />
             </button>

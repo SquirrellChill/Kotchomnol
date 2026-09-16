@@ -20,7 +20,7 @@ const profileFallback = {
   address: '',
 };
 
-const getErrorMessage = (error) => error?.response?.data?.detail || 'Unable to update profile.';
+const getErrorMessage = (error, fallback) => error?.response?.data?.detail || fallback;
 
 export default function EditProfileScreen() {
   const navigate = useNavigate();
@@ -38,7 +38,7 @@ export default function EditProfileScreen() {
       updateUser(response.data.data.user);
       setStatus(t('profileUpdated'));
     } catch (err) {
-      setStatus(getErrorMessage(err) || t('unableProfile'));
+      setStatus(getErrorMessage(err, t('unableProfile')));
     } finally {
       setSaving(false);
     }

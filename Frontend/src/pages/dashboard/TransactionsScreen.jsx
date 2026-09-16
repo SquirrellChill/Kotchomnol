@@ -468,7 +468,7 @@ function TransactionDetail({ sale, exchangeRate, isBusy, isKm, onEdit, onDelete 
   });
 
   const totalQty = (sale.items || []).reduce((sum, item) => sum + Number(item.quantity || 0), 0);
-  const formattedDate = sale.date ? new Date(sale.date).toLocaleDateString() : 'Today';
+  const formattedDate = sale.date ? formatDisplayDate(sale.date, isKm ? 'km' : 'en') : (isKm ? 'ថ្ងៃនេះ' : 'Today');
 
   const handleDownloadImage = async () => {
     if (!receiptRef.current || exporting) return;

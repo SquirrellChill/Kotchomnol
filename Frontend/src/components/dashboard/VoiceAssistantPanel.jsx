@@ -72,7 +72,7 @@ export default function VoiceAssistantPanel({
         <section className="live-transcription-card">
           <div>
             <h3>{t('liveTranscription')}</h3>
-            <button type="button" aria-label="Collapse transcription"><ChevronUp size={18} /></button>
+            <button type="button" aria-label={t('collapseTranscription')}><ChevronUp size={18} /></button>
           </div>
           <p>{transcript || (mode === 'captured' ? t('readyToSend') : t('recordingAudio'))}</p>
           {error && <p className="review-error-message">{error}</p>}
@@ -171,18 +171,18 @@ export default function VoiceAssistantPanel({
         <div className="voice-timer">{elapsed}</div>
         <Waveform active={isRecording} />
         <div className="voice-primary-actions">
-          <button type="button" aria-label={mode === 'paused' ? 'Play recording' : 'Pause recording'} onClick={onPause} disabled={mode === 'captured' || mode === 'transcribing'}>
+          <button type="button" aria-label={mode === 'paused' ? t('resumeRecording') : t('pauseRecording')} onClick={onPause} disabled={mode === 'captured' || mode === 'transcribing'}>
             {mode === 'paused' ? <Play size={22} fill="currentColor" /> : <Pause size={22} fill="currentColor" />}
           </button>
-          <button className="stop" type="button" aria-label="Stop recording" onClick={onStop} disabled={mode === 'captured' || mode === 'transcribing'}>
+          <button className="stop" type="button" aria-label={t('stopRecording')} onClick={onStop} disabled={mode === 'captured' || mode === 'transcribing'}>
             <Square size={20} fill="currentColor" />
           </button>
         </div>
         <div className="voice-secondary-actions">
-          <button type="button" aria-label="Restart recording" onClick={onRestart} disabled={mode === 'transcribing' || isAnswering}>
+          <button type="button" aria-label={t('rerecord')} onClick={onRestart} disabled={mode === 'transcribing' || isAnswering}>
             <RotateCcw size={24} />
           </button>
-          <button className="send" type="button" aria-label="Send recording" onClick={onSend} disabled={mode !== 'captured'}>
+          <button className="send" type="button" aria-label={t('sendRecording')} onClick={onSend} disabled={mode !== 'captured'}>
             <Send size={20} fill="currentColor" />
           </button>
         </div>
@@ -210,7 +210,7 @@ function QuickEditForm({ item, onCancel, onApply, disabled }) {
     <form className="quick-edit-form" onSubmit={handleSubmit}>
       <div className="quick-edit-header">
         <span>{t('correctThisItem')}</span>
-        <button type="button" className="plain-icon-button" onClick={onCancel} aria-label="Close">
+        <button type="button" className="plain-icon-button" onClick={onCancel} aria-label={t('close')}>
           <X size={16} />
         </button>
       </div>

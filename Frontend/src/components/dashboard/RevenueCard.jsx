@@ -40,7 +40,7 @@ export default function RevenueCard({ summary, variant = 'home' }) {
         </div>
       </div>
 
-      <p className="exchange-rate-note">{t('exchangeRate', { rate: totals.rate.toLocaleString('en-US') })}</p>
+      <p className="exchange-rate-note">{t('exchangeRate', { rate: totals.rate.toLocaleString(language === 'km' ? 'km-KH' : 'en-US') })}</p>
 
       <div className="revenue-divider" />
       <div className="revenue-orders">

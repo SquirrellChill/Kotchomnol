@@ -2,10 +2,12 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../context/AuthContext';
+import { useLanguage } from '../../context/LanguageContext';
 
 export default function AuthCallback() {
   const navigate = useNavigate();
   const { updateUser } = useAuth();
+  const { t } = useLanguage();
 
   const [error, setError] = useState('');
 
@@ -23,7 +25,7 @@ export default function AuthCallback() {
         }
 
         if (!session) {
-          throw new Error('Google sign-in session was not found.');
+          throw new Error(t('googleSessionNotFound'));
         }
 
         // Get Google/Supabase user
@@ -73,7 +75,7 @@ export default function AuthCallback() {
 
         setError(
           err?.message ||
-            'Google sign-in failed. Please try again.'
+            t('googleSignInFailedMessage')
         );
       }
     };
@@ -104,7 +106,7 @@ export default function AuthCallback() {
             textAlign: 'center',
           }}
         >
-          <h2>Google Sign-In Failed</h2>
+          <h2>{t('googleSignInFailedTitle')}</h2>
 
           <p
             style={{
@@ -128,7 +130,7 @@ export default function AuthCallback() {
               cursor: 'pointer',
             }}
           >
-            Back to Login
+            {t('backToSignIn')}
           </button>
         </div>
       </div>
@@ -146,10 +148,10 @@ export default function AuthCallback() {
       }}
     >
       <div style={{ textAlign: 'center' }}>
-        <h2>Signing you in...</h2>
+        <h2>{t('signingYouIn')}</h2>
 
         <p>
-          Please wait while we finish signing in with Google.
+          {t('pleaseWaitGoogleSignIn')}
         </p>
       </div>
     </div>

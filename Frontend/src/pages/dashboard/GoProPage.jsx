@@ -333,7 +333,7 @@ export default function GoProPage() {
         {payment && (
           <div className="gopro-modal-overlay" onClick={closeModal}>
             <div className="gopro-modal" onClick={(e) => e.stopPropagation()}>
-              <button type="button" className="gopro-modal-close" onClick={closeModal} aria-label="Close">
+              <button type="button" className="gopro-modal-close" onClick={closeModal} aria-label={isKm ? 'បិទ' : 'Close'}>
                 <X size={18} />
               </button>
 

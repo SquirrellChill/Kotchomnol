@@ -69,7 +69,7 @@ export default function EditItemModal({ item, onClose, onDelete, onSave }) {
         {/* Modal Header */}
         <div className="modal-title-row">
           <h2>{t('editItems') || 'Edit Item'}</h2>
-          <button className="plain-icon-button" type="button" onClick={onClose} aria-label="Close">
+          <button className="plain-icon-button" type="button" onClick={onClose} aria-label={t('close')}>
             <X size={20} />
           </button>
         </div>
@@ -94,8 +94,8 @@ export default function EditItemModal({ item, onClose, onDelete, onSave }) {
             <div className="quantity-stepper">
               <button 
                 type="button" 
-                onClick={() => setQuantity(String(Math.max(1, Number(quantity || 1) - 1)))} 
-                aria-label="Decrease quantity"
+                onClick={() => setQuantity(String(Math.max(1, Number(quantity || 1) - 1)))}
+                aria-label={t('decreaseQuantity')}
               >
                 <Minus size={15} />
               </button>
@@ -107,8 +107,8 @@ export default function EditItemModal({ item, onClose, onDelete, onSave }) {
               />
               <button 
                 type="button" 
-                onClick={() => setQuantity(String(Number(quantity || 0) + 1))} 
-                aria-label="Increase quantity"
+                onClick={() => setQuantity(String(Number(quantity || 0) + 1))}
+                aria-label={t('increaseQuantity')}
               >
                 <Plus size={15} />
               </button>

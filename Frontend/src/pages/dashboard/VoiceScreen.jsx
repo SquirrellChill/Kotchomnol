@@ -1,20 +1,18 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { 
-  AudioLines, 
-  Check, 
-  Keyboard, 
-  Pause, 
-  Play, 
-  Plus, 
-  RotateCcw, 
-  Send, 
-  Square, 
-  Trash2, 
-  Mic, 
-  Calendar,
-  AlertCircle 
+import {
+  Check,
+  Keyboard,
+  Pause,
+  Play,
+  Plus,
+  RotateCcw,
+  Send,
+  Square,
+  Trash2,
+  Mic,
+  AlertCircle
 } from 'lucide-react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import MobileAppShell from '../../components/dashboard/MobileAppShell';
 import TransactionSavedView from '../../components/dashboard/TransactionSavedView';
 import Waveform from '../../components/dashboard/Waveform';
@@ -74,7 +72,6 @@ const voiceItemToDraftItem = (item, index) => normalizeReviewItem({
 }, index);
 
 export default function VoiceScreen() {
-  const navigate = useNavigate();
   const location = useLocation();
   const { language, t } = useLanguage();
   const isKm = language !== 'en';
@@ -378,6 +375,19 @@ export default function VoiceScreen() {
     return invalid ? (t('missingSaleDetails') || 'Missing item details') : '';
   };
 
+  const persistSaleLocally = (payload) => {
+    const currentStored = JSON.parse(localStorage.getItem('kotchomnol_sales') || '[]');
+    const localId = 'sale_' + Date.now();
+    currentStored.unshift({
+      ...payload,
+      saleId: localId,
+      createdAt: new Date().toISOString(),
+      pendingSync: true,
+    });
+    localStorage.setItem('kotchomnol_sales', JSON.stringify(currentStored));
+    return localId;
+  };
+
   const confirmAndSave = async () => {
     if (saving) return;
     const validationError = validateDraft();
@@ -387,34 +397,25 @@ export default function VoiceScreen() {
     }
     setSaving(true);
     setError('');
+    const payload = saleToPayload(saleDate, draftItems);
     try {
-      const payload = saleToPayload(saleDate, draftItems);
       const response = await createSale(payload);
       setSavedSaleId(response.data?.sale_id || response.data?.saleId || null);
       sessionStorage.removeItem(DRAFT_KEY);
-
-      const currentStored = JSON.parse(localStorage.getItem('kotchomnol_sales') || '[]');
-      currentStored.unshift({
-        ...payload,
-        saleId: response.data?.sale_id || 'sale_' + Date.now(),
-        createdAt: new Date().toISOString()
-      });
-      localStorage.setItem('kotchomnol_sales', JSON.stringify(currentStored));
-
       setViewMode('saved');
     } catch (err) {
-      const payload = saleToPayload(saleDate, draftItems);
-      const currentStored = JSON.parse(localStorage.getItem('kotchomnol_sales') || '[]');
-      const localId = 'sale_' + Date.now();
-      currentStored.unshift({
-        ...payload,
-        saleId: localId,
-        createdAt: new Date().toISOString()
-      });
-      localStorage.setItem('kotchomnol_sales', JSON.stringify(currentStored));
-      sessionStorage.removeItem(DRAFT_KEY);
-      setSavedSaleId(localId);
-      setViewMode('saved');
+      if (err?.response) {
+        // The server reached us and rejected the sale (validation, auth, etc.) — surface the
+        // real reason instead of silently pretending it saved, so the user can fix and retry.
+        setError(extractErrorMessage(err, t('unableSaveSale') || 'Unable to save sale. Please try again.'));
+      } else {
+        // No response reached us at all (offline/network failure) — keep the sale so it
+        // isn't lost, but mark it pending so it's clear it hasn't synced yet.
+        const localId = persistSaleLocally(payload);
+        sessionStorage.removeItem(DRAFT_KEY);
+        setSavedSaleId(localId);
+        setViewMode('saved');
+      }
     } finally {
       setSaving(false);
     }
@@ -423,8 +424,8 @@ export default function VoiceScreen() {
   if (viewMode === 'saved') {
     return (
       <MobileAppShell activeTab="add" showBottomNav={false}>
-        <TransactionSavedView 
-          savedSaleId={savedSaleId} 
+        <TransactionSavedView
+          savedSaleId={savedSaleId}
           onNewSale={() => {
             setDraftItems([]);
             setVoiceResult(null);
@@ -432,7 +433,7 @@ export default function VoiceScreen() {
             setHistory([]);
             setSavedSaleId(null);
             setViewMode('entry');
-          }} 
+          }}
         />
       </MobileAppShell>
     );
@@ -454,8 +455,8 @@ export default function VoiceScreen() {
 
         {/* Mode Selector Toggle */}
         <div className="mode-toggle-grid">
-          <button 
-            type="button" 
+          <button
+            type="button"
             className={`mode-btn ${inputMode === 'manual' ? 'active' : ''}`}
             onClick={() => { setInputMode('manual'); setError(''); }}
           >
@@ -466,8 +467,8 @@ export default function VoiceScreen() {
             </div>
           </button>
 
-          <button 
-            type="button" 
+          <button
+            type="button"
             className={`mode-btn ${inputMode === 'voice' ? 'active' : ''}`}
             onClick={() => { setInputMode('voice'); setError(''); }}
           >
@@ -492,24 +493,24 @@ export default function VoiceScreen() {
           {inputMode === 'manual' ? (
             <div className="entry-card">
               <h3 className="card-section-title">{isKm ? 'ព័ត៌មានទំនិញ' : 'Item Information'}</h3>
-              
+
               <form className="manual-form" onSubmit={addManualItem} noValidate>
                 <div className="form-group">
                   <label>{isKm ? 'កាលបរិច្ឆេទ' : 'Date'}</label>
-                  <input 
-                    type="date" 
-                    value={saleDate} 
-                    onChange={(e) => setSaleDate(e.target.value)} 
-                    required 
+                  <input
+                    type="date"
+                    value={saleDate}
+                    onChange={(e) => setSaleDate(e.target.value)}
+                    required
                   />
                 </div>
 
                 <div className="form-row-2">
                   <div className="form-group">
                     <label>{isKm ? 'ផលិតផល' : 'Product'}</label>
-                    <input 
-                      type="text" 
-                      placeholder={isKm ? 'ឈ្មោះទំនិញ (ឧ. កាហ្វេ)' : 'Product name (e.g. Coffee)'} 
+                    <input
+                      type="text"
+                      placeholder={isKm ? 'ឈ្មោះទំនិញ (ឧ. កាហ្វេ)' : 'Product name (e.g. Coffee)'}
                       value={manualItem.description}
                       onChange={(e) => updateManualField('description', e.target.value)}
                     />
@@ -518,10 +519,10 @@ export default function VoiceScreen() {
 
                   <div className="form-group">
                     <label>{isKm ? 'ចំនួន' : 'Quantity'}</label>
-                    <input 
-                      type="text" 
+                    <input
+                      type="text"
                       inputMode="decimal"
-                      placeholder="1" 
+                      placeholder="1"
                       value={manualItem.quantity}
                       onChange={(e) => updateManualField('quantity', e.target.value)}
                     />
@@ -533,15 +534,15 @@ export default function VoiceScreen() {
                   <div className="form-group">
                     <label>{isKm ? 'រូបិយប័ណ្ណ' : 'Currency'}</label>
                     <div className="currency-selector">
-                      <button 
-                        type="button" 
+                      <button
+                        type="button"
                         className={`currency-pill ${manualItem.currency === 'KHR' ? 'active' : ''}`}
                         onClick={() => updateManualField('currency', 'KHR')}
                       >
                         KHR
                       </button>
-                      <button 
-                        type="button" 
+                      <button
+                        type="button"
                         className={`currency-pill ${manualItem.currency === 'USD' ? 'active' : ''}`}
                         onClick={() => updateManualField('currency', 'USD')}
                       >
@@ -552,10 +553,10 @@ export default function VoiceScreen() {
 
                   <div className="form-group">
                     <label>{isKm ? `តម្លៃឯកតា (${manualItem.currency})` : `Unit Price (${manualItem.currency})`}</label>
-                    <input 
-                      type="text" 
+                    <input
+                      type="text"
                       inputMode="decimal"
-                      placeholder="0.00" 
+                      placeholder="0.00"
                       value={manualItem.unit_price}
                       onChange={(e) => updateManualField('unit_price', e.target.value)}
                     />
@@ -591,8 +592,8 @@ export default function VoiceScreen() {
               {/* Pulsing Mic with Waveform */}
               <div className="voice-mic-container">
                 <div className={`pulse-ring ${recordingMode === 'recording' ? 'pulsing' : ''}`} />
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   className={`voice-mic-main ${recordingMode === 'recording' ? 'recording' : ''}`}
                   onClick={() => {
                     if (recordingMode === 'recording') stopRecording();
@@ -669,10 +670,10 @@ export default function VoiceScreen() {
               {/* Clarification Follow-up Prompt Form */}
               {recordingMode === 'clarification' && (
                 <form className="voice-followup-form" onSubmit={submitFollowup}>
-                  <input 
-                    type="text" 
-                    value={answerText} 
-                    onChange={(e) => setAnswerText(e.target.value)} 
+                  <input
+                    type="text"
+                    value={answerText}
+                    onChange={(e) => setAnswerText(e.target.value)}
                     placeholder={voiceResult?.question || (isKm ? 'ឆ្លើយតបសំណួរនៅទីនេះ...' : 'Answer question here...')}
                     disabled={isAnswering}
                   />
@@ -756,8 +757,8 @@ export default function VoiceScreen() {
                         </span>
 
                         {/* 5. Delete Button */}
-                        <button 
-                          type="button" 
+                        <button
+                          type="button"
                           className="draft-delete-btn"
                           title={isKm ? 'លុប' : 'Delete item'}
                           onClick={() => deleteItem(item.id)}
@@ -784,8 +785,8 @@ export default function VoiceScreen() {
                 </div>
               </div>
 
-              <button 
-                type="button" 
+              <button
+                type="button"
                 className="confirm-sale-btn"
                 disabled={draftItems.length === 0 || saving}
                 onClick={confirmAndSave}

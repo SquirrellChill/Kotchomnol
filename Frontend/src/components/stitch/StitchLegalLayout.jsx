@@ -84,13 +84,13 @@ export default function StitchLegalLayout({ icon, title, updated, children, acti
               className="landing-brand-btn"
               type="button"
               onClick={() => { closeMenu(); navigate('/'); }}
-              aria-label="Go home"
+              aria-label={isKhmer ? 'ទៅទំព័រដើម' : 'Go home'}
             >
               <img src="/logo-mascot.png" alt="KOTCHOMNOL" className="landing-brand-icon" />
               <span className="landing-brand-title">KOTCHOMNOL</span>
             </button>
 
-            <nav className="landing-nav-links" aria-label="Primary Navigation">
+            <nav className="landing-nav-links" aria-label={isKhmer ? 'ការរុករកចម្បង' : 'Primary Navigation'}>
               <Link to="/">{isKhmer ? 'ទំព័រដើម' : 'Home'}</Link>
               <a href="/#features">{isKhmer ? 'មុខងារ' : 'Features'}</a>
               <a href="/#pricing">{isKhmer ? 'តម្លៃ' : 'Pricing'}</a>
@@ -103,7 +103,7 @@ export default function StitchLegalLayout({ icon, title, updated, children, acti
                   type="button"
                   className="landing-theme-btn"
                   onClick={toggleTheme}
-                  aria-label="Toggle theme mode"
+                  aria-label={isKhmer ? 'ប្តូររបៀបរូបរាង' : 'Toggle theme mode'}
                 >
                   {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
                 </button>
@@ -111,7 +111,7 @@ export default function StitchLegalLayout({ icon, title, updated, children, acti
                   type="button"
                   className="landing-lang-btn"
                   onClick={toggleLanguage}
-                  aria-label="Toggle language"
+                  aria-label={isKhmer ? 'ប្តូរភាសា' : 'Toggle language'}
                 >
                   <img
                     src={language === 'en' ? 'https://flagcdn.com/w40/gb.png' : 'https://flagcdn.com/w40/kh.png'}
@@ -145,7 +145,7 @@ export default function StitchLegalLayout({ icon, title, updated, children, acti
                 type="button"
                 className="landing-hamburger-btn"
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                aria-label="Toggle menu"
+                aria-label={isKhmer ? 'បើក/បិទម៉ឺនុយ' : 'Toggle menu'}
               >
                 {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
               </button>
@@ -170,7 +170,7 @@ export default function StitchLegalLayout({ icon, title, updated, children, acti
               type="button"
               className="drawer-x-btn"
               onClick={closeMenu}
-              aria-label="Close menu"
+              aria-label={isKhmer ? 'បិទម៉ឺនុយ' : 'Close menu'}
             >
               <X size={18} />
             </button>
@@ -188,7 +188,11 @@ export default function StitchLegalLayout({ icon, title, updated, children, acti
               onClick={toggleTheme}
             >
               {theme === 'dark' ? <Sun size={17} /> : <Moon size={17} />}
-              <span>{theme === 'dark' ? 'Light Mode' : 'Dark Mode'}</span>
+              <span>
+                {theme === 'dark'
+                  ? (isKhmer ? 'របៀបភ្លឺ' : 'Light Mode')
+                  : (isKhmer ? 'របៀបងងឹត' : 'Dark Mode')}
+              </span>
             </button>
 
             <button
@@ -231,7 +235,7 @@ export default function StitchLegalLayout({ icon, title, updated, children, acti
       {!isDashboardRoute && (
         <footer className="landing-footer">
           <div className="landing-container">
-            <div className="footer-top-row">
+            <div className="footer-grid">
               <div className="footer-brand-col">
                 <div className="footer-brand-logo">
                   <img src="/logo-mascot.png" alt="KOTCHOMNOL" className="footer-brand-icon" />
@@ -242,56 +246,74 @@ export default function StitchLegalLayout({ icon, title, updated, children, acti
                     ? 'KOTCHOMNOL ជួយម្ចាស់ហាងកត់ត្រាការលក់ដោយសំឡេង ឬបញ្ចូលដោយដៃ ពិនិត្យទំនិញនីមួយៗ ហើយរក្សាទុកប្រតិបត្តិការដែលបានបញ្ជាក់ទៅក្នុងកំណត់ត្រាចំណូលដែលបានផ្ទៀងផ្ទាត់។'
                     : 'KOTCHOMNOL helps shop owners log sales via voice or manual entry, review each line item, and store confirmed transactions in a verified ledger.'}
                 </p>
-                <div className="footer-social-row">
-                  <Link to="/contact" className="footer-contact-icon-btn" aria-label="Contact">
-                    <Mail size={18} />
-                  </Link>
-                  <a
-                    href="https://facebook.com/kotchomnol"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="footer-contact-icon-btn"
-                    aria-label="Facebook"
-                  >
-                    <FacebookIcon size={18} />
-                  </a>
-                  <a
-                    href="https://instagram.com/kotchomnol"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="footer-contact-icon-btn"
-                    aria-label="Instagram"
-                  >
-                    <InstagramIcon size={18} />
-                  </a>
-                  <a
-                    href="https://t.me/kotchomnol"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="footer-contact-icon-btn"
-                    aria-label="Telegram"
-                  >
-                    <TelegramIcon size={18} />
-                  </a>
-                  <a
-                    href="https://tiktok.com/@kotchomnol"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="footer-contact-icon-btn"
-                    aria-label="TikTok"
-                  >
-                    <TikTokIcon size={18} />
-                  </a>
-                </div>
+                <ul className="footer-social-row" aria-label={isKhmer ? 'បណ្តាញសង្គម' : 'Social media links'}>
+                  <li>
+                    <Link to="/contact" className="footer-contact-icon-btn" aria-label={isKhmer ? 'ទំនាក់ទំនង' : 'Contact'}>
+                      <Mail size={18} />
+                    </Link>
+                  </li>
+                  <li>
+                    <a
+                      href="https://facebook.com/kotchomnol"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="footer-contact-icon-btn"
+                      aria-label="Facebook"
+                    >
+                      <FacebookIcon size={18} />
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      href="https://instagram.com/kotchomnol"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="footer-contact-icon-btn"
+                      aria-label="Instagram"
+                    >
+                      <InstagramIcon size={18} />
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      href="https://t.me/kotchomnol"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="footer-contact-icon-btn"
+                      aria-label="Telegram"
+                    >
+                      <TelegramIcon size={18} />
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      href="https://tiktok.com/@kotchomnol"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="footer-contact-icon-btn"
+                      aria-label="TikTok"
+                    >
+                      <TikTokIcon size={18} />
+                    </a>
+                  </li>
+                </ul>
               </div>
 
-              <div className="footer-links-col">
+              <nav className="footer-link-col" aria-label={isKhmer ? 'ផលិតផល' : 'Product'}>
+                <span className="footer-col-heading">{isKhmer ? 'ផលិតផល' : 'Product'}</span>
                 <Link to="/">{isKhmer ? 'ទំព័រដើម' : 'Home'}</Link>
                 <a href="/#features">{isKhmer ? 'មុខងារ' : 'Features'}</a>
+                <a href="/#pricing">{isKhmer ? 'តម្លៃ' : 'Pricing'}</a>
+                <a href="/#faq">{isKhmer ? 'សំណួរ' : 'FAQ'}</a>
+              </nav>
+
+              <nav className="footer-link-col" aria-label={isKhmer ? 'ក្រុមហ៊ុន' : 'Company'}>
+                <span className="footer-col-heading">{isKhmer ? 'ក្រុមហ៊ុន' : 'Company'}</span>
                 <Link to="/about">{isKhmer ? 'អំពីយើង' : 'About'}</Link>
                 <Link to="/terms">{isKhmer ? 'លក្ខខណ្ឌ' : 'Terms'}</Link>
                 <Link to="/privacy">{isKhmer ? 'ឯកជនភាព' : 'Privacy'}</Link>
-              </div>
+                <Link to="/contact">{isKhmer ? 'ទំនាក់ទំនង' : 'Contact'}</Link>
+              </nav>
             </div>
 
             <div className="footer-bottom-row">

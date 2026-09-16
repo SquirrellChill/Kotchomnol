@@ -10,13 +10,13 @@ export default function HistoryFilters({ activeFilter, onChange, onPickDate }) {
   ];
 
   return (
-    <nav className="history-filter-bar" aria-label="Time period range">
+    <nav className="history-filter-bar" aria-label={t('timePeriodRange')}>
       {filters.map(([value, label]) => (
         <button key={value} className={activeFilter === value ? 'active' : ''} type="button" onClick={() => onChange(value)}>
           {label}
         </button>
       ))}
-      <button className="date-filter-button" type="button" onClick={onPickDate} aria-label="Custom date range">
+      <button className="date-filter-button" type="button" onClick={onPickDate} aria-label={t('customDateRange')}>
         <Calendar size={16} />
         <ChevronDown size={14} />
       </button>

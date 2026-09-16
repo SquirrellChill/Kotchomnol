@@ -496,6 +496,154 @@ html[data-theme='dark'] .best-seller-khr {
   color: #c084fc;
 }
 
+/* Report export panel */
+.export-panel {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 18px;
+  padding: 18px 20px;
+  box-shadow: 0 4px 16px rgba(126, 34, 206, 0.05);
+}
+
+html[data-theme='dark'] .export-panel {
+  background-color: #111827;
+  border-color: rgba(168, 85, 247, 0.2);
+}
+
+.export-panel-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+
+.export-panel-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-text-dark);
+}
+
+.export-panel-sub {
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
+.export-options-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.export-option-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 14px 8px;
+  border-radius: 14px;
+  border: 1px solid var(--color-border);
+  background-color: transparent;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.export-option-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.export-option-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+}
+
+.export-option-icon.table {
+  background-color: rgba(22, 163, 74, 0.12);
+  color: #16a34a;
+}
+
+.export-option-icon.image {
+  background-color: rgba(126, 34, 206, 0.1);
+  color: #7e22ce;
+}
+
+.export-option-icon.pdf {
+  background-color: rgba(79, 70, 229, 0.1);
+  color: #4f46e5;
+}
+
+.export-option-btn.table:hover:not(:disabled) {
+  border-color: #16a34a;
+  background-color: rgba(22, 163, 74, 0.06);
+}
+
+.export-option-btn.image:hover:not(:disabled) {
+  border-color: #7e22ce;
+  background-color: rgba(126, 34, 206, 0.06);
+}
+
+.export-option-btn.pdf:hover:not(:disabled) {
+  border-color: #4f46e5;
+  background-color: rgba(79, 70, 229, 0.06);
+}
+
+.export-option-label {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--color-text-dark);
+}
+
+.export-option-hint {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* Captured report region — the brand/date strip only needs to exist so
+   an exported PNG/PDF is self-identifying once it's off the screen. */
+.analytics-report-capture {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.report-brand-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.report-badge {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: #7e22ce;
+  background: rgba(126, 34, 206, 0.1);
+  padding: 5px 12px;
+  border-radius: 999px;
+}
+
+html[data-theme='dark'] .report-badge {
+  color: #c084fc;
+  background: rgba(168, 85, 247, 0.15);
+}
+
+.report-date {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
 .empty-chart-text {
   text-align: center;
   padding: 30px 0;

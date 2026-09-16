@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { Home, BarChart3, Mic, Receipt, User } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
 import BottomTabNav from './BottomTabNav';
+import GreetingBar from './GreetingBar';
 import './MobileAppShell.css';
 
 export default function MobileAppShell({ children, activeTab, showBottomNav = true, className = '' }) {
@@ -54,6 +55,7 @@ export default function MobileAppShell({ children, activeTab, showBottomNav = tr
       {/* Main Screen Wrapper */}
       <div className="dash-main-wrapper">
         <main className="sub-screen-content">
+          <GreetingBar />
           {children}
         </main>
       </div>

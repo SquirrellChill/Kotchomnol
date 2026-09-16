@@ -1,21 +1,26 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { 
-  BarChart3, 
-  TrendingUp, 
-  PieChart, 
-  Package, 
-  ShoppingCart, 
-  DollarSign, 
-  Coins, 
-  Award 
+import html2canvas from 'html2canvas';
+import { jsPDF } from 'jspdf';
+import {
+  BarChart3,
+  TrendingUp,
+  PieChart,
+  Package,
+  ShoppingCart,
+  DollarSign,
+  Coins,
+  Award,
+  Image as ImageIcon,
+  FileDown,
+  FileSpreadsheet
 } from 'lucide-react';
 import MobileAppShell from '../../components/dashboard/MobileAppShell';
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { getSales } from '../../services/transactionService';
 import { APPLICATION_EXCHANGE_RATE, calculateEquivalentTotals } from '../../utils/currency';
-import { normalizeSaleFromApi, resolveUnitPrice } from '../../utils/sales';
+import { normalizeSaleFromApi, resolveUnitPrice, formatDisplayDate, formatLocalDate } from '../../utils/sales';
 import './HistoryScreen.css';
 
 const EXCHANGE_RATE = APPLICATION_EXCHANGE_RATE || 4050;
@@ -29,6 +34,8 @@ export default function HistoryScreen() {
   const [period, setPeriod] = useState('today'); // 'today' | 'week' | 'month'
   const [sales, setSales] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  const reportRef = useRef(null);
 
   // Fetch real-time sales directly from backend
   useEffect(() => {
@@ -60,13 +67,14 @@ export default function HistoryScreen() {
   }, []);
 
   // Compute analytics dynamically based on active period
-  const { 
-    totalUSD, 
-    totalKHR, 
-    salesCount, 
-    totalProductsSold, 
-    productBreakdown, 
-    weeklyBars 
+  const {
+    totalUSD,
+    totalKHR,
+    salesCount,
+    totalProductsSold,
+    productBreakdown,
+    weeklyBars,
+    filteredSales
   } = useMemo(() => {
     const now = new Date();
     const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -177,7 +185,8 @@ export default function HistoryScreen() {
       salesCount: filtered.length,
       totalProductsSold: productsCount,
       productBreakdown: sortedProducts,
-      weeklyBars: bars
+      weeklyBars: bars,
+      filteredSales: filtered
     };
   }, [sales, period, isKm]);
 
@@ -209,6 +218,114 @@ export default function HistoryScreen() {
 
     return { points, linePath, areaPath, width, height, top, bottom };
   }, [weeklyBars]);
+
+  const periodLabel = period === 'today'
+    ? (isKm ? 'ថ្ងៃនេះ' : 'Today')
+    : period === 'week'
+      ? (isKm ? 'របាយការណ៍ប្រចាំសប្តាហ៍' : 'Weekly Report')
+      : (isKm ? 'របាយការណ៍ប្រចាំខែ' : 'Monthly Report');
+
+  const reportDateLabel = formatDisplayDate(new Date(), isKm ? 'km' : 'en');
+
+  const handleDownloadImage = async () => {
+    if (!reportRef.current || exporting) return;
+    setExporting(true);
+    try {
+      const element = reportRef.current;
+      const canvas = await html2canvas(element, {
+        scale: 3,
+        useCORS: true,
+        backgroundColor: '#ffffff',
+        scrollX: 0,
+        scrollY: 0,
+        windowWidth: element.scrollWidth,
+      });
+      const link = document.createElement('a');
+      link.download = `kotchomnol_${period}-report_${formatLocalDate(new Date())}.png`;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    } catch (err) {
+      console.error('Failed to export report image:', err);
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  const handleDownloadPDF = async () => {
+    if (!reportRef.current || exporting) return;
+    setExporting(true);
+    try {
+      const element = reportRef.current;
+      const canvas = await html2canvas(element, {
+        scale: 3,
+        useCORS: true,
+        backgroundColor: '#ffffff',
+        scrollX: 0,
+        scrollY: 0,
+        windowWidth: element.scrollWidth,
+      });
+
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'pt',
+        format: 'a4',
+      });
+
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const margin = 24;
+      const printableWidth = pageWidth - margin * 2;
+      const printableHeight = (canvas.height * printableWidth) / canvas.width;
+
+      pdf.addImage(imgData, 'PNG', margin, margin, printableWidth, printableHeight);
+      pdf.save(`kotchomnol_${period}-report_${formatLocalDate(new Date())}.pdf`);
+    } catch (err) {
+      console.error('Failed to export report PDF:', err);
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  const csvEscape = (value) => {
+    const str = String(value ?? '');
+    return /[",\n]/.test(str) ? `"${str.replace(/"/g, '""')}"` : str;
+  };
+
+  const handleDownloadTable = () => {
+    if (exporting) return;
+    const headerRow = isKm
+      ? ['កាលបរិច្ឆេទ', 'ផលិតផល', 'ចំនួន', 'តម្លៃឯកតា', 'រូបិយប័ណ្ណ', 'សរុប']
+      : ['Date', 'Product', 'Quantity', 'Unit Price', 'Currency', 'Total'];
+
+    const rows = [headerRow];
+    filteredSales.forEach((sale) => {
+      const dateLabel = formatDisplayDate(sale.date, isKm ? 'km' : 'en');
+      (sale.items || []).forEach((item) => {
+        const qty = Number(item.quantity || 0);
+        const unitPrice = resolveUnitPrice(item);
+        const currency = item.currency || 'KHR';
+        const total = item.amount ? Number(item.amount) : qty * unitPrice;
+        rows.push([
+          dateLabel,
+          item.product || item.description || '',
+          qty,
+          unitPrice.toFixed(2),
+          currency,
+          total.toFixed(2),
+        ]);
+      });
+    });
+
+    // BOM prefix so Excel detects UTF-8 and renders Khmer text correctly.
+    const csvContent = '﻿' + rows.map((row) => row.map(csvEscape).join(',')).join('\r\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `kotchomnol_${period}-report_${formatLocalDate(new Date())}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
 
   return (
     <MobileAppShell activeTab="history">
@@ -244,13 +361,61 @@ export default function HistoryScreen() {
           >
             {isKm ? 'សប្តាហ៍នេះ' : 'This Week'}
           </button>
-          <button 
-            type="button" 
+          <button
+            type="button"
             className={`filter-pill ${period === 'month' ? 'active' : ''}`}
             onClick={() => setPeriod('month')}
           >
             {isKm ? 'ខែនេះ' : 'This Month'}
           </button>
+        </div>
+
+        {/* Export current period's report */}
+        <div className="export-panel">
+          <div className="export-panel-header">
+            <span className="export-panel-title">{isKm ? 'ទាញយករបាយការណ៍' : 'Export Report'}</span>
+            <span className="export-panel-sub">
+              {isKm ? `សម្រាប់ ${periodLabel}` : `For ${periodLabel}`}
+            </span>
+          </div>
+          <div className="export-options-grid">
+            <button
+              type="button"
+              className="export-option-btn table"
+              onClick={handleDownloadTable}
+              disabled={exporting || filteredSales.length === 0}
+            >
+              <span className="export-option-icon table"><FileSpreadsheet size={18} /></span>
+              <span className="export-option-label">{isKm ? 'តារាង (Excel)' : 'Table (Excel)'}</span>
+              <span className="export-option-hint">.csv</span>
+            </button>
+            <button
+              type="button"
+              className="export-option-btn image"
+              onClick={handleDownloadImage}
+              disabled={exporting}
+            >
+              <span className="export-option-icon image"><ImageIcon size={18} /></span>
+              <span className="export-option-label">{exporting ? '...' : (isKm ? 'រូបភាព' : 'Image')}</span>
+              <span className="export-option-hint">.png</span>
+            </button>
+            <button
+              type="button"
+              className="export-option-btn pdf"
+              onClick={handleDownloadPDF}
+              disabled={exporting}
+            >
+              <span className="export-option-icon pdf"><FileDown size={18} /></span>
+              <span className="export-option-label">{exporting ? '...' : (isKm ? 'ឯកសារ' : 'PDF')}</span>
+              <span className="export-option-hint">.pdf</span>
+            </button>
+          </div>
+        </div>
+
+        <div className="analytics-report-capture" ref={reportRef}>
+        <div className="report-brand-row">
+          <span className="report-badge">KOTCHOMNOL {periodLabel.toUpperCase()}</span>
+          <span className="report-date">{reportDateLabel}</span>
         </div>
 
         {/* 4-Column Stat Cards Across 1 Row */}
@@ -452,6 +617,7 @@ export default function HistoryScreen() {
               ))
             )}
           </div>
+        </div>
         </div>
       </div>
     </MobileAppShell>

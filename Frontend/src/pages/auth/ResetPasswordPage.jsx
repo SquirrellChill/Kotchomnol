@@ -42,7 +42,7 @@ export default function ResetPasswordPage() {
       console.error('Reset error:', err);
       setStatusMsg({
         type: 'error',
-        text: err.response?.data?.detail || 'Failed to reset password. Token may be invalid or expired.',
+        text: err.response?.data?.detail || t('resetTokenInvalid'),
       });
       setLoading(false);
     }
@@ -75,7 +75,7 @@ export default function ResetPasswordPage() {
 
             <div className="pwd-banner-footer">
               <ShieldCheck size={16} />
-              <span>Encrypted & Secure authentication</span>
+              <span>{t('encryptedSecureAuth')}</span>
             </div>
           </div>
 

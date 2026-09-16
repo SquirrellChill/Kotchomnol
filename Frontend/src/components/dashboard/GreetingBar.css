@@ -1,0 +1,39 @@
+.greeting-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 18px;
+  margin-bottom: 20px;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  box-shadow: 0 4px 14px rgba(126, 34, 206, 0.05);
+}
+
+.greeting-bar-text {
+  font-family: 'Kantumruy Pro', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-text-dark);
+}
+
+.greeting-bar-avatar-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border-radius: 50%;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  box-shadow: 0 2px 8px rgba(126, 34, 206, 0.18);
+}
+
+.greeting-bar-avatar-btn:hover {
+  transform: scale(1.08);
+  box-shadow: 0 4px 14px rgba(126, 34, 206, 0.35);
+}
+
+html[data-theme='dark'] .greeting-bar {
+  background-color: #111827;
+  border-color: rgba(168, 85, 247, 0.2);
+}

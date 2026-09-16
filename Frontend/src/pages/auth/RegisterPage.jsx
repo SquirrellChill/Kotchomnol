@@ -35,8 +35,7 @@ export default function RegisterPage() {
     loginWithGoogle,
   } = useAuth();
 
-  const { language, t } = useLanguage();
-  const isKm = language !== 'en';
+  const { t } = useLanguage();
 
   // Form state
   const [formData, setFormData] = useState(emptyForm);
@@ -342,7 +341,7 @@ export default function RegisterPage() {
               <ShieldCheck size={16} />
 
               <span>
-                Encrypted &amp; Secure authentication
+                {t('encryptedSecureAuth')}
               </span>
             </div>
 
@@ -515,8 +514,8 @@ export default function RegisterPage() {
                         }
                         aria-label={
                           showPassword
-                            ? 'Hide password'
-                            : 'Show password'
+                            ? t('hidePassword')
+                            : t('showPassword')
                         }
                       >
                         {showPassword ? (
@@ -569,8 +568,8 @@ export default function RegisterPage() {
                         }
                         aria-label={
                           showConfirmPassword
-                            ? 'Hide password'
-                            : 'Show password'
+                            ? t('hidePassword')
+                            : t('showPassword')
                         }
                       >
                         {showConfirmPassword ? (
@@ -611,9 +610,7 @@ export default function RegisterPage() {
                 <div className="register-divider-line" />
 
                 <span>
-                  {isKm
-                    ? 'ឬ'
-                    : t('or') || 'OR'}
+                  {t('or')}
                 </span>
 
                 <div className="register-divider-line" />
@@ -659,8 +656,8 @@ export default function RegisterPage() {
 
                 <span>
                   {googleLoading
-                    ? 'Connecting to Google...'
-                    : 'Continue with Google'}
+                    ? t('connectingToGoogle')
+                    : t('continueWithGoogle')}
                 </span>
 
               </button>

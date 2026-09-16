@@ -10,8 +10,7 @@ import '../dashboard/ChangePasswordScreen.css';
 export default function LoginPage() {
   const navigate = useNavigate();
   const { login, loginWithGoogle } = useAuth();
-  const { language, t } = useLanguage();
-  const isKm = language !== 'en';
+  const { t } = useLanguage();
 
   const [formData, setFormData] = useState({
     email: '',
@@ -102,7 +101,7 @@ export default function LoginPage() {
             <div className="pwd-banner-footer">
               <ShieldCheck size={16} />
               <span>
-                Encrypted & Secure authentication
+                {t('encryptedSecureAuth')}
               </span>
             </div>
           </div>
@@ -231,9 +230,7 @@ export default function LoginPage() {
                 <div className="pwd-divider-line" />
 
                 <span className="pwd-divider-text">
-                  {isKm
-                    ? 'ឬ'
-                    : t('or') || 'OR'}
+                  {t('or')}
                 </span>
 
                 <div className="pwd-divider-line" />
@@ -265,7 +262,7 @@ export default function LoginPage() {
                 }}
               >
                 {googleLoading ? (
-                  'Connecting to Google...'
+                  t('connectingToGoogle')
                 ) : (
                   <>
                     <svg
@@ -292,8 +289,7 @@ export default function LoginPage() {
                       />
                     </svg>
 
-                    {t('Continue With Google') ||
-                      'Continue with Google'}
+                    {t('continueWithGoogle')}
                   </>
                 )}
               </button>
