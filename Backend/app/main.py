@@ -15,7 +15,8 @@ frontend_origins = [
 # Tighten this to your real frontend domain before deploying.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=frontend_origins,
+    allow_origins=["http://localhost:5173",
+        "https://kotchomnol-iota.vercel.app"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
