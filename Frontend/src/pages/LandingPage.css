@@ -94,6 +94,7 @@ html {
   padding: 0;
   flex-shrink: 0;
 }
+html[data-theme='dark'] .landing-brand-icon,
 .landing-brand-icon {
   width: 38px;
   height: 38px;
@@ -103,9 +104,6 @@ html {
   box-shadow: none;
 }
 
-html[data-theme='dark'] .landing-brand-icon {
-  filter: brightness(0) invert(1);
-}
 .landing-brand-title {
   font-size: 17px;
   font-weight: 700;
@@ -1799,4 +1797,90 @@ html[data-theme='dark'] .landing-page .btn-start-free--gold:hover {
 
 @media (prefers-reduced-motion: reduce) {
   .landing-page .btn-start-free { animation: none; }
+}
+
+/* ============================================
+   Scroll-reveal + hero entrance animations
+   ============================================ */
+
+/* Sections/cards fade + slide up the first time they scroll into view */
+.landing-page .reveal {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, transform;
+}
+
+.landing-page .reveal.in-view {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.landing-page .reveal.reveal-delay-1.in-view { transition-delay: 0.08s; }
+.landing-page .reveal.reveal-delay-2.in-view { transition-delay: 0.18s; }
+.landing-page .reveal.reveal-delay-3.in-view { transition-delay: 0.28s; }
+
+/* Hero content animates in on page load (no scroll needed) */
+.landing-page .hero-enter {
+  opacity: 0;
+  transform: translateY(18px);
+  animation: heroEnter 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.landing-page .hero-enter-1 { animation-delay: 0.05s; }
+.landing-page .hero-enter-2 { animation-delay: 0.15s; }
+.landing-page .hero-enter-3 { animation-delay: 0.25s; }
+.landing-page .hero-enter-4 { animation-delay: 0.35s; }
+.landing-page .hero-enter-5 { animation-delay: 0.45s; }
+
+@keyframes heroEnter {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Gentle floating motion on the hero preview card for extra life */
+.landing-page .landing-hero-preview .revenue-card {
+  animation: revenueCardFloat 6s ease-in-out infinite;
+}
+
+@keyframes revenueCardFloat {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-8px); }
+}
+
+/* Subtle rotation-in for feature icon boxes on hover, adds a bit of delight */
+.landing-page .feature-icon-box {
+  transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.landing-page .feature-card:hover .feature-icon-box {
+  transform: rotate(-6deg) scale(1.08);
+}
+
+/* Nice small pop on the pricing "Most Popular" badge */
+.landing-page .pricing-popular-badge {
+  animation: popularBadgePulse 2.6s ease-in-out infinite;
+}
+
+@keyframes popularBadgePulse {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.05); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-page .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+  .landing-page .hero-enter {
+    opacity: 1;
+    transform: none;
+    animation: none;
+  }
+  .landing-page .landing-hero-preview .revenue-card,
+  .landing-page .pricing-popular-badge {
+    animation: none;
+  }
 }

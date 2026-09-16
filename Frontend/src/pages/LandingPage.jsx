@@ -16,6 +16,40 @@ import faqIllustration from '../assets/image 1.png';
 
 const POLL_INTERVAL_MS = 4000;
 
+// Scroll-reveal: any element with className "reveal" fades/slides into view
+// the first time it crosses into the viewport. Respects prefers-reduced-motion
+// (handled in CSS) and only needs one IntersectionObserver for the whole page.
+function useScrollReveal(rootRef) {
+  useEffect(() => {
+    const root = rootRef.current;
+    if (!root) return undefined;
+
+    const targets = Array.from(root.querySelectorAll('.reveal'));
+    if (targets.length === 0) return undefined;
+
+    // If IntersectionObserver isn't available for some reason, just show everything.
+    if (typeof IntersectionObserver === 'undefined') {
+      targets.forEach((el) => el.classList.add('in-view'));
+      return undefined;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('in-view');
+            observer.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.15, rootMargin: '0px 0px -60px 0px' }
+    );
+
+    targets.forEach((el) => observer.observe(el));
+    return () => observer.disconnect();
+  }, [rootRef]);
+}
+
 // FastAPI/Pydantic error `detail` isn't always a string — for 422s it's an
 // array of {type, loc, msg, input, ctx} objects. Never hand that straight to
 // React as a child; always resolve it down to a string first.
@@ -228,6 +262,8 @@ export default function LandingPage() {
   const { theme, toggleTheme } = useTheme();
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const pageRef = useRef(null);
+  useScrollReveal(pageRef);
 
   const activeLang = language === 'en' ? 'en' : 'km';
   const txt = content[activeLang];
@@ -252,7 +288,7 @@ export default function LandingPage() {
     navigate('/');
   };
 
-  const [openFaqIndex, setOpenFaqIndex] = useState(0);
+  const [openFaqIndex, setOpenFaqIndex] = useState(-1);
   const faqItems = [
     { q: txt.faq1Q, a: txt.faq1A },
     { q: txt.faq2Q, a: txt.faq2A },
@@ -366,7 +402,7 @@ export default function LandingPage() {
   };
 
   return (
-    <div className="landing-page font-kantomruy">
+    <div className="landing-page font-kantomruy" ref={pageRef}>
       {/* Floating Header */}
       <header className="landing-navbar-wrapper">
         <div className="landing-navbar">
@@ -511,19 +547,19 @@ export default function LandingPage() {
         <div className="landing-container">
           <div className="landing-hero-grid">
             <div className="landing-hero-copy">
-              <span className="landing-hero-badge">
+              <span className="landing-hero-badge hero-enter hero-enter-1">
                 {txt.heroBadge}
               </span>
 
-              <h1 className="landing-hero-h1">
+              <h1 className="landing-hero-h1 hero-enter hero-enter-2">
                 {txt.heroTitle1}<span className="highlight">{txt.heroTitle2}</span>
               </h1>
 
-              <p className="landing-hero-sub">
+              <p className="landing-hero-sub hero-enter hero-enter-3">
                 {txt.heroSub}
               </p>
 
-              <div className="landing-hero-actions">
+              <div className="landing-hero-actions hero-enter hero-enter-4">
                 <button 
                   type="button" 
                   className="hero-btn-primary" 
@@ -540,12 +576,12 @@ export default function LandingPage() {
                 </button>
               </div>
 
-              <p className="landing-hero-disclaimer">
+              <p className="landing-hero-disclaimer hero-enter hero-enter-4">
                 {txt.heroDisclaimer}
               </p>
             </div>
 
-            <div className="landing-hero-preview">
+            <div className="landing-hero-preview hero-enter hero-enter-5">
               <div className="revenue-card">
                 <div className="rev-header">
                   <span className="rev-header-label">{txt.revLabel}</span>
@@ -597,13 +633,13 @@ export default function LandingPage() {
         <div className="landing-features-bg" aria-hidden="true" />
         <div className="landing-features-overlay" aria-hidden="true" />
         <div className="landing-container landing-features-content">
-          <div className="section-title-wrap">
+          <div className="section-title-wrap reveal">
             <h2>{txt.featuresTitle}</h2>
             <p>{txt.featuresSub}</p>
           </div>
 
           <div className="features-grid">
-            <div className="feature-card">
+            <div className="feature-card reveal reveal-delay-1">
               <div className="feature-icon-box">
                 <Mic size={22} strokeWidth={2.4} />
               </div>
@@ -611,7 +647,7 @@ export default function LandingPage() {
               <p>{txt.feat1Desc}</p>
             </div>
 
-            <div className="feature-card">
+            <div className="feature-card reveal reveal-delay-2">
               <div className="feature-icon-box">
                 <BarChart3 size={22} strokeWidth={2.4} />
               </div>
@@ -619,7 +655,7 @@ export default function LandingPage() {
               <p>{txt.feat2Desc}</p>
             </div>
 
-            <div className="feature-card">
+            <div className="feature-card reveal reveal-delay-3">
               <div className="feature-icon-box">
                 <ShieldCheck size={22} strokeWidth={2.4} />
               </div>
@@ -633,14 +669,14 @@ export default function LandingPage() {
       {/* Pricing Section */}
       <section id="pricing" className="landing-pricing-section">
         <div className="landing-container">
-          <div className="section-title-wrap">
+          <div className="section-title-wrap reveal">
             <h2>{txt.pricingTitle}</h2>
             <p>{txt.pricingSub}</p>
           </div>
 
           <div className="pricing-grid">
             {/* Free Tier */}
-            <div className="pricing-card">
+            <div className="pricing-card reveal reveal-delay-1">
               <div className="pricing-card-head">
                 <h3>{txt.pricingFreeLabel}</h3>
                 <p className="pricing-tagline">{txt.pricingFreeTagline}</p>
@@ -654,7 +690,8 @@ export default function LandingPage() {
                 <li>{activeLang === 'en' ? 'Manual entry' : 'ការបញ្ចូលដោយដៃ'}</li>
                 <li>{activeLang === 'en' ? 'Limited voice transactions' : 'ប្រតិបត្តិការសំឡេងមានកំណត់'}</li>
                 <li>{activeLang === 'en' ? 'Daily transaction history' : 'ប្រវត្តិប្រតិបត្តិការ (ប្រចាំថ្ងៃ)'}</li>
-                <li>{activeLang === 'en' ? '1 business · 1 user' : 'អាជីវកម្ម 1 · អ្នកប្រើប្រាស់ 1'}</li>
+                <li>{activeLang === 'en' ? 'Basic revenue overview' : 'ទិដ្ឋភាពទូទៅនៃចំណូលមូលដ្ឋាន'}</li>
+                <li>{activeLang === 'en' ? 'Daily report exports (PNG/PDF)' : 'នាំចេញរបាយការណ៍ប្រចាំថ្ងៃ (PNG/PDF)'}</li>
               </ul>
               <button
                 type="button"
@@ -666,7 +703,7 @@ export default function LandingPage() {
             </div>
 
             {/* Starter Plan (Popular) */}
-            <div className="pricing-card pricing-card-popular">
+            <div className="pricing-card pricing-card-popular reveal reveal-delay-2">
               <span className="pricing-popular-badge">{txt.pricingPopular}</span>
               <div className="pricing-card-head">
                 <h3>{txt.pricingStarterLabel}</h3>
@@ -678,11 +715,12 @@ export default function LandingPage() {
               </div>
               <ul className="pricing-features">
                 <li>{activeLang === 'en' ? 'Everything in Free' : 'អ្វីៗគ្រប់យ៉ាងនៅក្នុងគម្រោងឥតគិតថ្លៃ'}</li>
-                <li>{activeLang === 'en' ? 'Unlimited transactions & history' : 'ប្រតិបត្តិការ និងប្រវត្តិគ្មានដែនកំណត់'}</li>
+                <li>{activeLang === 'en' ? 'Unlimited transactions & history (weekly, monthly)' : 'ប្រតិបត្តិការ និងប្រវត្តិគ្មានដែនកំណត់ (ប្រចាំសប្តាហ៍ ប្រចាំខែ)'}</li>
                 <li>{activeLang === 'en' ? 'Voice-to-transaction' : 'ការបញ្ចូលដោយសំឡេង'}</li>
-                <li>{activeLang === 'en' ? 'Revenue & expense tracking' : 'តាមដានចំណូល និងចំណាយ'}</li>
+                <li>{activeLang === 'en' ? 'Revenue tracking' : 'តាមដានចំណូល'}</li>
+                <li>{activeLang === 'en' ? 'Best-selling products' : 'ផលិតផលលក់ដាច់បំផុត'}</li>
                 <li>{activeLang === 'en' ? 'Product management' : 'ការគ្រប់គ្រងផលិតផល'}</li>
-                <li>{activeLang === 'en' ? 'Up to 2 users · 1 business' : 'អ្នកប្រើប្រាស់ 2 នាក់ · អាជីវកម្ម 1'}</li>
+                <li>{activeLang === 'en' ? 'Full report exports (PNG/PDF)' : 'នាំចេញរបាយការណ៍ពេញលេញ (PNG/PDF)'}</li>
               </ul>
               <button
                 type="button"
@@ -704,7 +742,7 @@ export default function LandingPage() {
         <div className="landing-container">
           <div className="faq-layout">
             {/* Left: questions */}
-            <div className="faq-content">
+            <div className="faq-content reveal">
               <span className="section-eyebrow">FAQ</span>
               <h2 className="faq-title">{txt.faqTitle}</h2>
 
@@ -732,7 +770,7 @@ export default function LandingPage() {
             </div>
 
             {/* Right: image */}
-            <div className="faq-visual" aria-hidden="true">
+            <div className="faq-visual reveal reveal-delay-1" aria-hidden="true">
               <div className="faq-visual-blob" />
               <img src={faqIllustration} alt="" className="faq-visual-img" loading="lazy" />
             </div>
@@ -742,7 +780,7 @@ export default function LandingPage() {
 
       {/* Bottom CTA Section */}
       <section className="landing-cta-banner">
-        <div className="faq-container">
+        <div className="faq-container reveal">
           <h2>KOTCHOMNOL</h2>
           <p>{txt.ctaDesc}</p>
           <button 
