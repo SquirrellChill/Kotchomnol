@@ -80,32 +80,31 @@ html[data-theme='dark'] .analytics-title-icon-badge {
   box-shadow: 0 4px 14px rgba(126, 34, 206, 0.35);
 }
 
-/* 4-Column Stat Tiles */
+/* 2-Column x 2-Row Stat Tiles */
 .analytics-four-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 16px;
+  width: 100%;
 }
-.analytics-four-grid .stat-tile-card:nth-child(3),
-.analytics-four-grid .stat-tile-card:nth-child(4) {
-  grid-column: 1 / -1;
-}
+
 @media (min-width: 640px) {
   .analytics-four-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 24px;
-  }
-
-  /* From tablet width up, go back to an even 2x2 grid. */
-  .analytics-four-grid .stat-tile-card:nth-child(3),
-  .analytics-four-grid .stat-tile-card:nth-child(4) {
-    grid-column: auto;
+    gap: 20px;
   }
 }
 
 @media (min-width: 1024px) {
   .analytics-four-grid {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 24px;
+  }
+}
+
+@media (max-width: 520px) {
+  .analytics-four-grid {
+    grid-template-columns: 1fr;
   }
 }
 
@@ -131,6 +130,26 @@ html[data-theme='dark'] .stat-tile-card {
   background-color: #111827;
   border: 1px solid rgba(255, 255, 255, 0.06);
   box-shadow: 0 10px 24px rgba(0, 0, 0, 0.4), 0 0 15px rgba(168, 85, 247, 0.08);
+}
+
+/* Taller Vertical Column Style for Products Sold & Transactions */
+.stat-tile-card.column-tile {
+  min-height: 140px;
+  padding: 28px 24px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.stat-tile-card.column-tile .stat-icon-wrap {
+  width: 58px;
+  height: 58px;
+  border-radius: 18px;
+}
+
+.stat-tile-card.column-tile .stat-tile-val {
+  font-size: 26px;
+  margin-top: 4px;
 }
 
 .stat-icon-wrap {
@@ -200,45 +219,6 @@ html[data-theme='dark'] .text-amber {
 
 html[data-theme='dark'] .text-emerald {
   color: #34d399 !important;
-}
-
-/* ===== Style B: Bold gradient card ===== */
-/* Enable by adding "variant-bold" to the .analytics-four-grid className in the JSX */
-.analytics-four-grid.variant-bold .stat-tile-card {
-  border: none;
-  color: #ffffff;
-  box-shadow: 0 14px 30px -6px rgba(0, 0, 0, 0.18);
-}
-
-.analytics-four-grid.variant-bold .stat-tile-card:nth-child(1) {
-  background: linear-gradient(135deg, #7e22ce 0%, #a855f7 100%);
-}
-.analytics-four-grid.variant-bold .stat-tile-card:nth-child(2) {
-  background: linear-gradient(135deg, #4338ca 0%, #6366f1 100%);
-}
-.analytics-four-grid.variant-bold .stat-tile-card:nth-child(3) {
-  background: linear-gradient(135deg, #d97706 0%, #fbbf24 100%);
-}
-.analytics-four-grid.variant-bold .stat-tile-card:nth-child(4) {
-  background: linear-gradient(135deg, #059669 0%, #34d399 100%);
-}
-
-.analytics-four-grid.variant-bold .stat-icon-wrap {
-  background-color: rgba(255, 255, 255, 0.2) !important;
-  border: 1px solid rgba(255, 255, 255, 0.3) !important;
-  color: #ffffff !important;
-}
-
-.analytics-four-grid.variant-bold .stat-tile-label,
-.analytics-four-grid.variant-bold .stat-tile-val,
-.analytics-four-grid.variant-bold .text-amber,
-.analytics-four-grid.variant-bold .text-emerald {
-  color: #ffffff !important;
-}
-
-.analytics-four-grid.variant-bold .stat-tile-card:hover {
-  transform: translateY(-3px) scale(1.01);
-  border-color: transparent;
 }
 
 /* Charts Grid */

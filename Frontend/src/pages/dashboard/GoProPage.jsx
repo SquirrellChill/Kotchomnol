@@ -21,9 +21,6 @@ const profileFallback = {
 
 const POLL_INTERVAL_MS = 4000;
 
-// FastAPI/Pydantic error `detail` isn't always a string — for 422s it's an
-// array of {type, loc, msg, input, ctx} objects. Never hand that straight to
-// React as a child; always resolve it down to a string first.
 function extractErrorMessage(err, fallback) {
   const detail = err?.response?.data?.detail;
   if (!detail) return fallback;
@@ -36,10 +33,6 @@ function extractErrorMessage(err, fallback) {
   return fallback;
 }
 
-// ⚠️ Plan ids must match the backend's PlanType enum and PLAN_PRICES_USD.
-// These were previously 'growth' ($0.01) / 'business' ($24.99) — this is a
-// different plan shape (a $0 tier + one paid tier), so the backend enum and
-// pricing table need to be updated to match before checkout will work.
 const PLANS = [
   {
     id: 'free',
@@ -53,10 +46,9 @@ const PLANS = [
       { en: 'Basic sales recording', km: 'ការកត់ត្រាការលក់មូលដ្ឋាន' },
       { en: 'Manual entry', km: 'ការបញ្ចូលដោយដៃ' },
       { en: 'Limited voice transactions', km: 'ប្រតិបត្តិការសំឡេងមានកំណត់' },
-      { en: 'Transaction history (daily)', km: 'ប្រវត្តិប្រតិបត្តិការ (ប្រចាំថ្ងៃ)' },
-      { en: 'Basic revenue overview', km: 'ទិដ្ឋភាពទូទៅចំណូលមូលដ្ឋាន' },
-      { en: 'PNG / PDF export (daily)', km: 'នាំចេញ PNG / PDF (ប្រចាំថ្ងៃ)' },
-      { en: '1 business · 1 user', km: 'អាជីវកម្ម 1 · អ្នកប្រើប្រាស់ 1' },
+      { en: 'Daily transaction history', km: 'ប្រវត្តិប្រតិបត្តិការប្រចាំថ្ងៃ' },
+      { en: 'Basic revenue overview', km: 'ទិដ្ឋភាពទូទៅនៃចំណូលមូលដ្ឋាន' },
+      { en: 'Daily report exports (PNG/PDF)', km: 'ការនាំចេញរបាយការណ៍ប្រចាំថ្ងៃ (PNG/PDF)' },
     ],
   },
   {
@@ -72,13 +64,12 @@ const PLANS = [
     purchasable: true,
     features: [
       { en: 'Everything in Free', km: 'អ្វីៗគ្រប់យ៉ាងនៅក្នុងគម្រោងឥតគិតថ្លៃ' },
-      { en: 'Unlimited transactions & history (weekly, month)', km: 'ប្រតិបត្តិការ និងប្រវត្តិគ្មានដែនកំណត់ (សប្តាហ៍, ខែ)' },
+      { en: 'Unlimited transactions & history (weekly, monthly)', km: 'ប្រតិបត្តិការ និងប្រវត្តិគ្មានដែនកំណត់ (ប្រចាំសប្តាហ៍, ប្រចាំខែ)' },
       { en: 'Voice-to-transaction', km: 'ការបញ្ចូលដោយសំឡេង' },
-      { en: 'Revenue & expense tracking', km: 'តាមដានចំណូល និងចំណាយ' },
+      { en: 'Revenue tracking', km: 'ការតាមដានចំណូល' },
       { en: 'Best-selling products', km: 'ផលិតផលលក់ដាច់បំផុត' },
       { en: 'Product management', km: 'ការគ្រប់គ្រងផលិតផល' },
-      { en: 'PNG / PDF export', km: 'នាំចេញ PNG / PDF' },
-      { en: 'Up to 2 users · 1 business', km: 'អ្នកប្រើប្រាស់ 2 នាក់ · អាជីវកម្ម 1' },
+      { en: 'Full report exports (PNG/PDF)', km: 'ការនាំចេញរបាយការណ៍ពេញលេញ (PNG/PDF)' },
     ],
   },
 ];
@@ -98,7 +89,7 @@ export default function GoProPage() {
   const [isChecking, setIsChecking] = useState(false);
   const [errorMsg, setErrorMsg] = useState(null);
 
-  const [payment, setPayment] = useState(null); // { id, amount, deeplink, status, ... }
+  const [payment, setPayment] = useState(null);
   const [qrImageUrl, setQrImageUrl] = useState(null);
 
   const pollRef = useRef(null);
@@ -128,7 +119,7 @@ export default function GoProPage() {
           setPayment((prev) => (prev ? { ...prev, status: data.status } : prev));
         }
       } catch {
-        // transient network error — keep polling, next tick will retry
+        // network retry tick
       }
     }, POLL_INTERVAL_MS);
   };
@@ -138,23 +129,16 @@ export default function GoProPage() {
       stopPolling();
       if (qrImageUrl) URL.revokeObjectURL(qrImageUrl);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // If we arrived here from the landing page's "Go Pro" button, skip the
-  // plan-picker screen entirely and jump straight to the Bakong QR — no
-  // need to make the user tap Continue, and no detour through profile
-  // or settings.
   const autoStartRequested = Boolean(location.state?.autoStart);
   const autoStartFiredRef = useRef(false);
 
   useEffect(() => {
     if (!autoStartRequested || autoStartFiredRef.current) return;
     autoStartFiredRef.current = true;
-    // Clear the nav state so a refresh/back doesn't retrigger checkout.
     navigate(location.pathname, { replace: true, state: {} });
     handleContinue();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [autoStartRequested]);
 
   const handleContinue = async () => {
@@ -188,7 +172,7 @@ export default function GoProPage() {
       setPayment((prev) => (prev ? { ...prev, status: data.status } : prev));
       if (data.status !== 'pending') stopPolling();
     } catch {
-      // ignore — background polling will keep trying
+      // background polling handles retry
     } finally {
       setIsChecking(false);
     }
@@ -205,14 +189,16 @@ export default function GoProPage() {
     <MobileAppShell activeTab="profile">
       <div className="gopro-page font-kantumruy">
         <div className="gopro-content">
-          <button
-            type="button"
-            className="gopro-back-link"
-            onClick={() => navigate('/dashboard/profile')}
-          >
-            <ArrowLeft size={16} />
-            <span>{isKm ? 'ត្រឡប់ទៅប្រវត្តិរូប' : 'Back to Profile'}</span>
-          </button>
+          <div className="gopro-topbar">
+            <button
+              type="button"
+              className="gopro-back-btn"
+              onClick={() => navigate('/dashboard/profile')}
+            >
+              <ArrowLeft size={18} />
+              <span>{isKm ? 'ត្រឡប់ទៅគណនី' : 'Back to Profile'}</span>
+            </button>
+          </div>
 
           <div className="gopro-heading">
             <div className="page-title-row">

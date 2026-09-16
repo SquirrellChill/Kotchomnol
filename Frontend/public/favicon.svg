@@ -1,5 +1,7 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" fill="none">
-  <rect width="64" height="64" rx="18" fill="#1677FF"/>
-  <path d="M32 12a8 8 0 0 0-8 8v12a8 8 0 0 0 16 0V20a8 8 0 0 0-8-8Z" fill="#FFFFFF"/>
-  <path d="M46 30a2.5 2.5 0 0 0-5 0 9 9 0 0 1-18 0 2.5 2.5 0 0 0-5 0 14.02 14.02 0 0 0 11.5 13.78V48H25a2.5 2.5 0 0 0 0 5h14a2.5 2.5 0 0 0 0-5h-4.5v-4.22A14.02 14.02 0 0 0 46 30Z" fill="#FFEB3B"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <!-- White circular badge background -->
+  <circle cx="32" cy="32" r="30" fill="#ffffff" stroke="#7e22ce" stroke-width="2" />
+  
+  <!-- Mascot image centered inside -->
+  <image href="/logo-mascot.png" x="8" y="8" width="48" height="48" preserveAspectRatio="xMidYMid meet" />
 </svg>

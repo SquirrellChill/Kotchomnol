@@ -1,52 +1,37 @@
-.stitch-legal-page {
-  padding: 0;
-  font-family: 'Kantumruy Pro', sans-serif;
-}
-
-/* Header is now the shared landing-navbar (see LandingPage.css / StitchLegalLayout.jsx)
-   so it matches the homepage exactly. The page content sits below it with top padding
-   equal to the fixed navbar's height (see .stitch-legal-shell below). */
-
-.legal-site-logo {
-  width: 34px;
-  height: 34px;
-  object-fit: contain;
-  animation: legal-logo-float 3.2s ease-in-out infinite;
-}
-
-@keyframes legal-logo-float {
-  0%, 100% { transform: translateY(0) rotate(0deg); }
-  50% { transform: translateY(-4px) rotate(-3deg); }
+.legal-page-landing-wrapper {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
 }
 
 .stitch-legal-shell {
   width: 100%;
-  margin: 0;
-  padding: calc(72px + 24px) 24px 48px;
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 32px 20px 64px;
   box-sizing: border-box;
+  flex: 1;
 }
 
 @media (min-width: 768px) {
   .stitch-legal-shell {
-    padding-top: calc(80px + 24px);
+    padding: 48px 24px 80px;
   }
 }
 
-/* Header Topbar */
+/* Dashboard-only back button */
 .stitch-legal-header {
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  min-height: 48px;
-  margin-bottom: 24px;
+  margin-bottom: 20px;
 }
 
-/* Elevated Back to Website Pill Button */
 .legal-back-btn {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 10px 18px;
+  padding: 8px 16px;
   border-radius: 12px;
   font-size: 13px;
   font-weight: 600;
@@ -54,9 +39,8 @@
   border: 1px solid rgba(126, 34, 206, 0.18);
   background-color: #ffffff;
   color: #1e1b4b;
-  box-shadow: 0 4px 14px rgba(126, 34, 206, 0.08);
+  box-shadow: 0 4px 14px rgba(126, 34, 206, 0.06);
   transition: all 0.15s ease;
-  text-decoration: none;
 }
 
 .legal-back-btn:hover {
@@ -64,34 +48,33 @@
   border-color: #7e22ce;
   color: #7e22ce;
   transform: translateX(-2px);
-  box-shadow: 0 6px 18px rgba(126, 34, 206, 0.14);
 }
 
 /* Page Title & Icon */
 .stitch-legal-title {
   text-align: center;
-  margin-bottom: 28px;
+  margin-bottom: 32px;
 }
 
 .stitch-legal-icon {
-  width: 56px;
-  height: 56px;
+  width: 54px;
+  height: 54px;
   margin: 0 auto 14px;
   border-radius: 18px;
-  background: #f5f3ff;
-  border: 1px solid #ddd6fe;
-  color: #7c3aed;
+  background: #f3e8ff;
+  border: 1px solid rgba(126, 34, 206, 0.2);
+  color: #7e22ce;
   display: grid;
   place-items: center;
-  box-shadow: 0 4px 14px rgba(126, 34, 206, 0.12);
+  box-shadow: 0 4px 14px rgba(126, 34, 206, 0.1);
 }
 
 .stitch-legal-title h1 {
   margin: 0;
-  color: #4c1d95;
+  color: #581c87;
   font-size: 32px;
-  font-weight: 700;
-  line-height: 1.2;
+  font-weight: 800;
+  line-height: 1.25;
 }
 
 .stitch-legal-title p {
@@ -104,21 +87,22 @@
 /* Legal Content Card */
 .stitch-legal-card {
   background: #ffffff;
-  border: 1px solid rgba(126, 34, 206, 0.14);
+  border: 1px solid rgba(126, 34, 206, 0.12);
   border-radius: 24px;
-  padding: 32px;
-  box-shadow: 0 16px 40px -6px rgba(126, 34, 206, 0.08), 0 4px 14px rgba(0, 0, 0, 0.03);
+  padding: 36px 32px;
+  box-shadow: 0 12px 32px -6px rgba(126, 34, 206, 0.08), 0 4px 12px rgba(0, 0, 0, 0.02);
+  line-height: 1.7;
 }
 
 .legal-intro-block {
   margin-bottom: 24px;
   padding-bottom: 20px;
-  border-bottom: 1px solid rgba(126, 34, 206, 0.12);
+  border-bottom: 1px solid rgba(126, 34, 206, 0.1);
 }
 
 .legal-intro-block p {
   font-size: 14px;
-  line-height: 1.7;
+  line-height: 1.75;
   color: #475569;
   font-weight: 500;
 }
@@ -184,120 +168,8 @@
 }
 
 /* ==========================================================================
-   Site Footer — public /about, /terms, /privacy pages
-   ========================================================================== */
-.legal-site-footer {
-  margin-top: 40px;
-  padding: 36px 24px 28px;
-  border-top: 1px solid rgba(126, 34, 206, 0.12);
-  background: #faf9ff;
-  text-align: center;
-  animation: legal-footer-fade-in 0.6s ease both;
-}
-
-@keyframes legal-footer-fade-in {
-  from { opacity: 0; transform: translateY(12px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.legal-footer-brand {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  font-weight: 800;
-  font-size: 16px;
-  color: #4c1d95;
-  margin-bottom: 10px;
-}
-
-.legal-footer-brand .legal-site-logo {
-  width: 30px;
-  height: 30px;
-}
-
-.legal-footer-desc {
-  max-width: 560px;
-  margin: 0 auto 18px;
-  font-size: 13px;
-  line-height: 1.6;
-  color: #64748b;
-}
-
-.legal-footer-nav {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: center;
-  gap: 18px;
-  margin-bottom: 18px;
-}
-
-.legal-footer-nav a {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 13px;
-  font-weight: 600;
-  color: #475569;
-  text-decoration: none;
-  transition: color 0.15s ease;
-}
-
-.legal-footer-nav a:hover {
-  color: #7e22ce;
-}
-
-.legal-footer-copyright {
-  font-size: 12px;
-  color: #94a3b8;
-  margin: 0;
-}
-
-/* ==========================================================================
    Dark Theme Adaptations
    ========================================================================== */
-html[data-theme='dark'] .legal-site-header {
-  background: rgba(17, 24, 39, 0.85);
-  border-bottom-color: rgba(168, 85, 247, 0.2);
-}
-
-html[data-theme='dark'] .legal-site-brand {
-  color: #f3f4f6;
-}
-
-html[data-theme='dark'] .legal-site-nav a {
-  color: #cbd5e1;
-}
-
-html[data-theme='dark'] .legal-site-nav a:hover {
-  color: #c084fc;
-}
-
-html[data-theme='dark'] .legal-site-footer {
-  background: #0d0a1a;
-  border-top-color: rgba(168, 85, 247, 0.2);
-}
-
-html[data-theme='dark'] .legal-footer-brand {
-  color: #f3f4f6;
-}
-
-html[data-theme='dark'] .legal-footer-desc {
-  color: #94a3b8;
-}
-
-html[data-theme='dark'] .legal-footer-nav a {
-  color: #cbd5e1;
-}
-
-html[data-theme='dark'] .legal-footer-nav a:hover {
-  color: #c084fc;
-}
-
-html[data-theme='dark'] .legal-footer-copyright {
-  color: #6b7280;
-}
-
 html[data-theme='dark'] .legal-back-btn {
   background-color: #111827;
   border-color: rgba(168, 85, 247, 0.25);
@@ -331,14 +203,14 @@ html[data-theme='dark'] .legal-intro-block {
 }
 
 html[data-theme='dark'] .stitch-legal-card {
-  background: #111827;
-  border-color: rgba(255, 255, 255, 0.08);
+  background: #0f0a1f;
+  border: 1px solid rgba(168, 85, 247, 0.18);
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5), 0 0 20px rgba(168, 85, 247, 0.08);
 }
 
 html[data-theme='dark'] .stitch-legal-icon {
   background: #1e1438;
-  border-color: #7e22ce;
+  border-color: rgba(168, 85, 247, 0.3);
   color: #c084fc;
 }
 
@@ -357,19 +229,9 @@ html[data-theme='dark'] .legal-callout.success {
 /* ==========================================================================
    Responsive Breakpoints
    ========================================================================== */
-@media (min-width: 1025px) {
-  .stitch-legal-shell {
-    padding: calc(80px + 36px) 40px 64px;
-  }
-
-  .stitch-legal-card {
-    padding: 40px;
-  }
-}
-
 @media (max-width: 639px) {
   .stitch-legal-card {
-    padding: 20px;
+    padding: 24px 20px;
     border-radius: 18px;
   }
 

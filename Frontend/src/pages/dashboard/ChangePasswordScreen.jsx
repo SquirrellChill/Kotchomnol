@@ -4,10 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import MobileAppShell from '../../components/dashboard/MobileAppShell';
 import { useLanguage } from '../../context/LanguageContext';
 import {
-  requestPasswordChangeOTP,
-  verifyChangePasswordWithOTP,
-  requestForgotCurrentPasswordOTP,
-  resetWithOtpAuthenticated,
+  changePassword,
+  forgotPassword,
   getErrorMessage,
 } from '../../services/authService';
 import './ChangePasswordScreen.css';
@@ -17,13 +15,12 @@ export default function ChangePasswordScreen() {
   const { language } = useLanguage();
   const isKm = language !== 'en';
 
-  // Modes: 'standard' (knows old pwd) or 'forgot' (forgot old pwd)
+  // Modes: 'standard' (knows old pwd, changes it directly) or
+  // 'forgot' (doesn't know it, gets an email reset link instead).
   const [mode, setMode] = useState('standard');
-  const [step, setStep] = useState(1); // 1: prompt/request, 2: verify + new pwd
 
   const [currentPassword, setCurrentPassword] = useState('');
   const [email, setEmail] = useState('');
-  const [code, setCode] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
 
@@ -33,53 +30,21 @@ export default function ChangePasswordScreen() {
 
   const [statusMsg, setStatusMsg] = useState({ type: '', text: '' });
   const [loading, setLoading] = useState(false);
+  const [linkSent, setLinkSent] = useState(false);
 
   const handleSwitchToForgot = () => {
     setMode('forgot');
-    setStep(1);
+    setLinkSent(false);
     setStatusMsg({ type: '', text: '' });
   };
 
   const handleSwitchToStandard = () => {
     setMode('standard');
-    setStep(1);
+    setLinkSent(false);
     setStatusMsg({ type: '', text: '' });
   };
 
-  // Step 1: Submit handler
-  const handleStep1Submit = async (e) => {
-    e.preventDefault();
-    setStatusMsg({ type: '', text: '' });
-    setLoading(true);
-
-    try {
-      if (mode === 'standard') {
-        await requestPasswordChangeOTP({ currentPassword });
-      } else {
-        await requestForgotCurrentPasswordOTP({ email });
-      }
-
-      setStatusMsg({
-        type: 'success',
-        text: isKm
-          ? 'កូដផ្ទៀងផ្ទាត់ ៦ ខ្ទង់ត្រូវបានផ្ញើទៅ Gmail របស់អ្នក!'
-          : 'A 6-digit verification code has been sent to your registered Gmail!',
-      });
-      setStep(2);
-    } catch (err) {
-      setStatusMsg({
-        type: 'error',
-        text:
-          getErrorMessage(err) ||
-          (isKm ? 'បរាជ័យក្នុងការផ្ញើកូដ' : 'Failed to send verification code.'),
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Step 2: Verification and Password Update
-  const handleStep2Submit = async (e) => {
+  const handleStandardSubmit = async (e) => {
     e.preventDefault();
     setStatusMsg({ type: '', text: '' });
 
@@ -92,20 +57,8 @@ export default function ChangePasswordScreen() {
     }
 
     setLoading(true);
-
     try {
-      if (mode === 'standard') {
-        await verifyChangePasswordWithOTP({
-          currentPassword,
-          code,
-          newPassword,
-        });
-      } else {
-        await resetWithOtpAuthenticated({
-          code,
-          newPassword,
-        });
-      }
+      await changePassword({ currentPassword, newPassword });
 
       setStatusMsg({
         type: 'success',
@@ -113,8 +66,6 @@ export default function ChangePasswordScreen() {
       });
 
       setCurrentPassword('');
-      setEmail('');
-      setCode('');
       setNewPassword('');
       setConfirmPassword('');
 
@@ -124,7 +75,33 @@ export default function ChangePasswordScreen() {
         type: 'error',
         text:
           getErrorMessage(err) ||
-          (isKm ? 'កូដផ្ទៀងផ្ទាត់មិនត្រឹមត្រូវ ឬផុតកំណត់' : 'Invalid or expired verification code.'),
+          (isKm ? 'លេខសម្ងាត់បច្ចុប្បន្នមិនត្រឹមត្រូវ' : 'Current password is incorrect.'),
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleForgotSubmit = async (e) => {
+    e.preventDefault();
+    setStatusMsg({ type: '', text: '' });
+    setLoading(true);
+
+    try {
+      await forgotPassword({ email });
+      setLinkSent(true);
+      setStatusMsg({
+        type: 'success',
+        text: isKm
+          ? 'តំណកំណត់លេខសម្ងាត់ឡើងវិញត្រូវបានផ្ញើទៅអ៊ីមែលរបស់អ្នក!'
+          : 'A password reset link has been sent to your email!',
+      });
+    } catch (err) {
+      setStatusMsg({
+        type: 'error',
+        text:
+          getErrorMessage(err) ||
+          (isKm ? 'បរាជ័យក្នុងការផ្ញើតំណ' : 'Failed to send reset link.'),
       });
     } finally {
       setLoading(false);
@@ -139,18 +116,10 @@ export default function ChangePasswordScreen() {
           <button
             type="button"
             className="pwd-back-btn"
-            onClick={() => (step === 2 ? setStep(1) : navigate('/dashboard/profile'))}
+            onClick={() => navigate('/dashboard/profile')}
           >
             <ArrowLeft size={16} />
-            <span>
-              {step === 2
-                ? isKm
-                  ? 'ថយក្រោយទៅជំហានទី ១'
-                  : 'Back to Step 1'
-                : isKm
-                ? 'ត្រឡប់ទៅប្រវត្តិរូប'
-                : 'Back to Profile'}
-            </span>
+            <span>{isKm ? 'ត្រឡប់ទៅប្រវត្តិរូប' : 'Back to Profile'}</span>
           </button>
         </div>
 
@@ -160,7 +129,7 @@ export default function ChangePasswordScreen() {
           <div className="pwd-card-banner">
             <div>
               <div className="pwd-icon-badge">
-                {mode === 'forgot' ? <HelpCircle size={22} /> : step === 1 ? <KeyRound size={22} /> : <Mail size={22} />}
+                {mode === 'forgot' ? <HelpCircle size={22} /> : <KeyRound size={22} />}
               </div>
               <span className="pwd-brand-text">KOTCHOMNOL</span>
               <h2 className="pwd-banner-title">
@@ -169,23 +138,23 @@ export default function ChangePasswordScreen() {
                     ? 'កំណត់លេខសម្ងាត់ឡើងវិញ'
                     : 'Reset Forgotten Password'
                   : isKm
-                  ? 'ការការពារគណនី ២ ជាន់'
-                  : 'Two-Factor Verification'}
+                  ? 'ការការពារគណនី'
+                  : 'Account Security'}
               </h2>
               <p className="pwd-banner-desc">
                 {mode === 'forgot'
                   ? isKm
-                    ? 'សូមបញ្ចូល Gmail គណនីរបស់អ្នកដើម្បីទទួលលេខកូដផ្ទៀងផ្ទាត់ ៦ ខ្ទង់។'
-                    : 'Please enter your registered Gmail address to receive a 6-digit verification code.'
+                    ? 'សូមបញ្ចូលអាសយដ្ឋានអ៊ីមែលគណនីរបស់អ្នកដើម្បីទទួលតំណកំណត់លេខសម្ងាត់ឡើងវិញ។'
+                    : 'Enter your account email to receive a password reset link.'
                   : isKm
-                  ? 'ដើម្បីធានាសុវត្ថិភាព ពួកយើងនឹងផ្ញើលេខកូដសម្ងាត់ទៅកាន់ Gmail របស់អ្នកមុនពេលផ្លាស់ប្តូរលេខសម្ងាត់។'
-                  : 'To protect your account, we dispatch a verification token to your registered Gmail address before updating credentials.'}
+                  ? 'បញ្ជាក់លេខសម្ងាត់បច្ចុប្បន្នរបស់អ្នក រួចកំណត់លេខសម្ងាត់ថ្មី។'
+                  : 'Confirm your current password, then set a new one.'}
               </p>
             </div>
 
             <div className="pwd-banner-footer">
               <ShieldCheck size={16} />
-              <span>{isKm ? 'សុវត្ថិភាពខ្ពស់តាម Gmail OTP' : 'Encrypted & Gmail 2FA Verified'}</span>
+              <span>{isKm ? 'សុវត្ថិភាពខ្ពស់' : 'Encrypted & Secure'}</span>
             </div>
           </div>
 
@@ -194,37 +163,21 @@ export default function ChangePasswordScreen() {
             <div className="pwd-form-header">
               <h3>
                 {mode === 'forgot'
-                  ? step === 1
-                    ? isKm
-                      ? 'ភ្លេចលេខសម្ងាត់បច្ចុប្បន្ន?'
-                      : 'Forgot Current Password?'
-                    : isKm
-                    ? 'បញ្ចូលកូដ និងលេខសម្ងាត់ថ្មី'
-                    : 'Enter OTP & Set New Password'
-                  : step === 1
                   ? isKm
-                    ? 'ជំហានទី ១៖ បញ្ជាក់លេខសម្ងាត់'
-                    : 'Step 1: Confirm Current Password'
+                    ? 'ភ្លេចលេខសម្ងាត់បច្ចុប្បន្ន?'
+                    : 'Forgot Current Password?'
                   : isKm
-                  ? 'ជំហានទី ២៖ ផ្ទៀងផ្ទាត់កូដ Gmail'
-                  : 'Step 2: Enter OTP & New Password'}
+                  ? 'ផ្លាស់ប្តូរលេខសម្ងាត់'
+                  : 'Change Password'}
               </h3>
               <p>
                 {mode === 'forgot'
-                  ? step === 1
-                    ? isKm
-                      ? 'បញ្ចូលអាសយដ្ឋាន Gmail របស់អ្នក ដើម្បីទទួលកូដផ្ទៀងផ្ទាត់។'
-                      : 'Enter your account Gmail address to receive the verification code.'
-                    : isKm
-                    ? 'សូមបញ្ចូលកូដ ៦ ខ្ទង់ពី Gmail និងលេខសម្ងាត់ថ្មី។'
-                    : 'Enter the 6-digit code received in your inbox along with your new password.'
-                  : step === 1
                   ? isKm
-                    ? 'បញ្ចូលលេខសម្ងាត់បច្ចុប្បន្ន ដើម្បីទទួលកូដតាម Gmail'
-                    : 'Enter your current password to request a 6-digit authorization code.'
+                    ? 'បញ្ចូលអាសយដ្ឋានអ៊ីមែលគណនីរបស់អ្នក ដើម្បីទទួលតំណកំណត់លេខសម្ងាត់ឡើងវិញ។'
+                    : 'Enter your account email to receive a password reset link.'
                   : isKm
-                  ? 'សូមបញ្ចូលលេខកូដ ៦ ខ្ទង់ពី Gmail និងលេខសម្ងាត់ថ្មី'
-                  : 'Enter the 6-digit code sent to your Gmail inbox along with your new password.'}
+                  ? 'បញ្ចូលលេខសម្ងាត់បច្ចុប្បន្ន និងលេខសម្ងាត់ថ្មីរបស់អ្នក'
+                  : 'Enter your current password and choose a new one.'}
               </p>
             </div>
 
@@ -235,116 +188,48 @@ export default function ChangePasswordScreen() {
             )}
 
             <div className="pwd-form-embed">
-              {step === 1 ? (
-                <form onSubmit={handleStep1Submit}>
-                  {mode === 'standard' ? (
-                    <div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                        <label htmlFor="current-password" style={{ margin: 0 }}>
-                          {isKm ? 'លេខសម្ងាត់បច្ចុប្បន្ន' : 'CURRENT PASSWORD'}
-                        </label>
-                        <button
-                          type="button"
-                          onClick={handleSwitchToForgot}
-                          style={{
-                            background: 'none',
-                            border: 'none',
-                            padding: 0,
-                            fontSize: '12px',
-                            color: '#9333ea',
-                            cursor: 'pointer',
-                            fontWeight: '600',
-                          }}
-                        >
-                          {isKm ? 'ភ្លេចលេខសម្ងាត់?' : 'Forgot Password?'}
-                        </button>
-                      </div>
-                      <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-                        <input
-                          id="current-password"
-                          type={showCurrent ? 'text' : 'password'}
-                          required
-                          autoComplete="current-password"
-                          className="pwd-input-with-toggle"
-                          placeholder="••••••••"
-                          value={currentPassword}
-                          onChange={(e) => setCurrentPassword(e.target.value)}
-                        />
-                        <button
-                          type="button"
-                          className="pwd-toggle-btn"
-                          onClick={() => setShowCurrent(!showCurrent)}
-                        >
-                          {showCurrent ? <EyeOff size={18} /> : <Eye size={18} />}
-                        </button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div>
-                      <label htmlFor="registered-email">
-                        {isKm ? 'អាសយដ្ឋាន GMAIL គណនី' : 'REGISTERED GMAIL ADDRESS'}
-                      </label>
-                      <input
-                        id="registered-email"
-                        type="email"
-                        required
-                        placeholder="name@gmail.com"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                      />
-                    </div>
-                  )}
-
-                  <button type="submit" disabled={loading}>
-                    {loading
-                      ? isKm
-                        ? 'កំពុងផ្ញើកូដ...'
-                        : 'Sending Code to Gmail...'
-                      : isKm
-                      ? 'ផ្ញើកូដផ្ទៀងផ្ទាត់ទៅ Gmail'
-                      : 'Send Verification Code'}
-                  </button>
-
-                  {mode === 'forgot' && (
-                    <button
-                      type="button"
-                      style={{
-                        background: 'transparent',
-                        border: 'none',
-                        color: '#9ca3af',
-                        fontSize: '13px',
-                        cursor: 'pointer',
-                        marginTop: '6px',
-                        textAlign: 'center',
-                      }}
-                      onClick={handleSwitchToStandard}
-                    >
-                      {isKm ? 'ចាំលេខសម្ងាត់ចាស់? ប្តូរធម្មតា' : 'Remember your password? Switch back'}
-                    </button>
-                  )}
-                </form>
-              ) : (
-                <form onSubmit={handleStep2Submit}>
+              {mode === 'standard' ? (
+                <form onSubmit={handleStandardSubmit}>
                   <div>
-                    <label htmlFor="otp-code">
-                      {isKm ? 'កូដផ្ទៀងផ្ទាត់ Gmail (៦ ខ្ទង់)' : 'GMAIL VERIFICATION CODE'}
-                    </label>
-                    <input
-                      id="otp-code"
-                      type="text"
-                      maxLength={6}
-                      required
-                      className="pwd-input-with-toggle"
-                      placeholder="123456"
-                      style={{
-                        letterSpacing: '0.3em',
-                        fontSize: '18px',
-                        fontWeight: 'bold',
-                        textAlign: 'center',
-                      }}
-                      value={code}
-                      onChange={(e) => setCode(e.target.value)}
-                    />
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                      <label htmlFor="current-password" style={{ margin: 0 }}>
+                        {isKm ? 'លេខសម្ងាត់បច្ចុប្បន្ន' : 'CURRENT PASSWORD'}
+                      </label>
+                      <button
+                        type="button"
+                        onClick={handleSwitchToForgot}
+                        style={{
+                          background: 'none',
+                          border: 'none',
+                          padding: 0,
+                          fontSize: '12px',
+                          color: '#9333ea',
+                          cursor: 'pointer',
+                          fontWeight: '600',
+                        }}
+                      >
+                        {isKm ? 'ភ្លេចលេខសម្ងាត់?' : 'Forgot Password?'}
+                      </button>
+                    </div>
+                    <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                      <input
+                        id="current-password"
+                        type={showCurrent ? 'text' : 'password'}
+                        required
+                        autoComplete="current-password"
+                        className="pwd-input-with-toggle"
+                        placeholder="••••••••"
+                        value={currentPassword}
+                        onChange={(e) => setCurrentPassword(e.target.value)}
+                      />
+                      <button
+                        type="button"
+                        className="pwd-toggle-btn"
+                        onClick={() => setShowCurrent(!showCurrent)}
+                      >
+                        {showCurrent ? <EyeOff size={18} /> : <Eye size={18} />}
+                      </button>
+                    </div>
                   </div>
 
                   <div>
@@ -401,11 +286,47 @@ export default function ChangePasswordScreen() {
                     {loading
                       ? isKm
                         ? 'កំពុងដំណើរការ...'
-                        : 'Verifying & Updating...'
+                        : 'Updating...'
                       : isKm
-                      ? 'ផ្ទៀងផ្ទាត់ និងកំណត់លេខសម្ងាត់ថ្មី'
-                      : 'Confirm New Password'}
+                      ? 'ផ្លាស់ប្តូរលេខសម្ងាត់'
+                      : 'Change Password'}
                   </button>
+                </form>
+              ) : (
+                <form onSubmit={handleForgotSubmit}>
+                  <div>
+                    <label htmlFor="registered-email">
+                      {isKm ? 'អាសយដ្ឋានអ៊ីមែលគណនី' : 'REGISTERED EMAIL ADDRESS'}
+                    </label>
+                    <input
+                      id="registered-email"
+                      type="email"
+                      required
+                      placeholder="name@example.com"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      disabled={linkSent}
+                    />
+                  </div>
+
+                  {!linkSent ? (
+                    <button type="submit" disabled={loading}>
+                      {loading
+                        ? isKm
+                          ? 'កំពុងផ្ញើ...'
+                          : 'Sending...'
+                        : isKm
+                        ? 'ផ្ញើតំណកំណត់ឡើងវិញ'
+                        : 'Send Reset Link'}
+                    </button>
+                  ) : (
+                    <div style={{ fontSize: '13px', color: '#6b7280', textAlign: 'center' }}>
+                      <Mail size={16} style={{ verticalAlign: 'middle', marginRight: 6 }} />
+                      {isKm
+                        ? 'ពិនិត្យអ៊ីមែលរបស់អ្នក ហើយចុចលើតំណដើម្បីកំណត់លេខសម្ងាត់ថ្មី។'
+                        : 'Check your inbox and click the link to set a new password.'}
+                    </div>
+                  )}
 
                   <button
                     type="button"
@@ -415,12 +336,12 @@ export default function ChangePasswordScreen() {
                       color: '#9ca3af',
                       fontSize: '13px',
                       cursor: 'pointer',
-                      marginTop: '4px',
+                      marginTop: '6px',
                       textAlign: 'center',
                     }}
-                    onClick={() => setStep(1)}
+                    onClick={handleSwitchToStandard}
                   >
-                    {isKm ? 'ត្រឡប់ទៅជំហានទី ១' : 'Back to Step 1'}
+                    {isKm ? 'ចាំលេខសម្ងាត់ចាស់? ប្តូរធម្មតា' : 'Remember your password? Switch back'}
                   </button>
                 </form>
               )}

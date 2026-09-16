@@ -182,8 +182,6 @@ export default function HistoryScreen() {
   }, [sales, period, isKm]);
 
   // Precompute pixel-accurate points for the SVG line chart.
-  // Everything (line, dots, value labels, day labels) is drawn in the
-  // SAME coordinate system, so nothing can ever drift out of alignment.
   const chartPoints = useMemo(() => {
     const width = 700;
     const height = 260;
@@ -255,29 +253,9 @@ export default function HistoryScreen() {
           </button>
         </div>
 
-        {/* 4-Column Stat Cards */}
-        {/* Add " variant-bold" to this className to switch to Style B (bold gradient cards) */}
+        {/* 2-Column x 2-Row Stat Cards */}
         <div className="analytics-four-grid">
-          <div className="stat-tile-card">
-            <div className="stat-icon-wrap violet">
-              <Package size={22} />
-            </div>
-            <div>
-              <span className="stat-tile-label">{isKm ? 'មុខទំនិញលក់បាន' : 'Products Sold'}</span>
-              <h3 className="stat-tile-val">{totalProductsSold} {isKm ? 'ឯកតា' : 'items'}</h3>
-            </div>
-          </div>
-
-          <div className="stat-tile-card">
-            <div className="stat-icon-wrap indigo">
-              <ShoppingCart size={22} />
-            </div>
-            <div>
-              <span className="stat-tile-label">{isKm ? 'ចំនួនប្រតិបត្តិការ' : 'Transactions'}</span>
-              <h3 className="stat-tile-val">{salesCount} {isKm ? 'លើក' : 'records'}</h3>
-            </div>
-          </div>
-
+          {/* Row 1, Col 1: Total in KHR */}
           <div className="stat-tile-card">
             <div className="stat-icon-wrap amber">
               <Coins size={22} />
@@ -288,6 +266,7 @@ export default function HistoryScreen() {
             </div>
           </div>
 
+          {/* Row 1, Col 2: Total in USD */}
           <div className="stat-tile-card">
             <div className="stat-icon-wrap emerald">
               <DollarSign size={22} />
@@ -295,6 +274,28 @@ export default function HistoryScreen() {
             <div>
               <span className="stat-tile-label">{isKm ? 'សរុបជាដុល្លារ (USD)' : 'Total in USD'}</span>
               <h3 className="stat-tile-val text-emerald">${totalUSD.toFixed(2)}</h3>
+            </div>
+          </div>
+
+          {/* Row 2, Col 1: Products Sold (Taller Column Style) */}
+          <div className="stat-tile-card column-tile">
+            <div className="stat-icon-wrap violet">
+              <Package size={26} />
+            </div>
+            <div>
+              <span className="stat-tile-label">{isKm ? 'មុខទំនិញលក់បាន' : 'Products Sold'}</span>
+              <h3 className="stat-tile-val">{totalProductsSold} {isKm ? 'ឯកតា' : 'items'}</h3>
+            </div>
+          </div>
+
+          {/* Row 2, Col 2: Transactions (Taller Column Style) */}
+          <div className="stat-tile-card column-tile">
+            <div className="stat-icon-wrap indigo">
+              <ShoppingCart size={26} />
+            </div>
+            <div>
+              <span className="stat-tile-label">{isKm ? 'ចំនួនប្រតិបត្តិការ' : 'Transactions'}</span>
+              <h3 className="stat-tile-val">{salesCount} {isKm ? 'លើក' : 'records'}</h3>
             </div>
           </div>
         </div>
@@ -350,7 +351,7 @@ export default function HistoryScreen() {
                   strokeLinejoin="round"
                 />
 
-                {/* Points + labels — same coordinate system as the line, so they always align */}
+                {/* Points + labels */}
                 {chartPoints.points.map((p, idx) => (
                   <g key={idx}>
                     <circle cx={p.x} cy={p.y} r="5" className="chart-point" />

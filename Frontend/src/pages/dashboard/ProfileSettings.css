@@ -1,4 +1,7 @@
-/* Master Settings Shell */
+/* ==========================================================================
+   Master Settings Shell
+   ========================================================================== */
+
 .settings-page-wrapper {
   width: 100%;
   max-width: 1100px;
@@ -54,15 +57,18 @@ html[data-theme='dark'] .settings-back-btn svg {
 }
 
 /* ==========================================================================
-   Card Styling: Elevated White Card with Violet Border & Soft Violet Shadow
+   Card Styling
    ========================================================================== */
+
 .settings-sidebar,
 .settings-content-panel {
   background-color: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: 24px;
   padding: 28px 24px;
-  box-shadow: 0 12px 30px -4px rgba(126, 34, 206, 0.09), 0 4px 14px rgba(126, 34, 206, 0.04);
+  box-shadow:
+    0 12px 30px -4px rgba(126, 34, 206, 0.09),
+    0 4px 14px rgba(126, 34, 206, 0.04);
   transition: all 0.2s ease;
 }
 
@@ -70,10 +76,15 @@ html[data-theme='dark'] .settings-sidebar,
 html[data-theme='dark'] .settings-content-panel {
   background-color: #111827;
   border: 1px solid rgba(255, 255, 255, 0.06);
-  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.45), 0 0 25px rgba(168, 85, 247, 0.12);
+  box-shadow:
+    0 16px 36px rgba(0, 0, 0, 0.45),
+    0 0 25px rgba(168, 85, 247, 0.12);
 }
 
-/* Left Profile Header */
+/* ==========================================================================
+   Left Profile Header
+   ========================================================================== */
+
 .sidebar-profile-header {
   text-align: center;
   padding-bottom: 20px;
@@ -85,7 +96,10 @@ html[data-theme='dark'] .sidebar-profile-header {
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-/* Full-bleed Circle Zoom Container */
+/* ==========================================================================
+   Profile Avatar
+   ========================================================================== */
+
 .sidebar-avatar-wrap {
   position: relative;
   width: 96px;
@@ -123,6 +137,18 @@ html[data-theme='dark'] .avatar-img-container {
   display: block;
 }
 
+.avatar-img-container img {
+  object-fit: cover;
+}
+
+.avatar-img-container img[src*="/avatars/"] {
+  transform: scale(1.42);
+}
+
+/* ==========================================================================
+   Avatar Edit Button
+   ========================================================================== */
+
 .avatar-edit-badge {
   position: absolute;
   bottom: -2px;
@@ -138,7 +164,9 @@ html[data-theme='dark'] .avatar-img-container {
   justify-content: center;
   cursor: pointer;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
-  transition: transform 0.15s ease, background-color 0.15s ease;
+  transition:
+    transform 0.15s ease,
+    background-color 0.15s ease;
   padding: 0;
   z-index: 2;
 }
@@ -165,7 +193,10 @@ html[data-theme='dark'] .avatar-edit-badge:hover {
   color: var(--color-text-dark);
 }
 
-/* Navigation Buttons */
+/* ==========================================================================
+   Navigation Buttons
+   ========================================================================== */
+
 .settings-nav-menu {
   display: flex;
   flex-direction: column;
@@ -218,6 +249,19 @@ html[data-theme='dark'] .settings-nav-item:hover {
   color: #e9d5ff;
 }
 
+.settings-nav-item.active {
+  background-color: rgba(126, 34, 206, 0.1);
+  border-color: rgba(126, 34, 206, 0.2);
+  color: #7e22ce;
+  font-weight: 700;
+}
+
+html[data-theme='dark'] .settings-nav-item.active {
+  background-color: rgba(168, 85, 247, 0.18);
+  border-color: rgba(168, 85, 247, 0.3);
+  color: #c084fc;
+}
+
 .nav-item-dual {
   flex: 1;
   display: flex;
@@ -225,7 +269,8 @@ html[data-theme='dark'] .settings-nav-item:hover {
   align-items: center;
 }
 
-.lang-tag, .theme-tag {
+.lang-tag,
+.theme-tag {
   font-size: 10px;
   font-weight: 700;
   padding: 2px 8px;
@@ -265,7 +310,10 @@ html[data-theme='dark'] .settings-nav-divider {
   border-color: rgba(239, 68, 68, 0.2) !important;
 }
 
-/* Right Panel Content */
+/* ==========================================================================
+   Right Panel Content
+   ========================================================================== */
+
 .content-card-header {
   display: flex;
   align-items: center;
@@ -337,7 +385,10 @@ html[data-theme='dark'] .edit-toggle-btn:hover {
   color: #ffffff;
 }
 
-/* Info Display Tiles */
+/* ==========================================================================
+   Info Display Tiles
+   ========================================================================== */
+
 .view-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -398,7 +449,10 @@ html[data-theme='dark'] .info-icon {
   color: #a855f7;
 }
 
-/* Form Inputs in Light Mode */
+/* ==========================================================================
+   Form Inputs
+   ========================================================================== */
+
 .floating-field label {
   display: block;
   font-size: 11px;
@@ -487,7 +541,11 @@ html[data-theme='dark'] .phone-prefix-input .phone-tag {
 }
 
 .settings-primary-btn {
-  background: linear-gradient(135deg, #7e22ce 0%, #9333ea 100%);
+  background: linear-gradient(
+    135deg,
+    #7e22ce 0%,
+    #9333ea 100%
+  );
   color: #ffffff;
   border: none;
   border-radius: 12px;
@@ -496,7 +554,9 @@ html[data-theme='dark'] .phone-prefix-input .phone-tag {
   font-size: 13px;
   cursor: pointer;
   box-shadow: 0 6px 18px rgba(126, 34, 206, 0.28);
-  transition: transform 0.15s ease, filter 0.15s ease;
+  transition:
+    transform 0.15s ease,
+    filter 0.15s ease;
 }
 
 .settings-primary-btn:hover {
@@ -533,8 +593,45 @@ html[data-theme='dark'] .settings-cancel-btn:hover {
 }
 
 /* ==========================================================================
-   Cartoon Avatar Modal Picker
+   Status Alert
    ========================================================================== */
+
+.settings-alert-banner {
+  padding: 11px 14px;
+  border-radius: 12px;
+  margin-bottom: 18px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.settings-alert-banner.success {
+  background-color: rgba(34, 197, 94, 0.1);
+  border: 1px solid rgba(34, 197, 94, 0.2);
+  color: #15803d;
+}
+
+.settings-alert-banner.error {
+  background-color: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  color: #dc2626;
+}
+
+html[data-theme='dark'] .settings-alert-banner.success {
+  background-color: rgba(34, 197, 94, 0.12);
+  border-color: rgba(34, 197, 94, 0.25);
+  color: #86efac;
+}
+
+html[data-theme='dark'] .settings-alert-banner.error {
+  background-color: rgba(239, 68, 68, 0.12);
+  border-color: rgba(239, 68, 68, 0.25);
+  color: #fca5a5;
+}
+
+/* ==========================================================================
+   Cartoon Preset Avatar Modal
+   ========================================================================== */
+
 .avatar-modal-backdrop {
   position: fixed;
   inset: 0;
@@ -551,7 +648,7 @@ html[data-theme='dark'] .settings-cancel-btn:hover {
 .avatar-modal-card {
   background: #ffffff;
   border-radius: 24px;
-  max-width: 380px;
+  max-width: 360px;
   width: 100%;
   padding: 22px;
   box-shadow: 0 20px 45px rgba(0, 0, 0, 0.22);
@@ -574,7 +671,7 @@ html[data-theme='dark'] .settings-cancel-btn:hover {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 16px;
+  margin-bottom: 20px;
 }
 
 .avatar-modal-header h3 {
@@ -608,10 +705,15 @@ html[data-theme='dark'] .settings-cancel-btn:hover {
   color: #7e22ce;
 }
 
+/* ==========================================================================
+   Cartoon Avatar Grid
+   ========================================================================== */
+
 .cartoon-avatar-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 12px;
+  margin-top: 6px;
 }
 
 @media (max-width: 480px) {
@@ -635,6 +737,11 @@ html[data-theme='dark'] .settings-cancel-btn:hover {
 
 .cartoon-choice-item:hover {
   transform: translateY(-2px) scale(1.05);
+}
+
+.cartoon-choice-item:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
 }
 
 .cartoon-choice-item.selected {
@@ -676,7 +783,10 @@ html[data-theme='dark'] .settings-cancel-btn:hover {
   z-index: 2;
 }
 
-/* Dark Theme Overrides */
+/* ==========================================================================
+   Dark Theme Overrides
+   ========================================================================== */
+
 html[data-theme='dark'] .avatar-modal-card {
   background-color: #120d24;
   border-color: rgba(168, 85, 247, 0.25);
@@ -704,15 +814,48 @@ html[data-theme='dark'] .cartoon-choice-item.selected {
   border-color: #c084fc;
 }
 
-/* Mobile Visibility */
+html[data-theme='dark'] .avatar-check-indicator {
+  background-color: #9333ea;
+  border-color: #120d24;
+}
+
+/* ==========================================================================
+   Mobile Visibility & Topbar Handling
+   ========================================================================== */
+
+.mobile-only-bar {
+  display: none !important;
+}
+
 @media (max-width: 899px) {
+  .mobile-only-bar {
+    display: flex !important;
+  }
+
   .settings-sidebar.mobile-hidden {
     display: none;
   }
+
   .settings-content-panel.mobile-hidden {
     display: none;
   }
+
   .view-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .avatar-modal-card {
+    padding: 18px;
+    border-radius: 20px;
+  }
+
+  .avatar-modal-header h3 {
+    font-size: 16px;
+  }
+
+  .avatar-modal-header p {
+    font-size: 11px;
   }
 }

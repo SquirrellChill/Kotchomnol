@@ -1,6 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Sun, Moon, Mic, BarChart3, ShieldCheck, Menu, X, Check, Mail, ChevronDown, ArrowRight } from 'lucide-react';
+import { 
+  Sun, Moon, Mic, BarChart3, ShieldCheck, Menu, X, 
+  Check, Mail, ChevronDown, ArrowRight, ShoppingCart, 
+  FileText 
+} from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { useTheme } from '../context/ThemeContext';
@@ -12,13 +16,10 @@ import {
 } from '../services/paymentService';
 import './LandingPage.css';
 import './dashboard/GoProPage.css';
-import faqIllustration from '../assets/image 1.png';
+import faqPhoto from '../assets/image 1.png';
 
 const POLL_INTERVAL_MS = 4000;
 
-// FastAPI/Pydantic error `detail` isn't always a string — for 422s it's an
-// array of {type, loc, msg, input, ctx} objects. Never hand that straight to
-// React as a child; always resolve it down to a string first.
 function extractErrorMessage(err, fallback) {
   const detail = err?.response?.data?.detail;
   if (!detail) return fallback;
@@ -31,9 +32,6 @@ function extractErrorMessage(err, fallback) {
   return fallback;
 }
 
-// lucide-react has deprecated (and will eventually remove) brand logos like
-// Facebook/Instagram, and never had Telegram/TikTok at all — so these are
-// small hand-drawn inline SVGs instead, kept consistent and version-proof.
 function FacebookIcon({ size = 18 }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
@@ -80,6 +78,7 @@ function TikTokIcon({ size = 18 }) {
 
 const content = {
   km: {
+    navHome: 'ទំព័រដើម',
     navFeatures: 'មុខងារ',
     navPricing: 'តម្លៃ',
     navFaq: 'សំណួរ',
@@ -110,37 +109,44 @@ const content = {
     statTime: 'ពេលកត់ត្រាជាមធ្យម',
     statCurrency: 'គាំទ្រទ្វេដង',
     statCloud: 'Cloud Safe',
-    featuresTitle: 'សមត្ថភាពសំខាន់ៗ',
-    featuresSub: 'រចនាសម្រាប់ល្បឿនប្រចាំថ្ងៃរបស់ហាង',
-    feat1Title: 'កត់ត្រាសំឡេងខ្មែរ និងអង់គ្លេស',
-    feat1Desc: 'ថតការលក់ ឆ្លើយសំណួរបន្ថែមបើចាំបាច់ ហើយពិនិត្យទំនិញដែលបានដកស្រង់មុនរក្សាទុក។',
-    feat2Title: 'ចំណូលពីការលក់ដែលបានរក្សាទុក',
-    feat2Desc: 'សង្ខេបចំណូលច្បាស់លាស់ ងាយស្រួលតាមដានរបាយការណ៍ប្រចាំថ្ងៃដោយស្វ័យប្រវត្តិ។',
-    feat3Title: 'កន្លែងការងារគណនីមានសុវត្ថិភាព',
-    feat3Desc: 'ទិន្នន័យហាងរបស់អ្នកត្រូវបានរក្សាទុកដោយសុវត្ថិភាពខ្ពស់នៅលើប្រព័ន្ធ Cloud ម៉ាស៊ីនមេ។',
+    featuresTitle: 'Key Capabilities',
+    featuresSub: 'Built for the daily speed of local businesses',
+    feat1Title: 'Khmer & English Voice Entry',
+    feat1Desc: 'Record spoken sales, answer follow-ups if needed, and review extracted items before saving.',
+    feat2Title: 'Saved Sales Revenue Tracking',
+    feat2Desc: 'Clear revenue summaries with automated daily reports that are effortless to track.',
+    feat3Title: 'Secure Account Workspace',
+    feat3Desc: 'Your shop data is securely saved with cloud infrastructure and access protection.',
+    feat1BadgeVoiceText: 'លក់ទឹកសុទ្ធ 5 ដប',
+    feat1BadgeResultText: 'Sold 5 bottles of water',
+    feat2BadgeToday: 'Today',
+    feat2BadgeRevenue: "Today's Revenue",
+    feat2BadgeSales: 'Sales',
+    feat2BadgeOrders: 'Orders',
+    feat3BadgeTitle: 'Your data is safe',
+    feat3BadgeSub: 'Powered by secure cloud',
     pricingTitle: 'គម្រោង និងតម្លៃ',
     pricingSub: 'ចាប់ផ្តើមឥតគិតថ្លៃ ហើយដំឡើងកម្រិតនៅពេលអាជីវកម្មរបស់អ្នករីកចម្រើន',
     pricingPopular: 'ពេញនិយមបំផុត',
-    pricingFreeLabel: 'គម្រោងឥតគិតថ្លៃ',
-    pricingFreeTagline: 'សម្រាប់ចាប់ផ្តើម',
+    pricingFreeLabel: 'Free Tier',
+    pricingFreeTagline: 'For getting started',
     pricingFreePrice: '$0',
-    pricingFreePeriod: 'ជារៀងរហូត',
-    pricingStarterLabel: 'ផែនការចាប់ផ្តើម',
-    pricingStarterTagline: 'សម្រាប់អាជីវកម្មកំពុងរីកចម្រើន',
+    pricingFreePeriod: 'forever',
+    pricingStarterLabel: 'Starter Plan',
+    pricingStarterTagline: 'For growing businesses',
     pricingStarterPrice: '$3.99',
-    pricingStarterPeriod: '/ខែ',
-    pricingBtnFree: 'ចាប់ផ្ដើមឥតគិតថ្លៃ',
-    pricingBtnStarter: 'ដំឡើងកម្រិត',
-    faqTitle: 'សំណួរដែលសួរញឹកញាប់',
-    faq1Q: 'តើខ្ញុំអាចពិនិត្យការលក់មុនរក្សាទុកបានទេ?',
-    faq1A: 'បាន។ លទ្ធផលសំឡេងនឹងបើកក្នុងទំព័រពិនិត្យដដែល ដើម្បីឱ្យអ្នកកែទំនិញមុនបញ្ជាក់។',
-    faq2Q: 'តើចំណូលមកពីប្រតិបត្តិការពិតទេ?',
-    faq2A: 'បាទ/ចាស ចំណូលទាំងអស់ត្រូវបានកត់ត្រាផ្អែកលើការបញ្ចូលជាក់ស្តែងរបស់អ្នក និងត្រូវបានធ្វើសមកាលកម្មភ្លាមៗ។',
-    faq3Q: 'តើខ្ញុំអាចប្រើភាសាខ្មែរបានទេ?',
-    faq3A: 'ប្រព័ន្ធរបស់យើងគាំទ្រទាំងភាសាខ្មែរ និងអង់គ្លេសយ៉ាងពេញលេញសម្រាប់សំឡេងនិងអត្ថបទ។',
+    pricingStarterPeriod: '/month',
+    pricingBtnFree: 'Start Free',
+    pricingBtnStarter: 'Go Pro',
+    faqTitle: 'Frequently Asked Questions',
+    faq1Q: 'Can I review sales before saving?',
+    faq1A: 'Yes. Voice results open in a review page so you can edit quantities and prices before confirming.',
+    faq2Q: 'Does revenue come from verified transactions?',
+    faq2A: 'Yes. All revenue is computed strictly from actual saved items and synced in real time.',
+    faq3Q: 'Can I speak in Khmer?',
+    faq3A: 'Our system natively supports Khmer and English voice entry and translation.',
     ctaDesc: 'និយាយការលក់ក្នុងហាង ហើយបម្លែងទៅជាកំណត់ត្រាលក់ សង្ខេបចំណូល និងបញ្ជីដែលអាចពិនិត្យបាន។',
     ctaBtn: 'ចាប់ផ្ដើមឥតគិតថ្លៃ',
-    footerDesc: 'KOTCHOMNOL ជួយម្ចាស់ហាងកត់ត្រាការលក់ដោយសំឡេង ឬបញ្ចូលដោយដៃ ពិនិត្យទំនិញនីមួយៗ ហើយរក្សាទុកប្រតិបត្តិការដែលបានបញ្ជាក់ទៅក្នុងកំណត់ត្រាចំណូលដែលបានផ្ទៀងផ្ទាត់។',
     footerHome: 'ទំព័រដើម',
     footerFeatures: 'មុខងារ',
     footerAbout: 'អំពីយើង',
@@ -148,8 +154,10 @@ const content = {
     footerPrivacy: 'ឯកជនភាព',
     footerContact: 'ទំនាក់ទំនង',
     footerCopyright: 'រក្សាសិទ្ធិ 2026 KOTCHOMNOL​ រក្សាសិទ្ធិគ្រប់យ៉ាង',
+    footerDesc: 'KOTCHOMNOL ជួយម្ចាស់ហាងកត់ត្រាការលក់ដោយសំឡេង ឬបញ្ចូលដោយដៃ ពិនិត្យទំនិញនីមួយៗ ហើយរក្សាទុកប្រតិបត្តិការដែលបានបញ្ជាក់ទៅក្នុងកំណត់ត្រាចំណូលដែលបានផ្ទៀងផ្ទាត់។',
   },
   en: {
+    navHome: 'Home',
     navFeatures: 'Features',
     navPricing: 'Pricing',
     navFaq: 'FAQ',
@@ -183,11 +191,19 @@ const content = {
     featuresTitle: 'Key Capabilities',
     featuresSub: 'Built for the daily speed of local businesses',
     feat1Title: 'Khmer & English Voice Entry',
-    feat1Desc: 'Record spoken sales, answer follow-ups if needed, and review extracted items before saving.',
+    feat1Desc: 'Record spoken sales naturally, answer follow-ups if needed, and review extracted items before saving.',
     feat2Title: 'Saved Sales Revenue Tracking',
     feat2Desc: 'Clear revenue summaries with automated daily reports that are effortless to track.',
     feat3Title: 'Secure Account Workspace',
     feat3Desc: 'Your shop data is securely saved with cloud infrastructure and access protection.',
+    feat1BadgeVoiceText: 'លក់ទឹកសុទ្ធ 5 ដប',
+    feat1BadgeResultText: 'Sold 5 bottles of water',
+    feat2BadgeToday: 'Today',
+    feat2BadgeRevenue: "Today's Revenue",
+    feat2BadgeSales: 'Sales',
+    feat2BadgeOrders: 'Orders',
+    feat3BadgeTitle: 'Your data is safe',
+    feat3BadgeSub: 'Powered by secure cloud',
     pricingTitle: 'Plans & Pricing',
     pricingSub: 'Start free, upgrade as your business grows',
     pricingPopular: 'Most Popular',
@@ -210,7 +226,6 @@ const content = {
     faq3A: 'Our system natively supports Khmer and English voice entry and translation.',
     ctaDesc: 'Speak in-store sales, automate bookkeeping, and manage cash flow with zero paperwork.',
     ctaBtn: 'Start Free',
-    footerDesc: 'KOTCHOMNOL helps shop owners log sales via voice or manual entry, review each line item, and store confirmed transactions in a verified ledger.',
     footerHome: 'Home',
     footerFeatures: 'Features',
     footerAbout: 'About',
@@ -218,6 +233,7 @@ const content = {
     footerPrivacy: 'Privacy',
     footerContact: 'Contact',
     footerCopyright: '© 2026 KOTCHOMNOL. All rights reserved.',
+    footerDesc: 'KOTCHOMNOL helps shop owners log sales via voice or manual entry, review each line item, and store confirmed transactions in a verified ledger.',
   }
 };
 
@@ -270,10 +286,7 @@ export default function LandingPage() {
     }
   };
 
-  // Go Pro should never route through the plan-picker / profile page —
-  // clicking it starts the Bakong checkout immediately and shows the QR
-  // right here on the landing page.
-  const [payment, setPayment] = useState(null); // { id, amount, deeplink, status }
+  const [payment, setPayment] = useState(null);
   const [qrImageUrl, setQrImageUrl] = useState(null);
   const [isStartingCheckout, setIsStartingCheckout] = useState(false);
   const [isChecking, setIsChecking] = useState(false);
@@ -300,7 +313,7 @@ export default function LandingPage() {
           setPayment((prev) => (prev ? { ...prev, status: data.status } : prev));
         }
       } catch {
-        // transient network error — keep polling, next tick will retry
+        // network polling retry
       }
     }, POLL_INTERVAL_MS);
   };
@@ -310,7 +323,6 @@ export default function LandingPage() {
       stopPolling();
       if (qrImageUrl) URL.revokeObjectURL(qrImageUrl);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const closeCheckoutModal = () => {
@@ -324,7 +336,6 @@ export default function LandingPage() {
   const handleGoPro = async () => {
     closeMenu();
     if (!isLoggedIn) {
-      // Payment needs an account to attach to — guests have to sign up first.
       navigate('/register');
       return;
     }
@@ -359,14 +370,14 @@ export default function LandingPage() {
       setPayment((prev) => (prev ? { ...prev, status: data.status } : prev));
       if (data.status !== 'pending') stopPolling();
     } catch {
-      // ignore — background polling will keep trying
+      // polling continues
     } finally {
       setIsChecking(false);
     }
   };
 
   return (
-    <div className="landing-page font-kantomruy">
+    <div className="landing-page font-kantumruy">
       {/* Floating Header */}
       <header className="landing-navbar-wrapper">
         <div className="landing-navbar">
@@ -382,15 +393,16 @@ export default function LandingPage() {
 
           {/* Desktop Nav Links */}
           <nav className="landing-nav-links" aria-label="Primary Navigation">
+            <a href="#top" onClick={() => { closeMenu(); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>
+              {txt.navHome}
+            </a>
             <a href="#features" onClick={(e) => handleNavClick(e, 'features')}>{txt.navFeatures}</a>
             <a href="#pricing" onClick={(e) => handleNavClick(e, 'pricing')}>{txt.navPricing}</a>
             <a href="#faq" onClick={(e) => handleNavClick(e, 'faq')}>{txt.navFaq}</a>
-            <Link to="/about">{txt.navAbout}</Link>
           </nav>
 
           {/* Nav Right Controls */}
           <div className="landing-nav-right">
-            {/* Desktop Theme & Language */}
             <div className="desktop-controls">
               <button 
                 type="button" 
@@ -416,7 +428,6 @@ export default function LandingPage() {
               </button>
             </div>
 
-            {/* Auth Buttons */}
             <div className="landing-auth-buttons">
               {isLoggedIn ? (
                 <button 
@@ -447,7 +458,6 @@ export default function LandingPage() {
               )}
             </div>
 
-            {/* Hamburger Button */}
             <button
               type="button"
               className="landing-hamburger-btn"
@@ -480,12 +490,13 @@ export default function LandingPage() {
         </div>
 
         <nav className="drawer-nav-links">
+          <a href="#top" onClick={() => { closeMenu(); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>
+            {txt.navHome}
+          </a>
           <a href="#features" onClick={(e) => handleNavClick(e, 'features')}>{txt.navFeatures}</a>
           <a href="#pricing" onClick={(e) => handleNavClick(e, 'pricing')}>{txt.navPricing}</a>
           <a href="#faq" onClick={(e) => handleNavClick(e, 'faq')}>{txt.navFaq}</a>
-          <Link to="/about" onClick={closeMenu}>{txt.navAbout}</Link>
 
-          {/* Theme Mode Toggle */}
           <button 
             type="button" 
             className="drawer-list-btn" 
@@ -495,7 +506,6 @@ export default function LandingPage() {
             <span>{theme === 'dark' ? 'Light Mode' : 'Dark Mode'}</span>
           </button>
 
-          {/* Language Toggle */}
           <button 
             type="button" 
             className="drawer-list-btn" 
@@ -592,39 +602,135 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Features Section */}
+      {/* 3-Column Immersive Feature Cards */}
       <section id="features" className="landing-features-section">
-        <div className="landing-features-bg" aria-hidden="true" />
-        <div className="landing-features-overlay" aria-hidden="true" />
-        <div className="landing-container landing-features-content">
+        <div className="landing-container">
           <div className="section-title-wrap">
             <h2>{txt.featuresTitle}</h2>
             <p>{txt.featuresSub}</p>
           </div>
 
-          <div className="features-grid">
-            <div className="feature-card">
-              <div className="feature-icon-box">
-                <Mic size={22} strokeWidth={2.4} />
+          <div className="photo-features-grid">
+            {/* CARD 1: Voice Entry */}
+            <div className="photo-card photo-card-1">
+              <div className="photo-card-bg card-bg-1" />
+              <div className="photo-card-gradient" />
+
+              <div className="photo-card-top">
+                <div className="photo-card-icon">
+                  <Mic size={20} strokeWidth={2.4} />
+                </div>
+                <h3>{txt.feat1Title}</h3>
+                <p>{txt.feat1Desc}</p>
               </div>
-              <h3>{txt.feat1Title}</h3>
-              <p>{txt.feat1Desc}</p>
+
+              <div className="photo-card-bottom">
+                <div className="floating-ui-badge voice-ui-badge">
+                  <div className="voice-wave-row">
+                    <div className="voice-round-btn">
+                      <Mic size={16} />
+                    </div>
+                    <div className="soundwave-anim">
+                      <span /><span /><span /><span /><span /><span /><span /><span /><span /><span /><span />
+                    </div>
+                  </div>
+                  <div className="voice-badge-text-primary">
+                    {txt.feat1BadgeVoiceText}
+                  </div>
+                  <div className="voice-badge-text-sub">
+                    <Check size={13} className="voice-check-icon" />
+                    <span>{txt.feat1BadgeResultText}</span>
+                  </div>
+                </div>
+              </div>
             </div>
 
-            <div className="feature-card">
-              <div className="feature-icon-box">
-                <BarChart3 size={22} strokeWidth={2.4} />
+            {/* CARD 2: Revenue Tracking */}
+            <div className="photo-card photo-card-2">
+              <div className="photo-card-bg card-bg-2" />
+              <div className="photo-card-gradient" />
+
+              <div className="photo-card-top">
+                <div className="photo-card-icon">
+                  <BarChart3 size={20} strokeWidth={2.4} />
+                </div>
+                <h3>{txt.feat2Title}</h3>
+                <p>{txt.feat2Desc}</p>
               </div>
-              <h3>{txt.feat2Title}</h3>
-              <p>{txt.feat2Desc}</p>
+
+              <div className="photo-card-bottom">
+                <div className="floating-ui-badge chart-ui-badge">
+                  <div className="chart-badge-header">
+                    <div>
+                      <span className="chart-label">{txt.feat2BadgeRevenue}</span>
+                      <div className="chart-amount">$128.50</div>
+                    </div>
+                    <span className="chart-filter-pill">
+                      {txt.feat2BadgeToday} <ChevronDown size={12} />
+                    </span>
+                  </div>
+
+                  {/* SVG Line Graph */}
+                  <div className="chart-svg-wrap">
+                    <svg viewBox="0 0 160 36" preserveAspectRatio="none" className="revenue-curve-svg">
+                      <defs>
+                        <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="#8b5cf6" stopOpacity="0.4" />
+                          <stop offset="100%" stopColor="#8b5cf6" stopOpacity="0.0" />
+                        </linearGradient>
+                      </defs>
+                      <path d="M0,32 Q25,28 45,24 T95,16 T135,10 T160,6 L160,36 L0,36 Z" fill="url(#chartGrad)" />
+                      <path d="M0,32 Q25,28 45,24 T95,16 T135,10 T160,6" fill="none" stroke="#7c3aed" strokeWidth="2.4" />
+                      <circle cx="45" cy="24" r="2.5" fill="#7c3aed" />
+                      <circle cx="95" cy="16" r="2.5" fill="#7c3aed" />
+                      <circle cx="160" cy="6" r="2.5" fill="#7c3aed" />
+                    </svg>
+                  </div>
+
+                  <div className="chart-metrics-row">
+                    <div className="chart-stat-item">
+                      <ShoppingCart size={14} className="stat-icon" />
+                      <div>
+                        <strong>24</strong>
+                        <span>{txt.feat2BadgeSales}</span>
+                      </div>
+                    </div>
+                    <div className="chart-stat-item">
+                      <FileText size={14} className="stat-icon" />
+                      <div>
+                        <strong>18</strong>
+                        <span>{txt.feat2BadgeOrders}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
 
-            <div className="feature-card">
-              <div className="feature-icon-box">
-                <ShieldCheck size={22} strokeWidth={2.4} />
+            {/* CARD 3: Secure Workspace */}
+            <div className="photo-card photo-card-3">
+              <div className="photo-card-bg card-bg-3" />
+              <div className="photo-card-gradient" />
+
+              <div className="photo-card-top">
+                <div className="photo-card-icon">
+                  <ShieldCheck size={20} strokeWidth={2.4} />
+                </div>
+                <h3>{txt.feat3Title}</h3>
+                <p>{txt.feat3Desc}</p>
               </div>
-              <h3>{txt.feat3Title}</h3>
-              <p>{txt.feat3Desc}</p>
+
+              <div className="photo-card-bottom">
+                <div className="floating-ui-badge security-ui-badge">
+                  <div className="security-icon-circle">
+                    <ShieldCheck size={20} />
+                  </div>
+                  <div>
+                    <div className="security-badge-title">{txt.feat3BadgeTitle}</div>
+                    <div className="security-badge-sub">{txt.feat3BadgeSub}</div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -653,8 +759,9 @@ export default function LandingPage() {
                 <li>{activeLang === 'en' ? 'Basic sales recording' : 'ការកត់ត្រាការលក់មូលដ្ឋាន'}</li>
                 <li>{activeLang === 'en' ? 'Manual entry' : 'ការបញ្ចូលដោយដៃ'}</li>
                 <li>{activeLang === 'en' ? 'Limited voice transactions' : 'ប្រតិបត្តិការសំឡេងមានកំណត់'}</li>
-                <li>{activeLang === 'en' ? 'Daily transaction history' : 'ប្រវត្តិប្រតិបត្តិការ (ប្រចាំថ្ងៃ)'}</li>
-                <li>{activeLang === 'en' ? '1 business · 1 user' : 'អាជីវកម្ម 1 · អ្នកប្រើប្រាស់ 1'}</li>
+                <li>{activeLang === 'en' ? 'Daily transaction history' : 'ប្រវត្តិប្រតិបត្តិការប្រចាំថ្ងៃ'}</li>
+                <li>{activeLang === 'en' ? 'Basic revenue overview' : 'ទិដ្ឋភាពទូទៅនៃចំណូលមូលដ្ឋាន'}</li>
+                <li>{activeLang === 'en' ? 'Daily report exports (PNG/PDF)' : 'ការនាំចេញរបាយការណ៍ប្រចាំថ្ងៃ (PNG/PDF)'}</li>
               </ul>
               <button
                 type="button"
@@ -665,7 +772,7 @@ export default function LandingPage() {
               </button>
             </div>
 
-            {/* Starter Plan (Popular) */}
+            {/* Starter Plan */}
             <div className="pricing-card pricing-card-popular">
               <span className="pricing-popular-badge">{txt.pricingPopular}</span>
               <div className="pricing-card-head">
@@ -678,11 +785,12 @@ export default function LandingPage() {
               </div>
               <ul className="pricing-features">
                 <li>{activeLang === 'en' ? 'Everything in Free' : 'អ្វីៗគ្រប់យ៉ាងនៅក្នុងគម្រោងឥតគិតថ្លៃ'}</li>
-                <li>{activeLang === 'en' ? 'Unlimited transactions & history' : 'ប្រតិបត្តិការ និងប្រវត្តិគ្មានដែនកំណត់'}</li>
+                <li>{activeLang === 'en' ? 'Unlimited transactions & history (weekly, monthly)' : 'ប្រតិបត្តិការ និងប្រវត្តិគ្មានដែនកំណត់ (ប្រចាំសប្តាហ៍, ប្រចាំខែ)'}</li>
                 <li>{activeLang === 'en' ? 'Voice-to-transaction' : 'ការបញ្ចូលដោយសំឡេង'}</li>
-                <li>{activeLang === 'en' ? 'Revenue & expense tracking' : 'តាមដានចំណូល និងចំណាយ'}</li>
+                <li>{activeLang === 'en' ? 'Revenue tracking' : 'ការតាមដានចំណូល'}</li>
+                <li>{activeLang === 'en' ? 'Best-selling products' : 'ផលិតផលលក់ដាច់បំផុត'}</li>
                 <li>{activeLang === 'en' ? 'Product management' : 'ការគ្រប់គ្រងផលិតផល'}</li>
-                <li>{activeLang === 'en' ? 'Up to 2 users · 1 business' : 'អ្នកប្រើប្រាស់ 2 នាក់ · អាជីវកម្ម 1'}</li>
+                <li>{activeLang === 'en' ? 'Full report exports (PNG/PDF)' : 'ការនាំចេញរបាយការណ៍ពេញលេញ (PNG/PDF)'}</li>
               </ul>
               <button
                 type="button"
@@ -699,11 +807,10 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* FAQ Section */}
+      {/* FAQ Section (Rounded Rectangle Photo Card) */}
       <section id="faq" className="landing-faq-section">
         <div className="landing-container">
           <div className="faq-layout">
-            {/* Left: questions */}
             <div className="faq-content">
               <span className="section-eyebrow">FAQ</span>
               <h2 className="faq-title">{txt.faqTitle}</h2>
@@ -731,16 +838,21 @@ export default function LandingPage() {
               </div>
             </div>
 
-            {/* Right: image */}
             <div className="faq-visual" aria-hidden="true">
-              <div className="faq-visual-blob" />
-              <img src={faqIllustration} alt="" className="faq-visual-img" loading="lazy" />
+              <div className="faq-visual-card">
+                <img
+                  src={faqPhoto}
+                  alt="Customer support assistant"
+                  className="faq-photo-img"
+                  loading="lazy"
+                />
+              </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Bottom CTA Section */}
+      {/* Bottom CTA Banner */}
       <section className="landing-cta-banner">
         <div className="faq-container">
           <h2>KOTCHOMNOL</h2>
@@ -768,7 +880,6 @@ export default function LandingPage() {
               <p className="footer-brand-desc">
                 {txt.footerDesc}
               </p>
-              {/* Update these hrefs to your real contact/social URLs */}
               <div className="footer-social-row">
                 <Link to="/contact" className="footer-contact-icon-btn" aria-label={txt.navContact}>
                   <Mail size={18} />
@@ -827,8 +938,8 @@ export default function LandingPage() {
           </div>
         </div>
       </footer>
-      {/* Bakong Checkout Modal — opens straight over the landing page,
-          no navigation to any plan-picker/profile screen */}
+
+      {/* Bakong Checkout Modal */}
       {payment && (
         <div className="gopro-modal-overlay" onClick={closeCheckoutModal}>
           <div className="gopro-modal" onClick={(e) => e.stopPropagation()}>
