@@ -39,4 +39,3 @@ def health_check():
     return {"status": "ok", "service": "BANHJI API"}
 
 
-#eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6OCwiZXhwIjoxNzg4NTMzMTE4fQ.sOh0mIzOdsavdw7De19bdHGheNt2U2sWdQcjlFPhfcQ
