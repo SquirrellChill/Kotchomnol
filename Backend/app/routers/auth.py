@@ -25,7 +25,7 @@ from fastapi import (
     UploadFile,
     status,
 )
-from gotrue.errors import AuthApiError
+from supabase_auth.errors import AuthApiError
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
