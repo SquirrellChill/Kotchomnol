@@ -117,7 +117,7 @@ const content = {
     feat2Desc: 'Clear revenue summaries with automated daily reports that are effortless to track.',
     feat3Title: 'Secure Account Workspace',
     feat3Desc: 'Your shop data is securely saved with cloud infrastructure and access protection.',
-    feat1BadgeVoiceText: 'លក់ទឹកសុទ្ធ 5 ដប',
+    feat1BadgeVoiceText: 'លក់ទឹកសុទ្ធបាន 5 ដប',
     feat1BadgeResultText: 'Sold 5 bottles of water',
     feat2BadgeToday: 'Today',
     feat2BadgeRevenue: "Today's Revenue",
@@ -138,13 +138,13 @@ const content = {
     pricingStarterPeriod: '/month',
     pricingBtnFree: 'Start Free',
     pricingBtnStarter: 'Go Pro',
-    faqTitle: 'Frequently Asked Questions',
-    faq1Q: 'Can I review sales before saving?',
-    faq1A: 'Yes. Voice results open in a review page so you can edit quantities and prices before confirming.',
-    faq2Q: 'Does revenue come from verified transactions?',
-    faq2A: 'Yes. All revenue is computed strictly from actual saved items and synced in real time.',
-    faq3Q: 'Can I speak in Khmer?',
-    faq3A: 'Our system natively supports Khmer and English voice entry and translation.',
+    faqTitle: 'សំណួរដែលសួរញឹកញាប់',
+    faq1Q: 'តើខ្ញុំអាចពិនិត្យការលក់មុនរក្សាទុកបានទេ?',
+    faq1A: 'បាន។ លទ្ធផលសំឡេងនឹងបើកក្នុងទំព័រពិនិត្យដដែល ដើម្បីឱ្យអ្នកកែទំនិញមុនបញ្ជាក់។',
+    faq2Q: 'តើចំណូលមកពីប្រតិបត្តិការពិតទេ?',
+    faq2A: 'បាទ/ចាស ចំណូលទាំងអស់ត្រូវបានកត់ត្រាផ្អែកលើការបញ្ចូលជាក់ស្តែងរបស់អ្នក និងត្រូវបានធ្វើសមកាលកម្មភ្លាមៗ។',
+    faq3Q: 'តើខ្ញុំអាចប្រើភាសាខ្មែរបានទេ?',
+    faq3A: 'ប្រព័ន្ធរបស់យើងគាំទ្រទាំងភាសាខ្មែរ និងអង់គ្លេសយ៉ាងពេញលេញសម្រាប់សំឡេងនិងអត្ថបទ។',
     ctaDesc: 'និយាយការលក់ក្នុងហាង ហើយបម្លែងទៅជាកំណត់ត្រាលក់ សង្ខេបចំណូល និងបញ្ជីដែលអាចពិនិត្យបាន។',
     ctaBtn: 'ចាប់ផ្ដើមឥតគិតថ្លៃ',
     footerHome: 'ទំព័រដើម',
@@ -428,6 +428,7 @@ export default function LandingPage() {
               </button>
             </div>
 
+            {/* Desktop Auth Buttons (Hidden on mobile) */}
             <div className="landing-auth-buttons">
               {isLoggedIn ? (
                 <button 
@@ -513,6 +514,37 @@ export default function LandingPage() {
           >
             <span>{language === 'en' ? 'KH Khmer' : 'EN English'}</span>
           </button>
+
+          {/* Auth Actions Inside Mobile Drawer */}
+          <div className="drawer-auth-section">
+            {isLoggedIn ? (
+              <button 
+                type="button" 
+                className="drawer-primary-btn" 
+                onClick={() => { closeMenu(); navigate('/dashboard'); }}
+              >
+                {txt.navDashboard}
+              </button>
+            ) : (
+              <>
+                <button 
+                  type="button" 
+                  className="drawer-signin-btn" 
+                  onClick={() => { closeMenu(); navigate('/login'); }}
+                >
+                  {txt.navSignIn}
+                </button>
+                <button 
+                  type="button" 
+                  className="drawer-primary-btn btn-start-free" 
+                  onClick={() => { closeMenu(); navigate('/register'); }}
+                >
+                  <span>{txt.navStartFree}</span>
+                  <ArrowRight size={16} className="btn-start-free-arrow" />
+                </button>
+              </>
+            )}
+          </div>
         </nav>
       </aside>
 

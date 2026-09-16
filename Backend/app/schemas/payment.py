@@ -3,7 +3,7 @@
 from datetime import datetime
 from pydantic import BaseModel
 from app.models.payment import PlanType, PaymentStatus, SubscriptionStatus  # adjust import path if needed
-
+from uuid import UUID
 
 PLAN_PRICES_USD = {
     PlanType.starter: 3.99,
@@ -16,7 +16,7 @@ class CreatePaymentRequest(BaseModel):
 
 
 class CreatePaymentResponse(BaseModel):
-    id: str
+    id: UUID
     plan: PlanType
     amount: float
     currency: str
@@ -31,7 +31,7 @@ class CreatePaymentResponse(BaseModel):
 
 
 class PaymentStatusResponse(BaseModel):
-    id: str
+    id: UUID
     status: PaymentStatus
     paid_at: datetime | None = None
 

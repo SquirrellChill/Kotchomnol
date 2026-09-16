@@ -206,7 +206,6 @@ export default function ProfileScreen() {
     setSavingAvatar(true);
     setSelectedAvatar(avatarUrl);
 
-    // Build payload omitting empty strings to prevent backend 422 errors
     const payload = {
       profile_picture: avatarUrl,
     };
@@ -249,7 +248,6 @@ export default function ProfileScreen() {
     } catch (err) {
       console.warn('Backend update failed, falling back to client-side session sync:', err);
 
-      // Graceful fallback for OAuth/Google users whose schema or token differs
       updateUser({
         ...user,
         profile_picture: avatarUrl,
@@ -436,9 +434,7 @@ export default function ProfileScreen() {
                   </span>
 
                   <span className="lang-tag">
-                    {language === 'en'
-                      ? 'KH'
-                      : 'EN'}
+                    {language === 'km' ? 'KH' : 'EN'}
                   </span>
                 </div>
               </button>
@@ -553,7 +549,7 @@ export default function ProfileScreen() {
                   <span>
                     {t('edit') ||
                       (isKm
-                        ? 'កែសម្រួល'
+                        ? 'កែ'
                         : 'Edit')}
                   </span>
                 </button>
@@ -645,7 +641,7 @@ export default function ProfileScreen() {
                 <div className="view-info-footer">
                   <p>
                     {isKm
-                      ? 'ចុចប៊ូតុង «កែសម្រួល» ខាងលើនៅពេលណាដែលអ្នកចង់ធ្វើបច្ចុប្បន្នភាពលេខទូរស័ព្ទ ឬឈ្មោះរបស់អ្នក។'
+                      ? 'ចុចប៊ូតុង «កែ» ខាងលើនៅពេលណាដែលអ្នកចង់ធ្វើបច្ចុប្បន្នភាពលេខទូរស័ព្ទ ឬឈ្មោះរបស់អ្នក។'
                       : 'Click "Edit" above whenever you need to update your phone number or name.'}
                   </p>
                 </div>
