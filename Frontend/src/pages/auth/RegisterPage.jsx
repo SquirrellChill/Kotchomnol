@@ -9,7 +9,6 @@ import {
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 
-import TelegramLoginButton from './TelegramLoginButton';
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
 import {
@@ -34,7 +33,6 @@ export default function RegisterPage() {
   const {
     login,
     loginWithGoogle,
-    loginWithTelegram,
   } = useAuth();
 
   const { language, t } = useLanguage();
@@ -287,22 +285,6 @@ export default function RegisterPage() {
     } catch (err) {
       setError(getErrorMessage(err));
       setGoogleLoading(false);
-    }
-  };
-
-  // --------------------------------------------------
-  // TELEGRAM LOGIN
-  // --------------------------------------------------
-
-  const handleTelegramAuth = async (telegramUser) => {
-    setError('');
-
-    try {
-      await loginWithTelegram(telegramUser);
-
-      navigate('/dashboard');
-    } catch (err) {
-      setError(getErrorMessage(err));
     }
   };
 
@@ -635,14 +617,6 @@ export default function RegisterPage() {
                 </span>
 
                 <div className="register-divider-line" />
-              </div>
-
-              {/* TELEGRAM */}
-              <div className="register-social-button">
-                <TelegramLoginButton
-                  onAuth={handleTelegramAuth}
-                  onError={setError}
-                />
               </div>
 
               {/* GOOGLE */}

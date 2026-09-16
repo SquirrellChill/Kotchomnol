@@ -2,7 +2,6 @@
 import React, { useState } from 'react';
 import { ArrowLeft, KeyRound, ShieldCheck, Eye, EyeOff } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
-import TelegramLoginButton from './TelegramLoginButton';
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { getErrorMessage } from '../../services/authService';
@@ -10,7 +9,7 @@ import '../dashboard/ChangePasswordScreen.css';
 
 export default function LoginPage() {
   const navigate = useNavigate();
-  const { login, loginWithGoogle, loginWithTelegram } = useAuth();
+  const { login, loginWithGoogle } = useAuth();
   const { language, t } = useLanguage();
   const isKm = language !== 'en';
 
@@ -57,18 +56,6 @@ export default function LoginPage() {
     } catch (err) {
       setError(getErrorMessage(err));
       setGoogleLoading(false);
-    }
-  };
-
-  // TELEGRAM LOGIN
-  const handleTelegramAuth = async (telegramUser) => {
-    setError('');
-
-    try {
-      await loginWithTelegram(telegramUser);
-      navigate('/dashboard');
-    } catch (err) {
-      setError(getErrorMessage(err));
     }
   };
 
@@ -310,12 +297,6 @@ export default function LoginPage() {
                   </>
                 )}
               </button>
-
-              {/* TELEGRAM LOGIN */}
-              <TelegramLoginButton
-                onAuth={handleTelegramAuth}
-                onError={setError}
-              />
 
               {/* REGISTER */}
               <div className="pwd-footer-link">

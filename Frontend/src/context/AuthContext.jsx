@@ -1,6 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import * as authService from '../services/authService.js';
-import * as telegramAuthService from '../services/telegramAuthService.js';
 import { isTimeoutError } from '../services/api.js';
 import { supabase } from '../lib/supabase';
 
@@ -79,21 +78,6 @@ export function AuthProvider({ children }) {
     }
   };
 
-  // TELEGRAM LOGIN
-  const loginWithTelegram = async (telegramUser) => {
-    const res =
-      await telegramAuthService.loginWithTelegram(telegramUser);
-
-    const { token, user: loggedInUser } = res.data.data;
-
-    localStorage.setItem('kc_token', token);
-    localStorage.setItem('kc_user', JSON.stringify(loggedInUser));
-
-    setUser(loggedInUser);
-
-    return loggedInUser;
-  };
-
   // LOGOUT
   const logout = async () => {
     try {
@@ -126,7 +110,6 @@ export function AuthProvider({ children }) {
     loading,
     login,
     loginWithGoogle,
-    loginWithTelegram,
     logout,
     updateUser,
     isAuthenticated: !!user,

@@ -392,33 +392,6 @@ html[data-theme='dark'] .auth-home-link {
   }
 }
 
-
-.telegram-login-btn {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  padding: 14px 20px;
-  background: #229ED9;   /* Telegram blue */
-  color: #fff;
-  border: none;
-  border-radius: 12px;
-  font-size: 15px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: background 0.15s ease;
-}
-
-.telegram-login-btn:hover {
-  background: #1c8bc0;
-}
-
-.telegram-login-btn:disabled {
-  opacity: 0.7;
-  cursor: default;
-}
-
 .stitch-divider {
   display: flex;
   align-items: center;
