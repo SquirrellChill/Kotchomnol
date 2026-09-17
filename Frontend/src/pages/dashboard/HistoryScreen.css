@@ -92,14 +92,13 @@ html[data-theme='dark'] .analytics-title-icon-badge {
 /* Responsive 4-Column Stat Cards */
 .analytics-four-grid {
   display: grid;
-  grid-template-columns: 1fr;
-  gap: 14px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
   width: 100%;
 }
 
 @media (min-width: 480px) {
   .analytics-four-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 16px;
   }
 }
@@ -195,6 +194,28 @@ html[data-theme='dark'] .stat-tile-card {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+@media (max-width: 479px) {
+  .stat-tile-card {
+    padding: 14px;
+    gap: 10px;
+    border-radius: 16px;
+  }
+
+  .stat-icon-wrap {
+    width: 38px;
+    height: 38px;
+    border-radius: 11px;
+  }
+
+  .stat-tile-val {
+    font-size: 16px;
+  }
+
+  .stat-tile-label {
+    font-size: 10px;
+  }
 }
 
 html[data-theme='dark'] .stat-tile-val {

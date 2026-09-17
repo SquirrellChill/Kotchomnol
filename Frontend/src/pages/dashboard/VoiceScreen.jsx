@@ -475,29 +475,25 @@ export default function VoiceScreen() {
       <div className="add-sale-wrapper font-kantomruy">
 
         {/* Mode Selector Toggle */}
-        <div className="mode-toggle-grid">
+        <div className="mode-toggle-pill">
           <button
             type="button"
-            className={`mode-btn ${inputMode === 'manual' ? 'active' : ''}`}
+            className={`mode-pill-btn ${inputMode === 'manual' ? 'active' : ''}`}
             onClick={() => { setInputMode('manual'); setError(''); }}
           >
-            <div className="mode-btn-icon"><Keyboard size={20} /></div>
-            <div>
-              <div className="mode-btn-title">{isKm ? 'បញ្ចូលដោយដៃ' : 'Manual Entry'}</div>
-              <div className="mode-btn-sub">{isKm ? 'វាយបញ្ចូលព័ត៌មានទំនិញនិងតម្លៃដោយខ្លួនឯង' : 'Type items and prices manually'}</div>
-            </div>
+            <Keyboard size={16} />
+            <span>{isKm ? 'បញ្ចូលដោយដៃ' : 'Manual'}</span>
           </button>
+
+          <span className="mode-toggle-divider" aria-hidden="true" />
 
           <button
             type="button"
-            className={`mode-btn ${inputMode === 'voice' ? 'active' : ''}`}
+            className={`mode-pill-btn ${inputMode === 'voice' ? 'active' : ''}`}
             onClick={() => { setInputMode('voice'); setError(''); }}
           >
-            <div className="mode-btn-icon voice"><Mic size={20} /></div>
-            <div>
-              <div className="mode-btn-title">{isKm ? 'ថតការលក់' : 'Voice Entry'}</div>
-              <div className="mode-btn-sub">{isKm ? 'និយាយដើម្បីកត់ត្រាការលក់ដោយស្វ័យប្រវត្តិ' : 'Speak to record sales automatically'}</div>
-            </div>
+            <Mic size={16} />
+            <span>{isKm ? 'ថតការលក់' : 'Record'}</span>
           </button>
         </div>
 

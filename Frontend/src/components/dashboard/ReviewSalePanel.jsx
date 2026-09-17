@@ -62,7 +62,7 @@ function EditableItemRow({ item, onUpdate, onDelete }) {
             <input
               inputMode="decimal"
               value={quantity}
-              onChange={(event) => patch({ quantity: Number(normalizeNumberInput(event.target.value) || 0) })}
+              onChange={(event) => patch({ quantity: normalizeNumberInput(event.target.value) })}
               aria-label={t('qty') || 'Quantity'}
             />
             <button
@@ -81,7 +81,7 @@ function EditableItemRow({ item, onUpdate, onDelete }) {
             <input
               inputMode="decimal"
               value={unitPrice}
-              onChange={(event) => patch({ unit_price: Number(normalizeNumberInput(event.target.value) || 0) })}
+              onChange={(event) => patch({ unit_price: normalizeNumberInput(event.target.value) })}
             />
             <div className="review-currency-toggle">
               <button

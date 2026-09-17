@@ -55,84 +55,61 @@ html[data-theme='dark'] .add-sale-title-icon-badge {
   border: 1px solid rgba(239, 68, 68, 0.25);
 }
 
-/* Mode Selector Toggle */
-.mode-toggle-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 14px;
+/* Mode Selector Toggle — compact segmented pill */
+.mode-toggle-pill {
+  display: inline-flex;
+  align-items: center;
+  align-self: center;
+  margin: 0 auto;
+  background-color: var(--color-surface-alt, rgba(126, 34, 206, 0.06));
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  padding: 3px;
+  gap: 2px;
 }
 
-@media (min-width: 640px) {
-  .mode-toggle-grid {
-    grid-template-columns: 1fr 1fr;
-  }
+html[data-theme='dark'] .mode-toggle-pill {
+  background-color: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.08);
 }
 
-.mode-btn {
+.mode-pill-btn {
   display: flex;
   align-items: center;
-  gap: 16px;
-  padding: 16px 20px;
-  border-radius: 20px;
-  border: 1px solid var(--color-border);
+  gap: 6px;
+  padding: 7px 14px;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--color-text-muted);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.mode-pill-btn.active {
   background-color: var(--color-surface);
   color: var(--color-text-dark);
-  cursor: pointer;
-  text-align: left;
-  transition: all 0.15s ease;
-  box-shadow: 0 10px 24px -4px rgba(126, 34, 206, 0.08), 0 3px 10px rgba(126, 34, 206, 0.03);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
 }
 
-.mode-btn:hover {
-  transform: translateY(-2px);
-  border-color: #7e22ce;
-}
-
-.mode-btn.active {
-  background: linear-gradient(135deg, #7e22ce 0%, #9333ea 100%);
-  border-color: #7e22ce;
-  color: #ffffff;
-  box-shadow: 0 10px 25px rgba(126, 34, 206, 0.35);
-}
-
-html[data-theme='dark'] .mode-btn {
-  background-color: #111827;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
-}
-
-html[data-theme='dark'] .mode-btn.active {
-  background: linear-gradient(135deg, #7e22ce 0%, #9333ea 100%);
-}
-
-.mode-btn-icon {
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
-  background-color: rgba(126, 34, 206, 0.1);
-  color: #7e22ce;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.mode-btn.active .mode-btn-icon {
-  background-color: rgba(255, 255, 255, 0.2);
+html[data-theme='dark'] .mode-pill-btn.active {
+  background-color: #1f2937;
   color: #ffffff;
 }
 
-.mode-btn-title {
-  font-size: 15px;
-  font-weight: 700;
+.mode-toggle-divider {
+  width: 1px;
+  height: 18px;
+  background-color: var(--color-border);
+  opacity: 0.7;
+  flex-shrink: 0;
 }
 
-.mode-btn-sub {
-  font-size: 11px;
-  color: var(--color-text-muted);
-}
-
-.mode-btn.active .mode-btn-sub {
-  color: #e9d5ff;
+html[data-theme='dark'] .mode-toggle-divider {
+  background-color: rgba(255, 255, 255, 0.1);
 }
 
 /* Grid Layout */
