@@ -133,12 +133,22 @@ export const normalizeSaleFromApi = (sale) => ({
   })),
 });
 
-export const summarizeSaleTitle = (sale) => {
+// Merges line items that are the same product into one entry (summed quantity),
+// so a sale rung up as two separate lines still reads as one product.
+export const mergeSaleItemsByProduct = (sale) => {
   const items = sale.items || [];
-  if (!items.length) return 'General Sale';
-  return items
-    .map((item) => `${item.description || item.product || 'Item'} x${Number(item.quantity || 0)}`)
-    .join(', ');
+  const merged = new Map();
+  items.forEach((item) => {
+    const name = item.description || item.product || 'Item';
+    merged.set(name, (merged.get(name) || 0) + Number(item.quantity || 0));
+  });
+  return Array.from(merged.entries()).map(([name, quantity]) => ({ name, quantity }));
+};
+
+export const summarizeSaleTitle = (sale) => {
+  const merged = mergeSaleItemsByProduct(sale);
+  if (!merged.length) return 'General Sale';
+  return merged.map(({ name, quantity }) => `${name} x${quantity}`).join(', ');
 };
 
 export const aggregateProductSummary = (sales) => {

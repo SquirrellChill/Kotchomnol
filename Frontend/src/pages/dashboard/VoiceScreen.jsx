@@ -71,6 +71,26 @@ const voiceItemToDraftItem = (item, index) => normalizeReviewItem({
   price_basis: item.price_basis || 'unit',
 }, index);
 
+// Same product (+ currency) added twice (e.g. "Coca-Cola" said again in a
+// follow-up, or added manually a second time) should add up into one draft
+// row rather than listing it twice.
+const draftItemMatchKey = (item) =>
+  `${String(item.description || item.product || '').trim().toLowerCase()}__${resolveCurrency(item)}`;
+
+const mergeDraftItems = (items) => {
+  const merged = new Map();
+  items.forEach((item) => {
+    const key = draftItemMatchKey(item);
+    const existing = merged.get(key);
+    if (existing) {
+      existing.quantity = Number(existing.quantity || 0) + Number(item.quantity || 0);
+    } else {
+      merged.set(key, { ...item });
+    }
+  });
+  return Array.from(merged.values());
+};
+
 export default function VoiceScreen() {
   const location = useLocation();
   const { language, t } = useLanguage();
@@ -183,7 +203,7 @@ export default function VoiceScreen() {
       price_basis: 'unit',
     });
     setPreferredCurrency(manualItem.currency);
-    setDraftItems((current) => [...current, item]);
+    setDraftItems((current) => mergeDraftItems([...current, item]));
     setManualItem({ ...emptyManualItem, currency: manualItem.currency });
     setError('');
   };
@@ -265,10 +285,11 @@ export default function VoiceScreen() {
     startRecording(recordingPurpose);
   };
 
-  // Safely appends newly detected items without purging previously saved items
+  // Safely appends newly detected items without purging previously saved items,
+  // merging quantities when a product (+ currency) is already in the draft.
   const mergeVoiceRecordIntoDraft = (record) => {
     const incomingItems = (record?.items || []).map(voiceItemToDraftItem);
-    setDraftItems((current) => [...current, ...incomingItems]);
+    setDraftItems((current) => mergeDraftItems([...current, ...incomingItems]));
   };
 
   const handleVoiceResult = (result) => {

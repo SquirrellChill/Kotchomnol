@@ -160,6 +160,54 @@ export default function TransactionsScreen() {
     });
   }, [filteredSales, exchangeRate]);
 
+  // Same product across different sales (within the active date filter) is combined
+  // into a single row, summing quantity/USD/KHR instead of listing each sale separately.
+  const productSummaryRows = useMemo(() => {
+    const map = new Map();
+
+    filteredSales.forEach((sale) => {
+      const saleDate = new Date(sale.date || sale.createdAt || Date.now());
+
+      (sale.items || []).forEach((item) => {
+        const name = String(item.product || item.description || '').trim();
+        if (!name) return;
+
+        const currency = resolveCurrency(item);
+        const key = `${name.toLowerCase()}__${currency}`;
+        const quantity = Number(item.quantity || 0);
+        const unitPrice = resolveUnitPrice(item);
+        const amount = Number(firstDefined(item.amount, quantity * unitPrice, 0));
+        const amountUSD = currency === 'USD' ? amount : amount / exchangeRate;
+        const amountKHR = currency === 'USD' ? amount * exchangeRate : amount;
+
+        const existing = map.get(key);
+        if (existing) {
+          existing.quantity += quantity;
+          existing.totalUSD += amountUSD;
+          existing.totalKHR += amountKHR;
+          existing.saleCount += 1;
+          if (saleDate > existing.lastDate) {
+            existing.lastDate = saleDate;
+            existing.lastSaleId = sale.saleId;
+          }
+        } else {
+          map.set(key, {
+            name,
+            currency,
+            quantity,
+            totalUSD: amountUSD,
+            totalKHR: amountKHR,
+            saleCount: 1,
+            lastDate: saleDate,
+            lastSaleId: sale.saleId,
+          });
+        }
+      });
+    });
+
+    return Array.from(map.values()).sort((a, b) => b.lastDate - a.lastDate);
+  }, [filteredSales, exchangeRate]);
+
   const handleDeleteItem = (id) => {
     setDeletedIds((current) => (current.includes(id) ? current : [...current, id]));
     setEditingItem(null);
@@ -382,7 +430,7 @@ export default function TransactionsScreen() {
                 {isKm ? 'កំពុងផ្ទុកទិន្នន័យ...' : 'Loading sales records...'}
               </div>
             )}
-            {!loadingSales && filteredSales.length === 0 && (
+            {!loadingSales && productSummaryRows.length === 0 && (
               <div className="records-empty">
                 <FileText size={36} />
                 <p>
@@ -392,44 +440,40 @@ export default function TransactionsScreen() {
                 </p>
               </div>
             )}
-            {!loadingSales && filteredSales.length > 0 && (
+            {!loadingSales && productSummaryRows.length > 0 && (
               <div className="records-table-wrapper">
                 <table className="records-table">
                   <thead>
                     <tr>
-                      <th>{isKm ? 'កាលបរិច្ឆេទ' : 'Date'}</th>
-                      <th>{isKm ? 'កំណត់ត្រា' : 'Record'}</th>
-                      <th className="text-center">{isKm ? 'ទំនិញ' : 'Items'}</th>
+                      <th>{isKm ? 'កាលបរិច្ឆេទចុងក្រោយ' : 'Last Sold'}</th>
+                      <th>{isKm ? 'ផលិតផល' : 'Product'}</th>
+                      <th className="text-center">{isKm ? 'ចំនួន' : 'Qty'}</th>
                       <th className="text-right">USD</th>
                       <th className="text-right">KHR</th>
                       <th className="text-center">{isKm ? 'សកម្មភាព' : 'Action'}</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredSales.map((sale) => {
-                      const rowTotals = calculateEquivalentTotals({
-                        usd: sale.totalUSD,
-                        khr: sale.totalKHR,
-                        exchangeRate,
-                      });
-                      const formattedDate = formatDisplayDate(sale.date, language);
+                    {productSummaryRows.map((row) => {
+                      // row.totalUSD/row.totalKHR are already full equivalents of the
+                      // same underlying amount (converted per item as it was summed),
+                      // so they're rendered directly rather than unified again.
+                      const formattedDate = formatDisplayDate(row.lastDate, language);
 
                       return (
                         <tr
-                          key={sale.saleId}
+                          key={`${row.name}__${row.currency}`}
                           className="records-table-row"
-                          onClick={() => handleSelectSale(sale.saleId)}
+                          onClick={() => handleSelectSale(row.lastSaleId)}
                         >
                           <td className="records-table-date">{formattedDate}</td>
-                          <td className="records-table-title">{summarizeSaleTitle(sale)}</td>
-                          <td className="text-center">
-                            {sale.items.length} {isKm ? 'ទំនិញ' : 'items'}
-                          </td>
+                          <td className="records-table-title">{row.name}</td>
+                          <td className="text-center">{row.quantity}</td>
                           <td className="text-right records-table-usd">
-                            ${rowTotals.totalUSD.toFixed(2)}
+                            ${row.totalUSD.toFixed(2)}
                           </td>
                           <td className="text-right records-table-khr">
-                            {Math.round(rowTotals.totalKHR).toLocaleString()} KHR
+                            {Math.round(row.totalKHR).toLocaleString()} KHR
                           </td>
                           <td className="text-center">
                             <button
@@ -437,7 +481,7 @@ export default function TransactionsScreen() {
                               type="button"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                handleSelectSale(sale.saleId);
+                                handleSelectSale(row.lastSaleId);
                               }}
                             >
                               <Eye size={14} /> {isKm ? 'មើល' : 'View'}
@@ -469,6 +513,29 @@ function TransactionDetail({ sale, exchangeRate, isBusy, isKm, onEdit, onDelete 
 
   const totalQty = (sale.items || []).reduce((sum, item) => sum + Number(item.quantity || 0), 0);
   const formattedDate = sale.date ? formatDisplayDate(sale.date, isKm ? 'km' : 'en') : (isKm ? 'ថ្ងៃនេះ' : 'Today');
+
+  // Merge line items that are the same product (+ currency) into one row,
+  // summing quantity/total; genuinely different products stay on their own row.
+  const aggregatedItems = useMemo(() => {
+    const map = new Map();
+    (sale.items || []).forEach((item, idx) => {
+      const name = item.product || item.description || '';
+      const currency = resolveCurrency(item);
+      const key = `${name}__${currency}`;
+      const quantity = Number(item.quantity || 0);
+      const unitPrice = resolveUnitPrice(item);
+      const total = Number(firstDefined(item.amount, quantity * unitPrice, 0));
+
+      const existing = map.get(key);
+      if (existing) {
+        existing.quantity += quantity;
+        existing.total += total;
+      } else {
+        map.set(key, { id: item.id || `${key}-${idx}`, name, currency, quantity, total });
+      }
+    });
+    return Array.from(map.values());
+  }, [sale.items]);
 
   const handleDownloadImage = async () => {
     if (!receiptRef.current || exporting) return;
@@ -588,17 +655,15 @@ function TransactionDetail({ sale, exchangeRate, isBusy, isKm, onEdit, onDelete 
             <span className="text-right">{isKm ? 'សរុប' : 'Total'}</span>
           </div>
 
-          {sale.items.map((item, idx) => {
-            const unitPrice = resolveUnitPrice(item);
-            const currency = resolveCurrency(item);
-            const total = Number(firstDefined(item.amount, Number(item.quantity || 0) * unitPrice, 0));
+          {aggregatedItems.map((item) => {
+            const unitPrice = item.quantity > 0 ? item.total / item.quantity : 0;
 
             return (
-              <div className="tx-table-row" key={item.id || idx}>
-                <span className="item-name">{item.product || item.description}</span>
+              <div className="tx-table-row" key={item.id}>
+                <span className="item-name">{item.name}</span>
                 <span className="text-center">{item.quantity}</span>
-                <span className="text-center">{formatCurrencyValue(unitPrice, currency)}</span>
-                <strong className="text-right">{formatCurrencyValue(total, currency)}</strong>
+                <span className="text-center">{formatCurrencyValue(unitPrice, item.currency)}</span>
+                <strong className="text-right">{formatCurrencyValue(item.total, item.currency)}</strong>
               </div>
             );
           })}

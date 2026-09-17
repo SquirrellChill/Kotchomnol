@@ -54,8 +54,8 @@ export default function MobileAppShell({ children, activeTab, showBottomNav = tr
 
       {/* Main Screen Wrapper */}
       <div className="dash-main-wrapper">
+        <GreetingBar />
         <main className="sub-screen-content">
-          <GreetingBar />
           {children}
         </main>
       </div>

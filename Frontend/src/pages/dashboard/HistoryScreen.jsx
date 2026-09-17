@@ -13,7 +13,9 @@ import {
   Award,
   Image as ImageIcon,
   FileDown,
-  FileSpreadsheet
+  FileSpreadsheet,
+  Download,
+  ChevronDown
 } from 'lucide-react';
 import MobileAppShell from '../../components/dashboard/MobileAppShell';
 import { useAuth } from '../../context/AuthContext';
@@ -25,6 +27,17 @@ import './HistoryScreen.css';
 
 const EXCHANGE_RATE = APPLICATION_EXCHANGE_RATE || 4050;
 
+const PIE_COLOR_VARS = [
+  'var(--pie-color-1)',
+  'var(--pie-color-2)',
+  'var(--pie-color-3)',
+  'var(--pie-color-4)',
+  'var(--pie-color-5)',
+  'var(--pie-color-6)',
+];
+const PIE_OTHER_COLOR_VAR = 'var(--pie-color-other)';
+const PIE_MAX_SLOTS = 6;
+
 export default function HistoryScreen() {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -35,7 +48,28 @@ export default function HistoryScreen() {
   const [sales, setSales] = useState([]);
   const [loading, setLoading] = useState(false);
   const [exporting, setExporting] = useState(false);
+  const [hoveredShareIndex, setHoveredShareIndex] = useState(null);
+  const [isExportMenuOpen, setIsExportMenuOpen] = useState(false);
+  const exportMenuRef = useRef(null);
   const reportRef = useRef(null);
+
+  useEffect(() => {
+    if (!isExportMenuOpen) return undefined;
+    const handleOutside = (event) => {
+      if (exportMenuRef.current && !exportMenuRef.current.contains(event.target)) {
+        setIsExportMenuOpen(false);
+      }
+    };
+    const handleEscape = (event) => {
+      if (event.key === 'Escape') setIsExportMenuOpen(false);
+    };
+    document.addEventListener('mousedown', handleOutside);
+    document.addEventListener('keydown', handleEscape);
+    return () => {
+      document.removeEventListener('mousedown', handleOutside);
+      document.removeEventListener('keydown', handleEscape);
+    };
+  }, [isExportMenuOpen]);
 
   // Fetch real-time sales directly from backend
   useEffect(() => {
@@ -190,6 +224,64 @@ export default function HistoryScreen() {
     };
   }, [sales, period, isKm]);
 
+  // Revenue share per product, capped to a readable number of slices with the
+  // remainder folded into "Other" so the donut always sums to 100%.
+  const productShare = useMemo(() => {
+    const sortedByRevenue = [...productBreakdown].sort((a, b) => b.totalUSD - a.totalUSD);
+    const totalRevenue = sortedByRevenue.reduce((sum, p) => sum + p.totalUSD, 0);
+    const topSlots = sortedByRevenue.slice(0, PIE_MAX_SLOTS);
+    const rest = sortedByRevenue.slice(PIE_MAX_SLOTS);
+
+    const toShare = (p, colorVar) => ({
+      name: p.name,
+      qty: p.qty,
+      totalUSD: p.totalUSD,
+      percent: totalRevenue > 0 ? (p.totalUSD / totalRevenue) * 100 : 0,
+      colorVar,
+    });
+
+    const slices = topSlots.map((p, idx) => toShare(p, PIE_COLOR_VARS[idx]));
+
+    if (rest.length > 0) {
+      const restQty = rest.reduce((sum, p) => sum + p.qty, 0);
+      const restUSD = rest.reduce((sum, p) => sum + p.totalUSD, 0);
+      slices.push(
+        toShare(
+          { name: isKm ? 'ផ្សេងទៀត' : 'Other', qty: restQty, totalUSD: restUSD },
+          PIE_OTHER_COLOR_VAR
+        )
+      );
+    }
+
+    return { slices, totalRevenue };
+  }, [productBreakdown, isKm]);
+
+  useEffect(() => {
+    setHoveredShareIndex(null);
+  }, [productShare]);
+
+  // SVG donut geometry: each slice is a dashed arc on a shared circle,
+  // offset to sit right after the previous one with a small surface gap.
+  const donutGeometry = useMemo(() => {
+    const size = 200;
+    const strokeWidth = 30;
+    const radius = (size - strokeWidth) / 2;
+    const circumference = 2 * Math.PI * radius;
+    const gap = productShare.slices.length > 1 ? 4 : 0;
+
+    let cumulative = 0;
+    const arcs = productShare.slices.map((slice) => {
+      const rawLength = (slice.percent / 100) * circumference;
+      const segLength = Math.max(rawLength - gap, 0);
+      const dashArray = `${segLength} ${Math.max(circumference - segLength, 0)}`;
+      const dashOffset = -cumulative;
+      cumulative += rawLength;
+      return { ...slice, dashArray, dashOffset };
+    });
+
+    return { size, strokeWidth, radius, arcs };
+  }, [productShare]);
+
   // Precompute pixel-accurate points for the SVG line chart
   const chartPoints = useMemo(() => {
     const width = 700;
@@ -229,6 +321,7 @@ export default function HistoryScreen() {
 
   const handleDownloadImage = async () => {
     if (!reportRef.current || exporting) return;
+    setIsExportMenuOpen(false);
     setExporting(true);
     try {
       const element = reportRef.current;
@@ -253,6 +346,7 @@ export default function HistoryScreen() {
 
   const handleDownloadPDF = async () => {
     if (!reportRef.current || exporting) return;
+    setIsExportMenuOpen(false);
     setExporting(true);
     try {
       const element = reportRef.current;
@@ -293,6 +387,7 @@ export default function HistoryScreen() {
 
   const handleDownloadTable = () => {
     if (exporting) return;
+    setIsExportMenuOpen(false);
     const headerRow = isKm
       ? ['កាលបរិច្ឆេទ', 'ផលិតផល', 'ចំនួន', 'តម្លៃឯកតា', 'រូបិយប័ណ្ណ', 'សរុប']
       : ['Date', 'Product', 'Quantity', 'Unit Price', 'Currency', 'Total'];
@@ -345,70 +440,88 @@ export default function HistoryScreen() {
           </div>
         </div>
 
-        {/* Filter Period Pills */}
+        {/* Filter Period Pills + Export */}
         <div className="analytics-filter-bar">
-          <button 
-            type="button" 
-            className={`filter-pill ${period === 'today' ? 'active' : ''}`}
-            onClick={() => setPeriod('today')}
-          >
-            {isKm ? 'ថ្ងៃនេះ' : 'Today'}
-          </button>
-          <button 
-            type="button" 
-            className={`filter-pill ${period === 'week' ? 'active' : ''}`}
-            onClick={() => setPeriod('week')}
-          >
-            {isKm ? 'សប្តាហ៍នេះ' : 'This Week'}
-          </button>
-          <button
-            type="button"
-            className={`filter-pill ${period === 'month' ? 'active' : ''}`}
-            onClick={() => setPeriod('month')}
-          >
-            {isKm ? 'ខែនេះ' : 'This Month'}
-          </button>
-        </div>
-
-        {/* Export current period's report */}
-        <div className="export-panel">
-          <div className="export-panel-header">
-            <span className="export-panel-title">{isKm ? 'ទាញយករបាយការណ៍' : 'Export Report'}</span>
-            <span className="export-panel-sub">
-              {isKm ? `សម្រាប់ ${periodLabel}` : `For ${periodLabel}`}
-            </span>
+          <div className="filter-pill-group">
+            <button
+              type="button"
+              className={`filter-pill ${period === 'today' ? 'active' : ''}`}
+              onClick={() => setPeriod('today')}
+            >
+              {isKm ? 'ថ្ងៃនេះ' : 'Today'}
+            </button>
+            <button
+              type="button"
+              className={`filter-pill ${period === 'week' ? 'active' : ''}`}
+              onClick={() => setPeriod('week')}
+            >
+              {isKm ? 'សប្តាហ៍នេះ' : 'This Week'}
+            </button>
+            <button
+              type="button"
+              className={`filter-pill ${period === 'month' ? 'active' : ''}`}
+              onClick={() => setPeriod('month')}
+            >
+              {isKm ? 'ខែនេះ' : 'This Month'}
+            </button>
           </div>
-          <div className="export-options-grid">
+
+          <div className="export-dropdown" ref={exportMenuRef}>
             <button
               type="button"
-              className="export-option-btn table"
-              onClick={handleDownloadTable}
-              disabled={exporting || filteredSales.length === 0}
-            >
-              <span className="export-option-icon table"><FileSpreadsheet size={18} /></span>
-              <span className="export-option-label">{isKm ? 'តារាង (Excel)' : 'Table (Excel)'}</span>
-              <span className="export-option-hint">.csv</span>
-            </button>
-            <button
-              type="button"
-              className="export-option-btn image"
-              onClick={handleDownloadImage}
+              className="export-dropdown-trigger"
+              onClick={() => setIsExportMenuOpen((open) => !open)}
+              aria-haspopup="true"
+              aria-expanded={isExportMenuOpen}
               disabled={exporting}
             >
-              <span className="export-option-icon image"><ImageIcon size={18} /></span>
-              <span className="export-option-label">{exporting ? '...' : (isKm ? 'រូបភាព' : 'Image')}</span>
-              <span className="export-option-hint">.png</span>
+              <span className="export-dropdown-trigger-left">
+                <Download size={14} />
+                {exporting ? (isKm ? 'កំពុងទាញយក...' : 'Exporting...') : (isKm ? 'នាំចេញ' : 'Export')}
+              </span>
+              <ChevronDown size={14} className={`export-dropdown-chevron ${isExportMenuOpen ? 'open' : ''}`} />
             </button>
-            <button
-              type="button"
-              className="export-option-btn pdf"
-              onClick={handleDownloadPDF}
-              disabled={exporting}
-            >
-              <span className="export-option-icon pdf"><FileDown size={18} /></span>
-              <span className="export-option-label">{exporting ? '...' : (isKm ? 'ឯកសារ' : 'PDF')}</span>
-              <span className="export-option-hint">.pdf</span>
-            </button>
+
+            {isExportMenuOpen && (
+              <div className="export-dropdown-menu" role="menu">
+                <button
+                  type="button"
+                  className="export-dropdown-item"
+                  onClick={handleDownloadTable}
+                  disabled={exporting || filteredSales.length === 0}
+                >
+                  <span className="export-option-icon table"><FileSpreadsheet size={15} /></span>
+                  <span className="export-dropdown-item-text">
+                    <span className="export-option-label">{isKm ? 'តារាង (Excel)' : 'Table (Excel)'}</span>
+                    <span className="export-option-hint">.csv</span>
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  className="export-dropdown-item"
+                  onClick={handleDownloadImage}
+                  disabled={exporting}
+                >
+                  <span className="export-option-icon image"><ImageIcon size={15} /></span>
+                  <span className="export-dropdown-item-text">
+                    <span className="export-option-label">{isKm ? 'រូបភាព' : 'Image'}</span>
+                    <span className="export-option-hint">.png</span>
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  className="export-dropdown-item"
+                  onClick={handleDownloadPDF}
+                  disabled={exporting}
+                >
+                  <span className="export-option-icon pdf"><FileDown size={15} /></span>
+                  <span className="export-dropdown-item-text">
+                    <span className="export-option-label">{isKm ? 'ឯកសារ' : 'PDF'}</span>
+                    <span className="export-option-hint">.pdf</span>
+                  </span>
+                </button>
+              </div>
+            )}
           </div>
         </div>
 
@@ -552,28 +665,71 @@ export default function HistoryScreen() {
               <span className="chart-badge">{productBreakdown.length} {isKm ? 'មុខ' : 'items'}</span>
             </div>
 
-            <div className="products-summary-list">
-              {productBreakdown.length === 0 ? (
-                <div className="empty-chart-text">
-                  {isKm ? 'គ្មានទិន្នន័យទំនិញក្នុងកំឡុងពេលនេះទេ។' : 'No product sales recorded for this period.'}
+            {productShare.slices.length === 0 ? (
+              <div className="empty-chart-text">
+                {isKm ? 'គ្មានទិន្នន័យទំនិញក្នុងកំឡុងពេលនេះទេ។' : 'No product sales recorded for this period.'}
+              </div>
+            ) : (
+              <div className="product-donut-layout">
+                <div className="product-donut-wrap">
+                  <svg
+                    viewBox={`0 0 ${donutGeometry.size} ${donutGeometry.size}`}
+                    className="product-donut-svg"
+                    role="img"
+                    aria-label={isKm ? 'ក្រាហ្វិកចំណែកផលិតផលតាមចំណូល' : 'Product revenue share chart'}
+                  >
+                    <g transform={`rotate(-90 ${donutGeometry.size / 2} ${donutGeometry.size / 2})`}>
+                      {donutGeometry.arcs.map((arc, idx) => (
+                        <circle
+                          key={idx}
+                          cx={donutGeometry.size / 2}
+                          cy={donutGeometry.size / 2}
+                          r={donutGeometry.radius}
+                          fill="none"
+                          strokeWidth={donutGeometry.strokeWidth}
+                          strokeDasharray={arc.dashArray}
+                          strokeDashoffset={arc.dashOffset}
+                          style={{ stroke: arc.colorVar }}
+                          className="product-donut-arc"
+                          onMouseEnter={() => setHoveredShareIndex(idx)}
+                          onMouseLeave={() => setHoveredShareIndex(null)}
+                        >
+                          <title>{`${arc.name}: ${arc.percent.toFixed(1)}% ($${arc.totalUSD.toFixed(2)})`}</title>
+                        </circle>
+                      ))}
+                    </g>
+                  </svg>
+                  <div className="product-donut-center">
+                    {hoveredShareIndex != null && productShare.slices[hoveredShareIndex] ? (
+                      <>
+                        <span className="product-donut-center-value">
+                          {productShare.slices[hoveredShareIndex].percent.toFixed(0)}%
+                        </span>
+                        <span className="product-donut-center-label">
+                          {productShare.slices[hoveredShareIndex].name} · ${productShare.slices[hoveredShareIndex].totalUSD.toFixed(2)}
+                        </span>
+                      </>
+                    ) : (
+                      <>
+                        <span className="product-donut-center-value">${productShare.totalRevenue.toFixed(0)}</span>
+                        <span className="product-donut-center-label">{isKm ? 'ចំណូលសរុប' : 'Total revenue'}</span>
+                      </>
+                    )}
+                  </div>
                 </div>
-              ) : (
-                productBreakdown.slice(0, 5).map((p, idx) => (
-                  <div key={idx} className="product-summary-row">
-                    <div className="prod-left">
-                      <span className="prod-rank">{idx + 1}</span>
-                      <div>
-                        <div className="prod-name">{p.name}</div>
-                        <span className="prod-qty">{p.qty} {isKm ? 'លក់បាន' : 'sold'}</span>
+
+                <div className="products-summary-list">
+                  {productShare.slices.map((slice, idx) => (
+                    <div key={idx} className="product-summary-row">
+                      <div className="prod-left">
+                        <span className="prod-color-dot" style={{ backgroundColor: slice.colorVar }} />
+                        <div className="prod-name">{slice.name}</div>
                       </div>
                     </div>
-                    <div className="prod-right">
-                      <span className="prod-usd">${p.totalUSD.toFixed(2)}</span>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
 

@@ -1,21 +1,55 @@
 .greeting-bar {
+  position: sticky;
+  top: 0;
+  z-index: 40;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 12px 18px;
-  margin-bottom: 20px;
-  background-color: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: 16px;
-  box-shadow: 0 4px 14px rgba(126, 34, 206, 0.05);
+  min-height: 80px;
+  padding: 14px 32px;
+  background-color: rgba(255, 255, 255, 0.92);
+  border-bottom: 1px solid var(--color-border);
+  box-shadow: 0 4px 16px var(--color-shadow);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transition: background-color 0.25s ease, border-color 0.25s ease;
 }
 
-.greeting-bar-text {
+.greeting-bar-text-block {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.greeting-bar-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   font-family: 'Kantumruy Pro', sans-serif;
-  font-size: 14px;
+  font-size: 20px;
   font-weight: 700;
   color: var(--color-text-dark);
+  margin: 0;
+}
+
+.greeting-bar-icon-badge {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  background-color: rgba(126, 34, 206, 0.1);
+  color: #7e22ce;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.greeting-bar-sub {
+  font-size: 12px;
+  color: var(--color-text-muted);
+  margin: 2px 0 0;
 }
 
 .greeting-bar-avatar-btn {
@@ -24,6 +58,7 @@
   justify-content: center;
   cursor: pointer;
   border-radius: 50%;
+  flex-shrink: 0;
   transition: transform 0.15s ease, box-shadow 0.15s ease;
   box-shadow: 0 2px 8px rgba(126, 34, 206, 0.18);
 }
@@ -34,6 +69,26 @@
 }
 
 html[data-theme='dark'] .greeting-bar {
-  background-color: #111827;
+  background-color: rgba(17, 24, 39, 0.92);
   border-color: rgba(168, 85, 247, 0.2);
+}
+
+html[data-theme='dark'] .greeting-bar-icon-badge {
+  background-color: rgba(168, 85, 247, 0.15);
+  color: #c084fc;
+}
+
+@media (max-width: 1023px) {
+  .greeting-bar {
+    padding: 0 16px;
+    min-height: 58px;
+  }
+
+  .greeting-bar-title {
+    font-size: 16px;
+  }
+
+  .greeting-bar-sub {
+    display: none;
+  }
 }

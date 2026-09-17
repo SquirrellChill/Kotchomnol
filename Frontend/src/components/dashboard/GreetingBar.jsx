@@ -1,5 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Sun, Sunset, Moon } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { buildDashboardProfile } from '../../utils/profile';
@@ -16,7 +17,7 @@ const profileFallback = {
   phone: '',
 };
 
-export default function GreetingBar() {
+export default function GreetingBar({ subtitle }) {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { language } = useLanguage();
@@ -32,11 +33,21 @@ export default function GreetingBar() {
     km: { morning: 'អរុណសួស្តី', afternoon: 'ទិវាសួស្តី', evening: 'សាយណ្ហសួស្តី' },
   }[isKm ? 'km' : 'en'][greetingPeriod];
 
+  const GreetingIcon = greetingPeriod === 'morning' ? Sun : greetingPeriod === 'afternoon' ? Sunset : Moon;
+
   const goToProfile = () => navigate('/dashboard/profile');
 
   return (
-    <div className="greeting-bar">
-      <span className="greeting-bar-text">{`${greeting}, ${firstName}!`}</span>
+    <header className="greeting-bar">
+      <div className="greeting-bar-text-block">
+        <h1 className="greeting-bar-title">
+          <span className="greeting-bar-icon-badge">
+            <GreetingIcon size={18} />
+          </span>
+          {`${greeting}, ${firstName}!`}
+        </h1>
+        {subtitle && <p className="greeting-bar-sub">{subtitle}</p>}
+      </div>
       <div
         className="greeting-bar-avatar-btn"
         onClick={goToProfile}
@@ -50,8 +61,8 @@ export default function GreetingBar() {
         }}
         title={isKm ? 'ប្រវត្តិរូប' : 'Profile'}
       >
-        <UserAvatar size="sm" initials={firstName.charAt(0)} />
+        <UserAvatar size="md" initials={firstName.charAt(0)} />
       </div>
-    </div>
+    </header>
   );
 }

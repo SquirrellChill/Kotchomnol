@@ -137,72 +137,6 @@ html[data-theme='dark'] .dash-sidebar {
   transition: background-color 0.25s ease;
 }
 
-/* Top Header */
-.dash-header {
-  background-color: var(--color-surface);
-  border-bottom: 1px solid var(--color-border);
-  height: 80px;
-  padding: 0 32px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  box-shadow: 0 4px 16px var(--color-shadow);
-  flex-shrink: 0;
-  transition: background-color 0.25s ease, border-color 0.25s ease;
-}
-
-.dash-header-title {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 20px;
-  font-weight: 700;
-  color: var(--color-text-dark);
-  margin: 0;
-}
-
-.dash-header-title-icon-badge {
-  width: 32px;
-  height: 32px;
-  border-radius: 10px;
-  background-color: rgba(126, 34, 206, 0.1);
-  color: #7e22ce;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-html[data-theme='dark'] .dash-header-title-icon-badge {
-  background-color: rgba(168, 85, 247, 0.15);
-  color: #c084fc;
-}
-
-.dash-header-sub {
-  font-size: 12px;
-  color: var(--color-text-muted);
-  margin: 2px 0 0;
-}
-
-/* Clickable Avatar Button in Top Header */
-.dash-header-avatar-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  border-radius: 50%;
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
-  box-shadow: 0 2px 8px rgba(126, 34, 206, 0.18);
-  border: none;
-  background: transparent;
-  padding: 0;
-}
-
-.dash-header-avatar-btn:hover {
-  transform: scale(1.08);
-  box-shadow: 0 4px 14px rgba(126, 34, 206, 0.35);
-}
-
 /* Dashboard Body Content */
 .dash-content-body {
   padding: 32px;
@@ -842,11 +776,6 @@ html[data-theme='dark'] .dash-tx-item:focus-visible {
   .dash-nav-link span {
     font-size: 10px !important;
     white-space: nowrap !important;
-  }
-
-  .dash-header {
-    padding: 0 16px !important;
-    height: 58px !important;
   }
 
   .dash-content-body {

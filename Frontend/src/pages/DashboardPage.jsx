@@ -21,7 +21,7 @@ import { getSales } from '../services/transactionService';
 import { calculateEquivalentTotals, APPLICATION_EXCHANGE_RATE } from '../utils/currency';
 import { normalizeSaleFromApi, summarizeSaleTitle, formatLocalDate } from '../utils/sales';
 import { buildDashboardProfile } from '../utils/profile';
-import UserAvatar from '../components/dashboard/UserAvatar';
+import GreetingBar from '../components/dashboard/GreetingBar';
 import './DashboardPage.css';
 
 const isSameDay = (a, b) =>
@@ -48,7 +48,6 @@ export default function DashboardPage() {
 
   // Dynamic user profile
   const profile = buildDashboardProfile(user, profileFallback);
-  const firstName = profile.firstName || profile.name?.split(' ')[0] || (isKm ? 'អ្នកលក់' : 'Seller');
   const fullDisplayName = [profile.firstName, profile.lastName].filter(Boolean).join(' ') || profile.name || 'Seller';
 
   // Dynamic live date
@@ -58,14 +57,6 @@ export default function DashboardPage() {
     day: 'numeric',
     year: 'numeric'
   });
-
-  // Time-of-day greeting
-  const hour = today.getHours();
-  const greetingPeriod = hour < 12 ? 'morning' : hour < 18 ? 'afternoon' : 'evening';
-  const greeting = {
-    en: { morning: 'Good morning', afternoon: 'Good afternoon', evening: 'Good evening' },
-    km: { morning: 'អរុណសួស្តី', afternoon: 'ទិវាសួស្តី', evening: 'សាយណ្ហសួស្តី' },
-  }[isKm ? 'km' : 'en'][greetingPeriod];
 
   // State to hold live sales data
   const [sales, setSales] = useState([]);
@@ -260,34 +251,9 @@ export default function DashboardPage() {
 
       {/* Main Content Area */}
       <div className="dash-main-wrapper">
-        <header className="dash-header">
-          <div>
-            <h1 className="dash-header-title">
-              <span className="dash-header-title-icon-badge">
-                <Home size={18} />
-              </span>
-              {`${greeting}, ${firstName}!`}
-            </h1>
-            <p className="dash-header-sub">
-              {isKm ? 'នេះជាសង្ខេបអាជីវកម្មថ្ងៃនេះ។' : 'Here is your business overview today.'}
-            </p>
-          </div>
-          <div
-            className="dash-header-avatar-btn"
-            onClick={() => navigate('/dashboard/profile')}
-            role="button"
-            tabIndex={0}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                navigate('/dashboard/profile');
-              }
-            }}
-            title={isKm ? 'ប្រវត្តិរូប' : 'Profile'}
-          >
-            <UserAvatar size="md" initials={firstName.charAt(0)} />
-          </div>
-        </header>
+        <GreetingBar
+          subtitle={isKm ? 'នេះជាសង្ខេបអាជីវកម្មថ្ងៃនេះ។' : 'Here is your business overview today.'}
+        />
 
         <main className="dash-content-body">
           <div className="dash-metrics-grid">

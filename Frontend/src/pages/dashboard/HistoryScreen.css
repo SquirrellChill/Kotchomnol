@@ -52,6 +52,15 @@ html[data-theme='dark'] .analytics-title-icon-badge {
 /* Filter Period Pills */
 .analytics-filter-bar {
   display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.filter-pill-group {
+  display: flex;
+  flex-wrap: wrap;
   gap: 8px;
 }
 
@@ -335,19 +344,99 @@ html[data-theme='dark'] .chart-point-value {
   fill: var(--color-text-muted);
 }
 
-/* Product Share List */
-.products-summary-list {
+/* Product Share Donut Chart */
+.chart-card {
+  --pie-color-1: #2a78d6;
+  --pie-color-2: #eb6834;
+  --pie-color-3: #1baf7a;
+  --pie-color-4: #eda100;
+  --pie-color-5: #e87ba4;
+  --pie-color-6: #008300;
+  --pie-color-other: #898781;
+}
+
+html[data-theme='dark'] .chart-card {
+  --pie-color-1: #3987e5;
+  --pie-color-2: #d95926;
+  --pie-color-3: #199e70;
+  --pie-color-4: #c98500;
+  --pie-color-5: #d55181;
+  --pie-color-6: #008300;
+  --pie-color-other: #898781;
+}
+
+.product-donut-layout {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  align-items: center;
+  gap: 20px;
+}
+
+.product-donut-wrap {
+  position: relative;
+  width: 168px;
+  height: 168px;
+  flex-shrink: 0;
+}
+
+.product-donut-svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.product-donut-arc {
+  transition: opacity 0.15s ease;
+}
+
+.product-donut-arc:hover {
+  opacity: 0.85;
+}
+
+.product-donut-center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  text-align: center;
+}
+
+.product-donut-center-value {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--color-text-dark);
+}
+
+html[data-theme='dark'] .product-donut-center-value {
+  color: #ffffff;
+}
+
+.product-donut-center-label {
+  font-size: 10px;
+  color: var(--color-text-muted);
+  margin-top: 2px;
+  max-width: 110px;
+  line-height: 1.3;
+}
+
+/* Product Share List - name-only legend chips; percent/$ surface on hover via the donut center */
+.products-summary-list {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
 }
 
 .product-summary-row {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 11px 14px;
-  border-radius: 12px;
+  gap: 8px;
+  padding: 7px 12px;
+  border-radius: 9999px;
   background-color: #faf7fd;
   border: 1px solid rgba(126, 34, 206, 0.08);
 }
@@ -360,39 +449,29 @@ html[data-theme='dark'] .product-summary-row {
 .prod-left {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
+  min-width: 0;
 }
 
-.prod-rank {
-  font-size: 12px;
-  font-weight: 700;
-  color: #7e22ce;
-  width: 18px;
+.prod-color-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
 }
 
 .prod-name {
-  font-size: 13px;
+  font-size: 12.5px;
   font-weight: 600;
   color: var(--color-text-dark);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 160px;
 }
 
 html[data-theme='dark'] .prod-name {
   color: #ffffff;
-}
-
-.prod-qty {
-  font-size: 11px;
-  color: var(--color-text-muted);
-}
-
-.prod-usd {
-  font-size: 13px;
-  font-weight: 700;
-  color: #15803d;
-}
-
-html[data-theme='dark'] .prod-usd {
-  color: #10b981;
 }
 
 /* Best Selling Products */
@@ -496,71 +575,122 @@ html[data-theme='dark'] .best-seller-khr {
   color: #c084fc;
 }
 
-/* Report export panel */
-.export-panel {
-  background-color: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: 18px;
-  padding: 18px 20px;
-  box-shadow: 0 4px 16px rgba(126, 34, 206, 0.05);
+.export-dropdown {
+  position: relative;
+  display: inline-block;
 }
 
-html[data-theme='dark'] .export-panel {
+.export-dropdown-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: 9999px;
+  border: none;
+  background: linear-gradient(135deg, #7e22ce 0%, #9333ea 100%);
+  color: #ffffff;
+  font-size: 12.5px;
+  font-weight: 700;
+  font-family: 'Kantumruy Pro', sans-serif;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(126, 34, 206, 0.28);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.export-dropdown-trigger:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(126, 34, 206, 0.4);
+}
+
+.export-dropdown-trigger:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.export-dropdown-trigger-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.export-dropdown-chevron {
+  color: rgba(255, 255, 255, 0.85);
+  transition: transform 0.15s ease;
+  flex-shrink: 0;
+}
+
+.export-dropdown-chevron.open {
+  transform: rotate(180deg);
+}
+
+.export-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  min-width: 200px;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  box-shadow: 0 12px 28px -4px rgba(126, 34, 206, 0.18), 0 4px 12px rgba(126, 34, 206, 0.08);
+  padding: 6px;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+/* Once the filter row has room to stay on one line, the export button sits at
+   its right end, so the menu should hang from that same right edge instead. */
+@media (min-width: 640px) {
+  .export-dropdown-menu {
+    left: auto;
+    right: 0;
+  }
+}
+
+html[data-theme='dark'] .export-dropdown-menu {
   background-color: #111827;
   border-color: rgba(168, 85, 247, 0.2);
 }
 
-.export-panel-header {
+.export-dropdown-item {
   display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-bottom: 14px;
-}
-
-.export-panel-title {
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--color-text-dark);
-}
-
-.export-panel-sub {
-  font-size: 12px;
-  color: var(--color-text-muted);
-}
-
-.export-options-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
-}
-
-.export-option-btn {
-  display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 6px;
-  padding: 14px 8px;
-  border-radius: 14px;
-  border: 1px solid var(--color-border);
-  background-color: transparent;
+  gap: 10px;
+  width: 100%;
+  padding: 6px 8px;
+  border-radius: 10px;
+  border: none;
+  background: transparent;
   cursor: pointer;
-  transition: all 0.15s ease;
+  text-align: left;
+  transition: background-color 0.15s ease;
 }
 
-.export-option-btn:disabled {
+.export-dropdown-item:hover:not(:disabled) {
+  background-color: rgba(126, 34, 206, 0.08);
+}
+
+.export-dropdown-item:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+.export-dropdown-item-text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
 }
 
 .export-option-icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 38px;
-  height: 38px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
+  flex-shrink: 0;
 }
 
 .export-option-icon.table {
@@ -576,21 +706,6 @@ html[data-theme='dark'] .export-panel {
 .export-option-icon.pdf {
   background-color: rgba(79, 70, 229, 0.1);
   color: #4f46e5;
-}
-
-.export-option-btn.table:hover:not(:disabled) {
-  border-color: #16a34a;
-  background-color: rgba(22, 163, 74, 0.06);
-}
-
-.export-option-btn.image:hover:not(:disabled) {
-  border-color: #7e22ce;
-  background-color: rgba(126, 34, 206, 0.06);
-}
-
-.export-option-btn.pdf:hover:not(:disabled) {
-  border-color: #4f46e5;
-  background-color: rgba(79, 70, 229, 0.06);
 }
 
 .export-option-label {
