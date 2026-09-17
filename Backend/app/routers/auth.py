@@ -41,6 +41,7 @@ from app.repositories import user_repository as user_repo
 from app.schemas.user import (
     ChangePasswordRequest,
     ForgotPasswordRequest,
+    GoogleSyncRequest,
     LoginRequest,
     RegisterRequest,
     ResendVerificationRequest,
@@ -48,6 +49,7 @@ from app.schemas.user import (
     UpdateProfileRequest,
     UserOut,
     VerifyEmailRequest,
+
 )
 
 
@@ -226,7 +228,61 @@ def register(
         },
     }
 
+# ============================================================
+# GOOGLE OAUTH SYNC
+# ============================================================
 
+@router.post("/google-sync")
+def google_sync(
+    payload: GoogleSyncRequest,
+    db: Session = Depends(get_db),
+):
+    """
+    Called right after Supabase Google OAuth succeeds, before the
+    frontend uses the token anywhere else. Ensures a local `users`
+    row exists for this Supabase account, the same way /register does
+    for email/password sign-ups.
+    """
+    try:
+        claims = decode_supabase_token(payload.access_token)
+    except Exception as exc:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid Google session token.",
+        ) from exc
+
+    supabase_user_id = claims.get("sub")
+    email = claims.get("email")
+    user_metadata = claims.get("user_metadata", {}) or {}
+
+    if not supabase_user_id:
+        raise HTTPException(status_code=400, detail="Token missing subject.")
+
+    user = user_repo.find_user_by_supabase_id(db, supabase_user_id)
+
+    if user is None:
+        if email:
+            user = user_repo.find_user_by_email(db, email)
+
+        if user:
+            user.supabase_user_id = supabase_user_id
+            user = user_repo.save_user(db, user)
+        else:
+            user = user_repo.create_user(
+                db,
+                first_name=user_metadata.get("first_name") or user_metadata.get("given_name") or "",
+                last_name=user_metadata.get("last_name") or user_metadata.get("family_name") or "",
+                phone_number=None,
+                email=email,
+                supabase_user_id=supabase_user_id,
+            )
+            user.is_verified = True
+            user = user_repo.save_user(db, user)
+
+    return {
+        "success": True,
+        "data": {"user": UserOut.model_validate(user)},
+    }
 # ============================================================
 # VERIFY EMAIL
 # ============================================================

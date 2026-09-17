@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
-
+import { nodeApi } from '../../services/api';
 export default function AuthCallback() {
   const navigate = useNavigate();
   const { updateUser } = useAuth();
@@ -32,6 +32,10 @@ export default function AuthCallback() {
         const supabaseUser = session.user;
 
         console.log('Google user:', supabaseUser);
+
+        await nodeApi.post('/auth/google-sync', {
+            access_token: session.access_token,
+        });
 
         // Create/update the local KotChomnol user
         // through your backend if needed.

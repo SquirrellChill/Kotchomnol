@@ -70,3 +70,6 @@ class TokenResponse(BaseModel):
 
 class TelegramAuthRequest(BaseModel):
     id_token: str = Field(min_length=1)
+
+class GoogleSyncRequest(BaseModel):
+    access_token: str
