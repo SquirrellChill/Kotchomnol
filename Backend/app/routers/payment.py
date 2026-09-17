@@ -49,11 +49,13 @@ def create_subscription_payment(
         plan=body.plan,
     )
 
-    # # Start background payment polling
-    # background_tasks.add_task(
-    #     payment_service.poll_payment_until_resolved,
-    #     payment.id,
-    # )
+    # Start background payment polling — this is what actually calls
+    # Bakong and marks the payment paid. Without it, the frontend's
+    # GET /status poll only reads the DB, which never changes.
+    background_tasks.add_task(
+        payment_service.poll_payment_until_resolved,
+        payment.id,
+    )
 
     return payment
 

@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import {
   Sun, Moon, Mic, BarChart3, ShieldCheck, Menu, X,
   Check, Mail, ChevronDown, ArrowRight, ShoppingCart,
-  FileText
+  FileText, Loader2
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
@@ -11,7 +11,6 @@ import { useTheme } from '../context/ThemeContext';
 import {
   createSubscription,
   getPaymentStatus,
-  checkPaymentNow,
   getPaymentQrImageUrl,
 } from '../services/paymentService';
 import './LandingPage.css';
@@ -137,7 +136,7 @@ const content = {
     pricingFreePeriod: 'forever',
     pricingStarterLabel: 'Starter Plan',
     pricingStarterTagline: 'For growing businesses',
-    pricingStarterPrice: '$3.99',
+    pricingStarterPrice: '$2.99',
     pricingStarterPeriod: '/month',
     pricingBtnFree: 'Start Free',
     pricingBtnStarter: 'Go Pro',
@@ -221,7 +220,7 @@ const content = {
     pricingFreePeriod: 'forever',
     pricingStarterLabel: 'Starter Plan',
     pricingStarterTagline: 'For growing businesses',
-    pricingStarterPrice: '$3.99',
+    pricingStarterPrice: '$2.99',
     pricingStarterPeriod: '/month',
     pricingBtnFree: 'Start Free',
     pricingBtnStarter: 'Go Pro',
@@ -299,7 +298,6 @@ export default function LandingPage() {
   const [payment, setPayment] = useState(null);
   const [qrImageUrl, setQrImageUrl] = useState(null);
   const [isStartingCheckout, setIsStartingCheckout] = useState(false);
-  const [isChecking, setIsChecking] = useState(false);
   const [checkoutError, setCheckoutError] = useState(null);
   const pollRef = useRef(null);
 
@@ -369,20 +367,6 @@ export default function LandingPage() {
       );
     } finally {
       setIsStartingCheckout(false);
-    }
-  };
-
-  const handleCheckNow = async () => {
-    if (!payment) return;
-    setIsChecking(true);
-    try {
-      const { data } = await checkPaymentNow(payment.id);
-      setPayment((prev) => (prev ? { ...prev, status: data.status } : prev));
-      if (data.status !== 'pending') stopPolling();
-    } catch {
-      // polling continues
-    } finally {
-      setIsChecking(false);
     }
   };
 
@@ -1038,11 +1022,11 @@ export default function LandingPage() {
             {payment.status === 'paid' ? (
               <div className="gopro-modal-state">
                 <Check size={36} className="gopro-feature-check" />
-                <h3>{activeLang === 'km' ? 'ការទូទាត់ជោគជ័យ!' : 'Payment successful!'}</h3>
+                <h3>{activeLang === 'km' ? 'គណនីត្រូវបានតម្លើងកម្រិត!' : 'Account upgraded!'}</h3>
                 <p>
                   {activeLang === 'km'
-                    ? 'គណនីរបស់អ្នកឥឡូវនេះគឺជា Pro រួចហើយ។'
-                    : 'Your account is now Pro.'}
+                    ? 'Bakong បានបញ្ជាក់ការទូទាត់របស់អ្នក ហើយគណនីរបស់អ្នកឥឡូវនេះគឺជា Pro រួចហើយ។'
+                    : 'Bakong confirmed your payment — your account is now Pro.'}
                 </p>
                 <button
                   type="button"
@@ -1086,25 +1070,14 @@ export default function LandingPage() {
                     {activeLang === 'km' ? 'បើកកម្មវិធី Bakong' : 'Open in Bakong app'}
                   </a>
                 )}
-                <button
-                  type="button"
-                  className="gopro-continue-btn"
-                  onClick={handleCheckNow}
-                  disabled={isChecking}
-                >
-                  {isChecking
-                    ? activeLang === 'km'
-                      ? 'កំពុងពិនិត្យ...'
-                      : 'Checking...'
-                    : activeLang === 'km'
-                    ? 'ខ្ញុំបានទូទាត់រួច'
-                    : "I've paid"}
-                </button>
-                <p className="gopro-cta-note">
-                  {activeLang === 'km'
-                    ? 'កំពុងរង់ចាំការទូទាត់ដោយស្វ័យប្រវត្តិ...'
-                    : 'Waiting for payment automatically...'}
-                </p>
+                <div className="gopro-verifying">
+                  <Loader2 size={20} className="spin" />
+                  <span>
+                    {activeLang === 'km'
+                      ? 'កំពុងផ្ទៀងផ្ទាត់ការទូទាត់ជាមួយ Bakong...'
+                      : 'Verifying your payment with Bakong...'}
+                  </span>
+                </div>
               </div>
             )}
           </div>

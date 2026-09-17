@@ -344,25 +344,31 @@ html[data-theme='dark'] .chart-point-value {
   fill: var(--color-text-muted);
 }
 
-/* Product Share Donut Chart */
+/* Product Share Donut Chart — each slice reuses a color already meaningful
+   elsewhere in the app (brand purple, KHR gold, edit-green, etc.) so the
+   palette stays on-theme, but hues are spread far apart so adjacent slices
+   never read as "the same color". A single-hue ramp looked cohesive but
+   was too subtle to tell slices apart — this trades some of that cohesion
+   for actual distinguishability. "Other" stays neutral gray, since it's a
+   catch-all bucket, not a real category. */
 .chart-card {
-  --pie-color-1: #2a78d6;
-  --pie-color-2: #eb6834;
-  --pie-color-3: #1baf7a;
-  --pie-color-4: #eda100;
-  --pie-color-5: #e87ba4;
-  --pie-color-6: #008300;
-  --pie-color-other: #898781;
+  --pie-color-1: #7e22ce;
+  --pie-color-2: #eda100;
+  --pie-color-3: #2563eb;
+  --pie-color-4: #db2777;
+  --pie-color-5: #15803d;
+  --pie-color-6: #0f766e;
+  --pie-color-other: #9ca3af;
 }
 
 html[data-theme='dark'] .chart-card {
-  --pie-color-1: #3987e5;
-  --pie-color-2: #d95926;
-  --pie-color-3: #199e70;
-  --pie-color-4: #c98500;
-  --pie-color-5: #d55181;
-  --pie-color-6: #008300;
-  --pie-color-other: #898781;
+  --pie-color-1: #c084fc;
+  --pie-color-2: #fbbf24;
+  --pie-color-3: #60a5fa;
+  --pie-color-4: #f472b6;
+  --pie-color-5: #34d399;
+  --pie-color-6: #2dd4bf;
+  --pie-color-other: #9ca3af;
 }
 
 .product-donut-layout {
@@ -389,7 +395,16 @@ html[data-theme='dark'] .chart-card {
   transition: opacity 0.15s ease;
 }
 
-.product-donut-arc:hover {
+.product-donut-arc.active {
+  opacity: 0.85;
+}
+
+.product-donut-hit {
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.product-donut-hit:hover + .product-donut-arc {
   opacity: 0.85;
 }
 
@@ -439,11 +454,26 @@ html[data-theme='dark'] .product-donut-center-value {
   border-radius: 9999px;
   background-color: #faf7fd;
   border: 1px solid rgba(126, 34, 206, 0.08);
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.product-summary-row:hover,
+.product-summary-row.active {
+  background-color: rgba(126, 34, 206, 0.1);
+  border-color: rgba(126, 34, 206, 0.25);
 }
 
 html[data-theme='dark'] .product-summary-row {
   background-color: #171f30;
   border-color: transparent;
+}
+
+html[data-theme='dark'] .product-summary-row:hover,
+html[data-theme='dark'] .product-summary-row.active {
+  background-color: rgba(168, 85, 247, 0.16);
+  border-color: rgba(168, 85, 247, 0.3);
 }
 
 .prod-left {
@@ -558,11 +588,11 @@ html[data-theme='dark'] .best-seller-title {
 .best-seller-usd {
   font-size: 15px;
   font-weight: 800;
-  color: #15803d;
+  color: #6d28d9;
 }
 
 html[data-theme='dark'] .best-seller-usd {
-  color: #34d399;
+  color: #c4b5fd;
 }
 
 .best-seller-khr {

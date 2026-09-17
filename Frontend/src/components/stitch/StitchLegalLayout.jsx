@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { ArrowLeft, ArrowRight, Mail, Moon, Sun, Menu, X } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { useTheme } from '../../context/ThemeContext';
 import MobileAppShell from '../dashboard/MobileAppShell';
@@ -54,9 +55,13 @@ function TikTokIcon({ size = 18 }) {
 export default function StitchLegalLayout({ icon, title, updated, children, activeTab }) {
   const navigate = useNavigate();
   const location = useLocation();
+  const { user } = useAuth();
   const { language, toggleLanguage } = useLanguage();
   const { theme, toggleTheme } = useTheme();
   const isKhmer = language === 'km';
+
+  const hasStoredSession = Boolean(localStorage.getItem('kc_token') || localStorage.getItem('kc_user'));
+  const isLoggedIn = Boolean(user || hasStoredSession);
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const isDashboardRoute = location.pathname.startsWith('/dashboard');
@@ -124,21 +129,33 @@ export default function StitchLegalLayout({ icon, title, updated, children, acti
               </div>
 
               <div className="landing-auth-buttons">
-                <button
-                  type="button"
-                  className="landing-text-btn"
-                  onClick={() => navigate('/login')}
-                >
-                  {isKhmer ? 'ចូលគណនី' : 'Sign In'}
-                </button>
-                <button
-                  type="button"
-                  className="landing-primary-btn compact btn-start-free"
-                  onClick={() => navigate('/register')}
-                >
-                  <span>{isKhmer ? 'ចាប់ផ្ដើម' : 'Start Free'}</span>
-                  <ArrowRight size={16} className="btn-start-free-arrow" />
-                </button>
+                {isLoggedIn ? (
+                  <button
+                    type="button"
+                    className="landing-primary-btn compact"
+                    onClick={() => navigate('/dashboard')}
+                  >
+                    {isKhmer ? 'កម្មវិធី' : 'App'}
+                  </button>
+                ) : (
+                  <>
+                    <button
+                      type="button"
+                      className="landing-text-btn"
+                      onClick={() => navigate('/login')}
+                    >
+                      {isKhmer ? 'ចូលគណនី' : 'Sign In'}
+                    </button>
+                    <button
+                      type="button"
+                      className="landing-primary-btn compact btn-start-free"
+                      onClick={() => navigate('/register')}
+                    >
+                      <span>{isKhmer ? 'ចាប់ផ្ដើម' : 'Start Free'}</span>
+                      <ArrowRight size={16} className="btn-start-free-arrow" />
+                    </button>
+                  </>
+                )}
               </div>
 
               <button
@@ -165,43 +182,68 @@ export default function StitchLegalLayout({ icon, title, updated, children, acti
       {/* Mobile Drawer Menu: Home, Features, Pricing, FAQ */}
       {!isDashboardRoute && (
         <aside className={`landing-drawer-panel ${mobileMenuOpen ? 'open' : ''}`}>
-          <div className="drawer-header-row">
-            <button
-              type="button"
-              className="drawer-x-btn"
-              onClick={closeMenu}
-              aria-label={isKhmer ? 'បិទម៉ឺនុយ' : 'Close menu'}
-            >
-              <X size={18} />
-            </button>
-          </div>
-
           <nav className="drawer-nav-links">
             <Link to="/" onClick={closeMenu}>{isKhmer ? 'ទំព័រដើម' : 'Home'}</Link>
             <a href="/#features" onClick={closeMenu}>{isKhmer ? 'មុខងារ' : 'Features'}</a>
             <a href="/#pricing" onClick={closeMenu}>{isKhmer ? 'តម្លៃ' : 'Pricing'}</a>
             <a href="/#faq" onClick={closeMenu}>{isKhmer ? 'សំណួរ' : 'FAQ'}</a>
 
+            {/* Theme Button (Listed vertically, icon only, frameless) */}
             <button
               type="button"
-              className="drawer-list-btn"
+              className="drawer-icon-vertical-btn"
               onClick={toggleTheme}
+              aria-label={isKhmer ? 'ប្តូររបៀបរូបរាង' : 'Toggle theme mode'}
             >
-              {theme === 'dark' ? <Sun size={17} /> : <Moon size={17} />}
-              <span>
-                {theme === 'dark'
-                  ? (isKhmer ? 'របៀបភ្លឺ' : 'Light Mode')
-                  : (isKhmer ? 'របៀបងងឹត' : 'Dark Mode')}
-              </span>
+              {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
             </button>
 
+            {/* Language Flag (Listed vertically, flag only, frameless) */}
             <button
               type="button"
-              className="drawer-list-btn"
+              className="drawer-icon-vertical-btn"
               onClick={toggleLanguage}
+              aria-label={isKhmer ? 'ប្តូរភាសា' : 'Toggle language'}
             >
-              <span>{language === 'en' ? 'KH Khmer' : 'EN English'}</span>
+              <img
+                src={language === 'km' ? 'https://flagcdn.com/w40/kh.png' : 'https://flagcdn.com/w40/gb.png'}
+                alt={language === 'km' ? 'Khmer' : 'English'}
+                width="24"
+                height="17"
+                style={{ borderRadius: '3px', objectFit: 'cover', display: 'block' }}
+              />
             </button>
+
+            {/* Auth Section with Primary Purple App Button */}
+            <div className="drawer-auth-section">
+              {isLoggedIn ? (
+                <button
+                  type="button"
+                  className="drawer-primary-btn"
+                  onClick={() => { closeMenu(); navigate('/dashboard'); }}
+                >
+                  {isKhmer ? 'កម្មវិធី' : 'App'}
+                </button>
+              ) : (
+                <>
+                  <button
+                    type="button"
+                    className="drawer-signin-btn"
+                    onClick={() => { closeMenu(); navigate('/login'); }}
+                  >
+                    {isKhmer ? 'ចូលគណនី' : 'Sign In'}
+                  </button>
+                  <button
+                    type="button"
+                    className="drawer-primary-btn btn-start-free"
+                    onClick={() => { closeMenu(); navigate('/register'); }}
+                  >
+                    <span>{isKhmer ? 'ចាប់ផ្ដើម' : 'Start Free'}</span>
+                    <ArrowRight size={16} className="btn-start-free-arrow" />
+                  </button>
+                </>
+              )}
+            </div>
           </nav>
         </aside>
       )}

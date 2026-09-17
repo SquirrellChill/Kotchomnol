@@ -271,11 +271,11 @@ html[data-theme='dark'] .footer-qty strong {
 .footer-totals-col .grand-usd {
   font-size: 15px;
   font-weight: 800;
-  color: #4338ca;
+  color: #6d28d9;
 }
 
 html[data-theme='dark'] .footer-totals-col .grand-usd {
-  color: #a5b4fc;
+  color: #c4b5fd;
 }
 
 .footer-totals-col .grand-khr {
@@ -391,7 +391,7 @@ html[data-theme='dark'] .records-count-pill {
 }
 
 .records-summary-card.usd-summary-card {
-  background: linear-gradient(135deg, #4338ca 0%, #4f46e5 100%);
+  background: linear-gradient(135deg, #6d28d9 0%, #a855f7 100%);
 }
 
 .summary-currency-label {
@@ -545,7 +545,7 @@ html[data-theme='dark'] .records-table thead th {
 
 .records-table-usd {
   font-weight: 700;
-  color: #4338ca;
+  color: #6d28d9;
 }
 
 .records-table-khr {
@@ -553,16 +553,61 @@ html[data-theme='dark'] .records-table thead th {
   color: #7e22ce;
 }
 
-.view-detail-link {
+.records-row-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.view-detail-link,
+.edit-detail-link,
+.delete-detail-link {
   background: transparent;
   border: none;
-  color: #7e22ce;
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   gap: 4px;
+}
+
+.view-detail-link {
+  color: #7e22ce;
+}
+
+.edit-detail-link {
+  color: #15803d;
+}
+
+.delete-detail-link {
+  color: #ef4444;
+}
+
+.icon-only {
+  padding: 8px;
+  border-radius: 10px;
+  min-width: 36px;
+  min-height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.icon-only:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+html[data-theme='dark'] .icon-only:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+}
+
+html[data-theme='dark'] .edit-detail-link {
+  color: #34d399;
+}
+
+html[data-theme='dark'] .delete-detail-link {
+  color: #f87171;
 }
 
 .records-loading,

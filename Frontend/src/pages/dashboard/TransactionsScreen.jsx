@@ -1,21 +1,22 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { 
-  Eye, 
-  Trash2, 
-  ArrowLeft, 
-  Search, 
-  Calendar, 
-  FileText, 
-  Download, 
-  Image as ImageIcon, 
+import {
+  Eye,
+  Pencil,
+  Trash2,
+  Search,
+  Calendar,
+  FileText,
+  Download,
+  Image as ImageIcon,
   FileDown,
   Coins
 } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
-import EditItemModal from '../../components/dashboard/EditItemModal';
+import ConfirmDialog from '../../components/dashboard/ConfirmDialog';
 import MobileAppShell from '../../components/dashboard/MobileAppShell';
+import PageHeader from '../../components/dashboard/PageHeader';
 import ReviewSalePanel from '../../components/dashboard/ReviewSalePanel';
 import TransactionSavedView from '../../components/dashboard/TransactionSavedView';
 import { useLanguage } from '../../context/LanguageContext';
@@ -29,6 +30,7 @@ import {
 import {
   firstDefined,
   formatDisplayDate,
+  formatLocalDate,
   normalizeReviewItem,
   normalizeSaleFromApi,
   resolveCurrency,
@@ -49,7 +51,6 @@ export default function TransactionsScreen() {
   const isKm = language !== 'en';
 
   const draft = useMemo(() => resolveDraft(location.state), [location.state]);
-  const [editingItem, setEditingItem] = useState(null);
   const [saleItems, setSaleItems] = useState(() => resolveDraftItems(draft));
   const [deletedIds, setDeletedIds] = useState([]);
   const [saving, setSaving] = useState(false);
@@ -61,6 +62,8 @@ export default function TransactionsScreen() {
   const [loadingSales, setLoadingSales] = useState(false);
   const [editingSavedSale, setEditingSavedSale] = useState(false);
   const [exchangeRate] = useState(APPLICATION_EXCHANGE_RATE || 4050);
+  const [pendingDeleteSaleId, setPendingDeleteSaleId] = useState(null);
+  const [deletingSale, setDeletingSale] = useState(false);
 
   // Runtime Period Filtering: 'today' | 'week' | 'month' | 'all'
   const [timeFilter, setTimeFilter] = useState('today');
@@ -97,6 +100,30 @@ export default function TransactionsScreen() {
     } catch (err) {
       const found = sales.find((s) => s.saleId === saleId);
       if (found) setSelectedSale(found);
+    } finally {
+      setLoadingSales(false);
+    }
+  };
+
+  const enterEditMode = (sale) => {
+    setSelectedSale(sale);
+    setSaleItems(sale.items.map(normalizeReviewItem));
+    setDeletedIds([]);
+    setEditingSavedSale(true);
+  };
+
+  // Jumps straight into the same inline-editable review screen used for a new
+  // sale, skipping the read-only detail view for people who just want to edit.
+  const handleEditSale = async (saleId) => {
+    if (!saleId) return;
+    setLoadingSales(true);
+    setError('');
+    try {
+      const response = await getSale(saleId);
+      enterEditMode(normalizeSaleFromApi(response.data));
+    } catch (err) {
+      const found = sales.find((s) => s.saleId === saleId);
+      if (found) enterEditMode(found);
     } finally {
       setLoadingSales(false);
     }
@@ -160,20 +187,22 @@ export default function TransactionsScreen() {
     });
   }, [filteredSales, exchangeRate]);
 
-  // Same product across different sales (within the active date filter) is combined
-  // into a single row, summing quantity/USD/KHR instead of listing each sale separately.
+  // Same product across different sales is combined into a single row, summing
+  // quantity/USD/KHR, but only when those sales fall on the same day — the same
+  // product sold on different days stays on its own row.
   const productSummaryRows = useMemo(() => {
     const map = new Map();
 
     filteredSales.forEach((sale) => {
       const saleDate = new Date(sale.date || sale.createdAt || Date.now());
+      const dayKey = formatLocalDate(saleDate);
 
       (sale.items || []).forEach((item) => {
         const name = String(item.product || item.description || '').trim();
         if (!name) return;
 
         const currency = resolveCurrency(item);
-        const key = `${name.toLowerCase()}__${currency}`;
+        const key = `${dayKey}__${name.toLowerCase()}`;
         const quantity = Number(item.quantity || 0);
         const unitPrice = resolveUnitPrice(item);
         const amount = Number(firstDefined(item.amount, quantity * unitPrice, 0));
@@ -193,7 +222,6 @@ export default function TransactionsScreen() {
         } else {
           map.set(key, {
             name,
-            currency,
             quantity,
             totalUSD: amountUSD,
             totalKHR: amountKHR,
@@ -210,14 +238,12 @@ export default function TransactionsScreen() {
 
   const handleDeleteItem = (id) => {
     setDeletedIds((current) => (current.includes(id) ? current : [...current, id]));
-    setEditingItem(null);
   };
 
-  const handleSaveItem = (updatedItem) => {
+  const handleUpdateItem = (id, patch) => {
     setSaleItems((current) =>
-      current.map((item) => (item.id === updatedItem.id ? normalizeReviewItem(updatedItem, 0) : item))
+      current.map((item) => (item.id === id ? { ...item, ...patch } : item))
     );
-    setEditingItem(null);
     setError('');
   };
 
@@ -249,18 +275,33 @@ export default function TransactionsScreen() {
     }
   };
 
-  const handleDeleteSale = async () => {
-    if (!selectedSale || saving) return;
-    setSaving(true);
+  const handleDeleteSale = (saleId) => {
+    const targetId = saleId || selectedSale?.saleId;
+    if (!targetId) return;
+    setPendingDeleteSaleId(targetId);
+  };
+
+  const cancelDeleteSale = () => {
+    if (deletingSale) return;
+    setPendingDeleteSaleId(null);
+  };
+
+  const confirmDeleteSale = async () => {
+    const targetId = pendingDeleteSaleId;
+    if (!targetId) return;
+
+    setDeletingSale(true);
     setError('');
     try {
-      await deleteSale(selectedSale.saleId);
-      setSelectedSale(null);
+      await deleteSale(targetId);
+      if (selectedSale?.saleId === targetId) setSelectedSale(null);
+      if (editingSavedSale) setEditingSavedSale(false);
       await refreshSales();
+      setPendingDeleteSaleId(null);
     } catch {
       setError(isKm ? 'មិនអាចលុបបានទេ។' : 'Failed to delete sale.');
     } finally {
-      setSaving(false);
+      setDeletingSale(false);
     }
   };
 
@@ -277,87 +318,75 @@ export default function TransactionsScreen() {
 
   if (isReviewMode) {
     return (
-      <MobileAppShell activeTab="transactions">
-        <div className="tx-screen-top-bar">
-          <button
-            type="button"
-            className="tx-back-btn"
-            onClick={() => {
+      <MobileAppShell
+        activeTab="transactions"
+        header={
+          <PageHeader
+            icon={<FileText size={18} />}
+            title={
+              editingSavedSale
+                ? isKm
+                  ? 'កែប្រែកំណត់ត្រា'
+                  : 'Edit Sale Record'
+                : isKm
+                ? 'ពិនិត្យ និងបញ្ជាក់'
+                : 'Review & Confirm'
+            }
+            onBack={() => {
               if (editingSavedSale) setEditingSavedSale(false);
               else navigate('/dashboard');
             }}
-          >
-            <ArrowLeft size={18} />
-          </button>
-          <h2 className="tx-page-title">
-            {editingSavedSale
-              ? isKm
-                ? 'កែប្រែកំណត់ត្រា'
-                : 'Edit Sale Record'
-              : isKm
-              ? 'ពិនិត្យ និងបញ្ជាក់'
-              : 'Review & Confirm'}
-          </h2>
-        </div>
-
+          />
+        }
+      >
         <ReviewSalePanel
           items={saleItems}
           deletedIds={deletedIds}
           error={error}
           isSaving={saving}
           exchangeRate={exchangeRate}
-          onEdit={setEditingItem}
+          isEditingExisting={editingSavedSale}
+          onUpdateItem={handleUpdateItem}
+          onDeleteItem={handleDeleteItem}
           onConfirm={handleConfirm}
+          onDeleteSale={editingSavedSale ? () => handleDeleteSale(selectedSale?.saleId) : undefined}
         />
-        <EditItemModal
-          item={editingItem}
-          onClose={() => setEditingItem(null)}
-          onDelete={handleDeleteItem}
-          onSave={handleSaveItem}
+        <ConfirmDialog
+          open={Boolean(pendingDeleteSaleId)}
+          isBusy={deletingSale}
+          onConfirm={confirmDeleteSale}
+          onCancel={cancelDeleteSale}
         />
       </MobileAppShell>
     );
   }
 
   return (
-    <MobileAppShell activeTab="transactions">
-      <div className="tx-screen-top-bar">
-        {selectedSale && (
-          <button
-            type="button"
-            className="tx-back-btn"
-            onClick={() => setSelectedSale(null)}
-          >
-            <ArrowLeft size={18} />
-          </button>
-        )}
-        <h2 className="tx-page-title">
-          {!selectedSale && (
-            <span className="tx-title-icon-badge">
-              <FileText size={18} />
-            </span>
-          )}
-          {selectedSale
-            ? isKm
-              ? 'ព័ត៌មានលម្អិត'
-              : 'Sale Details'
-            : isKm
-            ? 'កំណត់ត្រាការលក់'
-            : 'Sales Records'}
-        </h2>
-      </div>
-
+    <MobileAppShell
+      activeTab="transactions"
+      header={
+        <PageHeader
+          icon={<FileText size={18} />}
+          title={
+            selectedSale
+              ? isKm
+                ? 'ព័ត៌មានលម្អិត'
+                : 'Sale Details'
+              : isKm
+              ? 'កំណត់ត្រាការលក់'
+              : 'Sales Records'
+          }
+          onBack={selectedSale ? () => setSelectedSale(null) : undefined}
+        />
+      }
+    >
       {selectedSale ? (
         <TransactionDetail
           sale={selectedSale}
           exchangeRate={exchangeRate}
           isBusy={saving}
           isKm={isKm}
-          onEdit={() => {
-            setSaleItems(selectedSale.items.map(normalizeReviewItem));
-            setDeletedIds([]);
-            setEditingSavedSale(true);
-          }}
+          onEdit={() => enterEditMode(selectedSale)}
           onDelete={handleDeleteSale}
         />
       ) : (
@@ -375,7 +404,7 @@ export default function TransactionsScreen() {
                 <Coins size={13} className="summary-khr-icon" />
                 KHR
               </span>
-              <span className="summary-khr-value">{Math.round(totalKHR).toLocaleString()} KHR</span>
+              <span className="summary-khr-value">{Math.round(totalKHR).toLocaleString()}៛</span>
             </div>
             <div className="records-summary-card usd-summary-card">
               <span className="summary-currency-label">USD</span>
@@ -462,7 +491,7 @@ export default function TransactionsScreen() {
 
                       return (
                         <tr
-                          key={`${row.name}__${row.currency}`}
+                          key={`${row.lastDate.getTime()}__${row.name}`}
                           className="records-table-row"
                           onClick={() => handleSelectSale(row.lastSaleId)}
                         >
@@ -473,19 +502,47 @@ export default function TransactionsScreen() {
                             ${row.totalUSD.toFixed(2)}
                           </td>
                           <td className="text-right records-table-khr">
-                            {Math.round(row.totalKHR).toLocaleString()} KHR
+                            {Math.round(row.totalKHR).toLocaleString()}៛
                           </td>
                           <td className="text-center">
-                            <button
-                              className="view-detail-link"
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleSelectSale(row.lastSaleId);
-                              }}
-                            >
-                              <Eye size={14} /> {isKm ? 'មើល' : 'View'}
-                            </button>
+                            <div className="records-row-actions">
+                              <button
+                                className="view-detail-link icon-only"
+                                type="button"
+                                aria-label={isKm ? 'មើល' : 'View'}
+                                title={isKm ? 'មើល' : 'View'}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleSelectSale(row.lastSaleId);
+                                }}
+                              >
+                                <Eye size={16} />
+                              </button>
+                              <button
+                                className="edit-detail-link icon-only"
+                                type="button"
+                                aria-label={isKm ? 'កែប្រែ' : 'Edit'}
+                                title={isKm ? 'កែប្រែ' : 'Edit'}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleEditSale(row.lastSaleId);
+                                }}
+                              >
+                                <Pencil size={16} />
+                              </button>
+                              <button
+                                className="delete-detail-link icon-only"
+                                type="button"
+                                aria-label={isKm ? 'លុប' : 'Delete'}
+                                title={isKm ? 'លុប' : 'Delete'}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDeleteSale(row.lastSaleId);
+                                }}
+                              >
+                                <Trash2 size={16} />
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       );
@@ -497,6 +554,13 @@ export default function TransactionsScreen() {
           </section>
         </div>
       )}
+
+      <ConfirmDialog
+        open={Boolean(pendingDeleteSaleId)}
+        isBusy={deletingSale}
+        onConfirm={confirmDeleteSale}
+        onCancel={cancelDeleteSale}
+      />
     </MobileAppShell>
   );
 }
@@ -640,7 +704,7 @@ function TransactionDetail({ sale, exchangeRate, isBusy, isKm, onEdit, onDelete 
             </div>
             <div>
               <label>KHR</label>
-              <strong>{Math.round(totals.totalKHR).toLocaleString()} KHR</strong>
+              <strong>{Math.round(totals.totalKHR).toLocaleString()}៛</strong>
             </div>
           </div>
         </div>
@@ -679,7 +743,7 @@ function TransactionDetail({ sale, exchangeRate, isBusy, isKm, onEdit, onDelete 
             <div></div>
             <div className="text-right footer-totals-col">
               <div className="grand-usd">${totals.totalUSD.toFixed(2)}</div>
-              <div className="grand-khr">{Math.round(totals.totalKHR).toLocaleString()} KHR</div>
+              <div className="grand-khr">{Math.round(totals.totalKHR).toLocaleString()}៛</div>
             </div>
           </div>
         </div>

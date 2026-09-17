@@ -26,8 +26,6 @@ import TransactionsScreen from '../pages/dashboard/TransactionsScreen.jsx';
 import VoiceScreen from '../pages/dashboard/VoiceScreen.jsx';
 import ProfileScreen from '../pages/dashboard/ProfileScreen.jsx';
 import EditProfileScreen from '../pages/dashboard/EditProfileScreen.jsx';
-import ChangePasswordScreen from '../pages/dashboard/ChangePasswordScreen.jsx';
-import GoProPage from '../pages/dashboard/GoProPage.jsx';
 
 // Auth pages
 import LoginPage from '../pages/auth/LoginPage.jsx';
@@ -177,24 +175,6 @@ export default function AppRoutes() {
                 element={
                   <ProtectedRoute>
                     <EditProfileScreen />
-                  </ProtectedRoute>
-                }
-              />
-
-              <Route
-                path="/dashboard/profile/change-password"
-                element={
-                  <ProtectedRoute>
-                    <ChangePasswordScreen />
-                  </ProtectedRoute>
-                }
-              />
-
-              <Route
-                path="/dashboard/go-pro"
-                element={
-                  <ProtectedRoute>
-                    <GoProPage />
                   </ProtectedRoute>
                 }
               />

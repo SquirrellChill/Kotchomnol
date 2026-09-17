@@ -15,9 +15,7 @@ export const getDisplayExchangeRate = (exchangeRate) => {
   return Number.isFinite(rate) && rate > 0 ? rate : APPLICATION_EXCHANGE_RATE;
 };
 
-export const formatKHR = (value) => `${Math.round(Number(value || 0)).toLocaleString('en-US')} KHR`;
-
-export const formatRiel = (value) => `${Math.round(Number(value || 0)).toLocaleString('en-US')}៛`;
+export const formatKHR = (value) => `${Math.round(Number(value || 0)).toLocaleString('en-US')}៛`;
 
 export const formatUSD = (value) =>
   Number(value || 0).toLocaleString('en-US', {

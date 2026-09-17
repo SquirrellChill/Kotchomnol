@@ -4,7 +4,11 @@ import {
   Check,
   ChevronRight,
   Crown,
+  Eye,
+  EyeOff,
   Globe2,
+  Info,
+  KeyRound,
   Languages,
   Lock,
   LogOut,
@@ -13,17 +17,20 @@ import {
   Pencil,
   Phone,
   Shield,
+  ShieldCheck,
   Smile,
   Sun,
   User,
   X
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import GoProPanel from '../../components/dashboard/GoProPanel';
 import MobileAppShell from '../../components/dashboard/MobileAppShell';
+import PageHeader from '../../components/dashboard/PageHeader';
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { useTheme } from '../../context/ThemeContext';
-import { updateMe } from '../../services/authService';
+import { changePassword, forgotPassword, getErrorMessage, updateMe } from '../../services/authService';
 import { buildDashboardProfile } from '../../utils/profile';
 import './ProfileSettings.css';
 
@@ -116,6 +123,104 @@ export default function ProfileScreen() {
     type: '',
     message: ''
   });
+
+  // Inline "Change Password" panel state (replaces the old My Account
+  // panel in place instead of navigating to a separate page).
+  const [pwdMode, setPwdMode] = useState('standard'); // 'standard' | 'forgot'
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [resetEmail, setResetEmail] = useState('');
+  const [showCurrentPwd, setShowCurrentPwd] = useState(false);
+  const [showNewPwd, setShowNewPwd] = useState(false);
+  const [showConfirmPwd, setShowConfirmPwd] = useState(false);
+  const [linkSent, setLinkSent] = useState(false);
+  const [pwdSaving, setPwdSaving] = useState(false);
+  const [pwdStatus, setPwdStatus] = useState({ type: '', message: '' });
+
+  const passwordStrength = (() => {
+    if (!newPassword) return { score: 0, label: '' };
+    let score = 0;
+    if (newPassword.length >= 8) score += 1;
+    if (/[a-z]/.test(newPassword) && /[A-Z]/.test(newPassword)) score += 1;
+    if (/\d/.test(newPassword)) score += 1;
+    if (/[^A-Za-z0-9]/.test(newPassword)) score += 1;
+    const labels = [
+      isKm ? 'ខ្សោយ' : 'Weak',
+      isKm ? 'ខ្សោយ' : 'Weak',
+      isKm ? 'មធ្យម' : 'Fair',
+      isKm ? 'ល្អ' : 'Good',
+      isKm ? 'ខ្លាំង' : 'Strong',
+    ];
+    return { score, label: labels[score] };
+  })();
+
+  const resetPasswordPanel = () => {
+    setPwdMode('standard');
+    setCurrentPassword('');
+    setNewPassword('');
+    setConfirmPassword('');
+    setResetEmail('');
+    setLinkSent(false);
+    setPwdStatus({ type: '', message: '' });
+  };
+
+  const handleChangePasswordSubmit = async (e) => {
+    e.preventDefault();
+    setPwdStatus({ type: '', message: '' });
+
+    if (newPassword !== confirmPassword) {
+      setPwdStatus({
+        type: 'error',
+        message: isKm ? 'លេខសម្ងាត់ទាំងពីរមិនត្រូវគ្នាទេ' : 'Passwords do not match.',
+      });
+      return;
+    }
+
+    setPwdSaving(true);
+    try {
+      await changePassword({ currentPassword, newPassword });
+      setPwdStatus({
+        type: 'success',
+        message: isKm ? 'បានផ្លាស់ប្តូរលេខសម្ងាត់ដោយជោគជ័យ!' : 'Password updated successfully!',
+      });
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+    } catch (err) {
+      setPwdStatus({
+        type: 'error',
+        message:
+          getErrorMessage(err) ||
+          (isKm ? 'លេខសម្ងាត់បច្ចុប្បន្នមិនត្រឹមត្រូវ' : 'Current password is incorrect.'),
+      });
+    } finally {
+      setPwdSaving(false);
+    }
+  };
+
+  const handleForgotPasswordSubmit = async (e) => {
+    e.preventDefault();
+    setPwdStatus({ type: '', message: '' });
+    setPwdSaving(true);
+    try {
+      await forgotPassword({ email: resetEmail });
+      setLinkSent(true);
+      setPwdStatus({
+        type: 'success',
+        message: isKm
+          ? 'តំណកំណត់លេខសម្ងាត់ឡើងវិញត្រូវបានផ្ញើទៅអ៊ីមែលរបស់អ្នក!'
+          : 'A password reset link has been sent to your email!',
+      });
+    } catch (err) {
+      setPwdStatus({
+        type: 'error',
+        message: getErrorMessage(err) || (isKm ? 'បរាជ័យក្នុងការផ្ញើតំណ' : 'Failed to send reset link.'),
+      });
+    } finally {
+      setPwdSaving(false);
+    }
+  };
 
   const handleChange = (e) => {
     setForm((prev) => ({
@@ -274,10 +379,21 @@ export default function ProfileScreen() {
     <MobileAppShell
       activeTab="profile"
       showBottomNav={true}
+      header={
+        <PageHeader
+          icon={<User size={18} />}
+          title={t('profile') || (isKm ? 'ប្រវត្តិរូប' : 'Profile')}
+          subtitle={
+            isKm
+              ? 'គ្រប់គ្រងគណនី និងការកំណត់របស់អ្នក។'
+              : 'Manage your account and preferences.'
+          }
+        />
+      }
     >
       <div className="settings-page-wrapper">
 
-        {mobileView === 'account_details' && (
+        {(mobileView === 'account_details' || mobileView === 'password' || mobileView === 'go_pro') && (
           <div className="settings-topbar mobile-only-bar">
             <button
               className="settings-back-btn"
@@ -285,6 +401,7 @@ export default function ProfileScreen() {
               onClick={() => {
                 setMobileView('menu');
                 setIsEditing(false);
+                resetPasswordPanel();
               }}
             >
               <ArrowLeft size={18} />
@@ -348,10 +465,8 @@ export default function ProfileScreen() {
 
               <button
                 type="button"
-                className="settings-nav-item"
-                onClick={() =>
-                  navigate('/dashboard/go-pro')
-                }
+                className={`settings-nav-item ${mobileView === 'go_pro' ? 'active' : ''}`}
+                onClick={() => setMobileView('go_pro')}
               >
                 <Crown size={18} />
 
@@ -394,12 +509,11 @@ export default function ProfileScreen() {
 
               <button
                 type="button"
-                className="settings-nav-item"
-                onClick={() =>
-                  navigate(
-                    '/dashboard/profile/change-password'
-                  )
-                }
+                className={`settings-nav-item ${mobileView === 'password' ? 'active' : ''}`}
+                onClick={() => {
+                  resetPasswordPanel();
+                  setMobileView('password');
+                }}
               >
                 <Lock size={18} />
 
@@ -506,15 +620,233 @@ export default function ProfileScreen() {
             </nav>
           </aside>
 
-          {/* RIGHT ACCOUNT DETAILS PANEL */}
+          {/* RIGHT ACCOUNT DETAILS / CHANGE PASSWORD PANEL */}
           <main
             className={`settings-content-panel ${
-              mobileView === 'account_details'
+              mobileView === 'account_details' || mobileView === 'password' || mobileView === 'go_pro'
                 ? 'mobile-visible'
                 : 'mobile-hidden'
             }`}
           >
 
+            {mobileView === 'go_pro' ? (
+              <GoProPanel onDone={() => setMobileView('menu')} />
+            ) : mobileView === 'password' ? (
+              <>
+                <header className="content-card-header">
+                  <div className="header-icon-shield">
+                    <Lock size={18} />
+                  </div>
+
+                  <div className="header-text-block">
+                    <h1>
+                      {t('changePassword') || (isKm ? 'ផ្លាស់ប្តូរលេខសម្ងាត់' : 'Change Password')}
+                    </h1>
+                    <p>
+                      {pwdMode === 'forgot'
+                        ? (isKm
+                            ? 'បញ្ចូលអាសយដ្ឋានអ៊ីមែលគណនីរបស់អ្នក ដើម្បីទទួលតំណកំណត់លេខសម្ងាត់ឡើងវិញ។'
+                            : 'Enter your account email to receive a password reset link.')
+                        : (isKm
+                            ? 'បញ្ជាក់លេខសម្ងាត់បច្ចុប្បន្ន រួចជ្រើសរើសលេខសម្ងាត់ថ្មី។'
+                            : 'Confirm your current password, then choose a new one.')}
+                    </p>
+                  </div>
+                </header>
+
+                {pwdStatus.message && (
+                  <div className={`settings-alert-banner ${pwdStatus.type}`}>{pwdStatus.message}</div>
+                )}
+
+                {pwdMode === 'standard' ? (
+                  <form className="reference-form password-panel-form" onSubmit={handleChangePasswordSubmit}>
+                    <div className="view-info-footer">
+                      <span className="view-info-footer-icon">
+                        <ShieldCheck size={14} />
+                      </span>
+                      <p>
+                        {isKm
+                          ? 'ប្រើលេខសម្ងាត់យ៉ាងតិច ៨ តួអក្សរ ដោយលាយអក្សរធំតូច លេខ និងសញ្ញាសម្គាល់។'
+                          : 'Use at least 8 characters, mixing upper/lowercase letters, numbers, and symbols.'}
+                      </p>
+                    </div>
+
+                    <div className="floating-field full-width">
+                      <label htmlFor="currentPassword">
+                        {isKm ? 'លេខសម្ងាត់បច្ចុប្បន្ន' : 'Current Password'}
+                      </label>
+                      <div className="password-field-wrap">
+                        <KeyRound size={15} className="password-field-icon" />
+                        <input
+                          id="currentPassword"
+                          type={showCurrentPwd ? 'text' : 'password'}
+                          value={currentPassword}
+                          onChange={(e) => setCurrentPassword(e.target.value)}
+                          autoComplete="current-password"
+                          placeholder="••••••••"
+                          required
+                        />
+                        <button
+                          type="button"
+                          className="password-toggle-btn"
+                          onClick={() => setShowCurrentPwd((v) => !v)}
+                          aria-label={showCurrentPwd ? (isKm ? 'លាក់' : 'Hide') : (isKm ? 'បង្ហាញ' : 'Show')}
+                        >
+                          {showCurrentPwd ? <EyeOff size={16} /> : <Eye size={16} />}
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="floating-field full-width">
+                      <label htmlFor="newPassword">
+                        {isKm ? 'លេខសម្ងាត់ថ្មី' : 'New Password'}
+                      </label>
+                      <div className="password-field-wrap">
+                        <KeyRound size={15} className="password-field-icon" />
+                        <input
+                          id="newPassword"
+                          type={showNewPwd ? 'text' : 'password'}
+                          value={newPassword}
+                          onChange={(e) => setNewPassword(e.target.value)}
+                          autoComplete="new-password"
+                          placeholder="••••••••"
+                          required
+                        />
+                        <button
+                          type="button"
+                          className="password-toggle-btn"
+                          onClick={() => setShowNewPwd((v) => !v)}
+                          aria-label={showNewPwd ? (isKm ? 'លាក់' : 'Hide') : (isKm ? 'បង្ហាញ' : 'Show')}
+                        >
+                          {showNewPwd ? <EyeOff size={16} /> : <Eye size={16} />}
+                        </button>
+                      </div>
+                      {newPassword && (
+                        <div className={`password-strength-meter strength-${passwordStrength.score}`}>
+                          <div className="password-strength-track">
+                            {[1, 2, 3, 4].map((segment) => (
+                              <span
+                                key={segment}
+                                className={`password-strength-segment ${segment <= passwordStrength.score ? 'filled' : ''}`}
+                              />
+                            ))}
+                          </div>
+                          <span className="password-strength-label">{passwordStrength.label}</span>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="floating-field full-width">
+                      <label htmlFor="confirmPassword">
+                        {isKm ? 'បញ្ជាក់លេខសម្ងាត់ថ្មី' : 'Confirm New Password'}
+                      </label>
+                      <div className="password-field-wrap">
+                        <KeyRound size={15} className="password-field-icon" />
+                        <input
+                          id="confirmPassword"
+                          type={showConfirmPwd ? 'text' : 'password'}
+                          value={confirmPassword}
+                          onChange={(e) => setConfirmPassword(e.target.value)}
+                          autoComplete="new-password"
+                          placeholder="••••••••"
+                          required
+                        />
+                        <button
+                          type="button"
+                          className="password-toggle-btn"
+                          onClick={() => setShowConfirmPwd((v) => !v)}
+                          aria-label={showConfirmPwd ? (isKm ? 'លាក់' : 'Hide') : (isKm ? 'បង្ហាញ' : 'Show')}
+                        >
+                          {showConfirmPwd ? <EyeOff size={16} /> : <Eye size={16} />}
+                        </button>
+                      </div>
+                      {confirmPassword && (
+                        <p className={`password-match-hint ${newPassword === confirmPassword ? 'match' : 'mismatch'}`}>
+                          {newPassword === confirmPassword ? (
+                            <>
+                              <Check size={13} /> {isKm ? 'លេខសម្ងាត់ត្រូវគ្នា' : 'Passwords match'}
+                            </>
+                          ) : (
+                            <>
+                              <X size={13} /> {isKm ? 'លេខសម្ងាត់មិនត្រូវគ្នា' : 'Passwords do not match'}
+                            </>
+                          )}
+                        </p>
+                      )}
+                    </div>
+
+                    <button className="settings-primary-btn full-width" type="submit" disabled={pwdSaving}>
+                      {pwdSaving
+                        ? (isKm ? 'កំពុងដំណើរការ...' : 'Updating...')
+                        : (isKm ? 'ផ្លាស់ប្តូរលេខសម្ងាត់' : 'Change Password')}
+                    </button>
+                    <button
+                      className="form-link-btn"
+                      type="button"
+                      onClick={() => {
+                        setPwdMode('forgot');
+                        setPwdStatus({ type: '', message: '' });
+                      }}
+                    >
+                      {isKm ? 'ភ្លេចលេខសម្ងាត់?' : 'Forgot your password?'}
+                    </button>
+                  </form>
+                ) : (
+                  <form className="reference-form password-panel-form" onSubmit={handleForgotPasswordSubmit}>
+                    <div className="floating-field full-width">
+                      <label htmlFor="resetEmail">
+                        {isKm ? 'អាសយដ្ឋានអ៊ីមែលគណនី' : 'Registered Email Address'}
+                      </label>
+                      <div className="password-field-wrap">
+                        <Mail size={15} className="password-field-icon" />
+                        <input
+                          id="resetEmail"
+                          type="email"
+                          value={resetEmail}
+                          onChange={(e) => setResetEmail(e.target.value)}
+                          placeholder="yourname@domain.com"
+                          disabled={linkSent}
+                          required
+                        />
+                      </div>
+                    </div>
+
+                    {linkSent && (
+                      <div className="view-info-footer">
+                        <span className="view-info-footer-icon">
+                          <Mail size={14} />
+                        </span>
+                        <p>
+                          {isKm
+                            ? 'ពិនិត្យអ៊ីមែលរបស់អ្នក ហើយចុចលើតំណដើម្បីកំណត់លេខសម្ងាត់ថ្មី។'
+                            : 'Check your inbox and click the link to set a new password.'}
+                        </p>
+                      </div>
+                    )}
+
+                    {!linkSent && (
+                      <button className="settings-primary-btn full-width" type="submit" disabled={pwdSaving}>
+                        {pwdSaving
+                          ? (isKm ? 'កំពុងផ្ញើ...' : 'Sending...')
+                          : (isKm ? 'ផ្ញើតំណកំណត់ឡើងវិញ' : 'Send Reset Link')}
+                      </button>
+                    )}
+                    <button
+                      className="form-link-btn"
+                      type="button"
+                      onClick={() => {
+                        setPwdMode('standard');
+                        setLinkSent(false);
+                        setPwdStatus({ type: '', message: '' });
+                      }}
+                    >
+                      {isKm ? 'ចាំលេខសម្ងាត់ចាស់? ត្រឡប់ក្រោយ' : 'Remember your password? Go back'}
+                    </button>
+                  </form>
+                )}
+              </>
+            ) : (
+              <>
             <header className="content-card-header">
 
               <div className="header-icon-shield">
@@ -639,6 +971,9 @@ export default function ProfileScreen() {
                 </div>
 
                 <div className="view-info-footer">
+                  <span className="view-info-footer-icon">
+                    <Info size={14} />
+                  </span>
                   <p>
                     {isKm
                       ? 'ចុចប៊ូតុង «កែ» ខាងលើនៅពេលណាដែលអ្នកចង់ធ្វើបច្ចុប្បន្នភាពលេខទូរស័ព្ទ ឬឈ្មោះរបស់អ្នក។'
@@ -788,6 +1123,8 @@ export default function ProfileScreen() {
                 </div>
 
               </form>
+            )}
+              </>
             )}
 
           </main>

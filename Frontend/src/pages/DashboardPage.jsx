@@ -329,7 +329,7 @@ export default function DashboardPage() {
                   </div>
                   <div>
                     <span className="dash-amt-label">{isKm ? 'សរុប (KHR)' : 'Total (KHR)'}</span>
-                    <span className="dash-khr-val">{Math.round(selectedTotalKHR).toLocaleString()} KHR</span>
+                    <span className="dash-khr-val">{Math.round(selectedTotalKHR).toLocaleString()}៛</span>
                   </div>
                 </div>
               </div>
@@ -337,8 +337,8 @@ export default function DashboardPage() {
               <div className="dash-rev-footer">
                 <span>
                   {isKm
-                    ? `អត្រាប្តូរប្រាក់: 1 USD = ${EXCHANGE_RATE.toLocaleString()} KHR`
-                    : `Exchange rate: 1 USD = ${EXCHANGE_RATE.toLocaleString()} KHR`}
+                    ? `អត្រាប្តូរប្រាក់: 1 USD = ${EXCHANGE_RATE.toLocaleString()}៛`
+                    : `Exchange rate: 1 USD = ${EXCHANGE_RATE.toLocaleString()}៛`}
                 </span>
                 <span className="dash-orders-badge">
                   {isKm ? `ចំនួនការលក់: ${selectedSalesCount}` : `Sales count: ${selectedSalesCount}`}
@@ -413,7 +413,7 @@ export default function DashboardPage() {
                 {isKm ? '៧ ថ្ងៃចុងក្រោយ' : 'Last 7 days'}
               </span>
               <span className="dash-week-teaser-value">
-                ${weekTotalUSD.toFixed(2)} <span className="dash-week-teaser-khr">({Math.round(weekTotalKHR).toLocaleString()} KHR)</span>
+                ${weekTotalUSD.toFixed(2)} <span className="dash-week-teaser-khr">({Math.round(weekTotalKHR).toLocaleString()}៛)</span>
               </span>
             </div>
             <span className="dash-week-teaser-cta">
@@ -480,7 +480,7 @@ export default function DashboardPage() {
                       </div>
                       <div className="dash-tx-right">
                         <div className="dash-tx-usd">${saleTotals.totalUSD.toFixed(2)}</div>
-                        <div className="dash-tx-khr">{Math.round(saleTotals.totalKHR).toLocaleString()} KHR</div>
+                        <div className="dash-tx-khr">{Math.round(saleTotals.totalKHR).toLocaleString()}៛</div>
                       </div>
                     </button>
                   );

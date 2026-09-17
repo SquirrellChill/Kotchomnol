@@ -18,6 +18,7 @@ import {
   ChevronDown
 } from 'lucide-react';
 import MobileAppShell from '../../components/dashboard/MobileAppShell';
+import PageHeader from '../../components/dashboard/PageHeader';
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { getSales } from '../../services/transactionService';
@@ -423,23 +424,21 @@ export default function HistoryScreen() {
   };
 
   return (
-    <MobileAppShell activeTab="history">
+    <MobileAppShell
+      activeTab="history"
+      header={
+        <PageHeader
+          icon={<BarChart3 size={18} />}
+          title={isKm ? 'ផ្ទាំងគ្រប់គ្រង & ការវិភាគ' : 'Dashboard & Analytics'}
+          subtitle={
+            isKm
+              ? 'នេះជាសង្ខេបអាជីវកម្ម និងក្រាហ្វវិភាគទិន្នន័យជាក់ស្តែងរបស់អ្នក'
+              : 'Here is your real-time business performance and sales analytics.'
+          }
+        />
+      }
+    >
       <div className="analytics-page-wrapper font-kantumruy">
-        {/* Header Title */}
-        <div className="analytics-header">
-          <div>
-            <h1 className="analytics-title">
-              <span className="analytics-title-icon-badge">
-                <BarChart3 size={18} />
-              </span>
-              {isKm ? 'ផ្ទាំងគ្រប់គ្រង & ការវិភាគ' : 'Dashboard & Analytics'}
-            </h1>
-            <p className="analytics-sub">
-              {isKm ? 'នេះជាសង្ខេបអាជីវកម្ម និងក្រាហ្វវិភាគទិន្នន័យជាក់ស្តែងរបស់អ្នក' : 'Here is your real-time business performance and sales analytics.'}
-            </p>
-          </div>
-        </div>
-
         {/* Filter Period Pills + Export */}
         <div className="analytics-filter-bar">
           <div className="filter-pill-group">
@@ -679,24 +678,55 @@ export default function HistoryScreen() {
                     aria-label={isKm ? 'ក្រាហ្វិកចំណែកផលិតផលតាមចំណូល' : 'Product revenue share chart'}
                   >
                     <g transform={`rotate(-90 ${donutGeometry.size / 2} ${donutGeometry.size / 2})`}>
-                      {donutGeometry.arcs.map((arc, idx) => (
-                        <circle
-                          key={idx}
-                          cx={donutGeometry.size / 2}
-                          cy={donutGeometry.size / 2}
-                          r={donutGeometry.radius}
-                          fill="none"
-                          strokeWidth={donutGeometry.strokeWidth}
-                          strokeDasharray={arc.dashArray}
-                          strokeDashoffset={arc.dashOffset}
-                          style={{ stroke: arc.colorVar }}
-                          className="product-donut-arc"
-                          onMouseEnter={() => setHoveredShareIndex(idx)}
-                          onMouseLeave={() => setHoveredShareIndex(null)}
-                        >
-                          <title>{`${arc.name}: ${arc.percent.toFixed(1)}% ($${arc.totalUSD.toFixed(2)})`}</title>
-                        </circle>
-                      ))}
+                      {donutGeometry.arcs.map((arc, idx) => {
+                        const selectSlice = () =>
+                          setHoveredShareIndex((prev) => (prev === idx ? null : idx));
+                        return (
+                          <g key={idx}>
+                            {/* Wider invisible stroke so the slice stays easy to
+                                tap on a phone even though the visible ring is thin.
+                                Handles all interaction; the visible circle below is
+                                purely decorative. */}
+                            <circle
+                              cx={donutGeometry.size / 2}
+                              cy={donutGeometry.size / 2}
+                              r={donutGeometry.radius}
+                              fill="none"
+                              stroke="transparent"
+                              strokeWidth={donutGeometry.strokeWidth + 16}
+                              strokeDasharray={arc.dashArray}
+                              strokeDashoffset={arc.dashOffset}
+                              style={{ pointerEvents: 'stroke' }}
+                              className="product-donut-hit"
+                              onMouseEnter={() => setHoveredShareIndex(idx)}
+                              onMouseLeave={() => setHoveredShareIndex(null)}
+                              onClick={selectSlice}
+                              onTouchEnd={(e) => {
+                                // Mobile browsers drop the synthetic click that
+                                // normally follows a tap if the finger moved even
+                                // slightly, which a mouse click never has to
+                                // survive — so handle the tap directly instead of
+                                // relying on onClick here.
+                                e.preventDefault();
+                                selectSlice();
+                              }}
+                            >
+                              <title>{`${arc.name}: ${arc.percent.toFixed(1)}% ($${arc.totalUSD.toFixed(2)})`}</title>
+                            </circle>
+                            <circle
+                              cx={donutGeometry.size / 2}
+                              cy={donutGeometry.size / 2}
+                              r={donutGeometry.radius}
+                              fill="none"
+                              strokeWidth={donutGeometry.strokeWidth}
+                              strokeDasharray={arc.dashArray}
+                              strokeDashoffset={arc.dashOffset}
+                              style={{ stroke: arc.colorVar, pointerEvents: 'none' }}
+                              className={`product-donut-arc ${hoveredShareIndex === idx ? 'active' : ''}`}
+                            />
+                          </g>
+                        );
+                      })}
                     </g>
                   </svg>
                   <div className="product-donut-center">
@@ -720,7 +750,17 @@ export default function HistoryScreen() {
 
                 <div className="products-summary-list">
                   {productShare.slices.map((slice, idx) => (
-                    <div key={idx} className="product-summary-row">
+                    <div
+                      key={idx}
+                      className={`product-summary-row ${hoveredShareIndex === idx ? 'active' : ''}`}
+                      onMouseEnter={() => setHoveredShareIndex(idx)}
+                      onMouseLeave={() => setHoveredShareIndex(null)}
+                      onClick={() => setHoveredShareIndex((prev) => (prev === idx ? null : idx))}
+                      onTouchEnd={(e) => {
+                        e.preventDefault();
+                        setHoveredShareIndex((prev) => (prev === idx ? null : idx));
+                      }}
+                    >
                       <div className="prod-left">
                         <span className="prod-color-dot" style={{ backgroundColor: slice.colorVar }} />
                         <div className="prod-name">{slice.name}</div>

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Check, Pencil, RotateCcw, ShoppingBag } from 'lucide-react';
+import { Check, Minus, Plus, RotateCcw, ShoppingBag, Trash2 } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
 import { calculateEquivalentTotals, formatCurrencyValue } from '../../utils/currency';
 import './ReviewSalePanel.css';
@@ -10,15 +10,119 @@ const getUnitPrice = (item) =>
 const getCurrency = (item) =>
   item.currency || (item.unitPriceKHR !== undefined || item.totalKHR !== undefined ? 'KHR' : 'USD');
 
+const normalizeNumberInput = (value) => {
+  const cleaned = String(value ?? '').replace(/[^\d.]/g, '');
+  const [wholeRaw, ...rest] = cleaned.split('.');
+  const whole = wholeRaw.replace(/^0+(?=\d)/, '') || (cleaned.startsWith('0') ? '0' : '');
+  return rest.length ? `${whole || '0'}.${rest.join('')}` : whole;
+};
+
+function EditableItemRow({ item, onUpdate, onDelete }) {
+  const { t, language } = useLanguage();
+  const isKm = language !== 'en';
+
+  const productName = item.product || item.description || '';
+  const quantity = String(item.quantity ?? 1);
+  const unitPrice = String(item.unit_price ?? getUnitPrice(item));
+  const currency = getCurrency(item);
+  const total = Number(quantity || 0) * Number(unitPrice || 0);
+
+  const patch = (fields) => onUpdate(item.id, fields);
+
+  return (
+    <div className="review-item-card">
+      <div className="review-item-top-row">
+        <input
+          className="review-item-name-input"
+          value={productName}
+          onChange={(event) => patch({ product: event.target.value, description: event.target.value })}
+          placeholder={isKm ? 'ឈ្មោះទំនិញ' : 'Item name'}
+        />
+        <button
+          type="button"
+          className="review-item-delete-btn"
+          onClick={() => onDelete(item.id)}
+          aria-label={t('delete') || 'Delete'}
+        >
+          <Trash2 size={16} />
+        </button>
+      </div>
+
+      <div className="review-item-fields-row">
+        <div className="review-item-field qty-field">
+          <span className="review-item-field-label">{t('qty') || 'Qty'}</span>
+          <div className="review-qty-stepper">
+            <button
+              type="button"
+              onClick={() => patch({ quantity: Math.max(1, Number(quantity || 1) - 1) })}
+              aria-label={t('decreaseQuantity') || 'Decrease'}
+            >
+              <Minus size={13} />
+            </button>
+            <input
+              inputMode="decimal"
+              value={quantity}
+              onChange={(event) => patch({ quantity: Number(normalizeNumberInput(event.target.value) || 0) })}
+              aria-label={t('qty') || 'Quantity'}
+            />
+            <button
+              type="button"
+              onClick={() => patch({ quantity: Number(quantity || 0) + 1 })}
+              aria-label={t('increaseQuantity') || 'Increase'}
+            >
+              <Plus size={13} />
+            </button>
+          </div>
+        </div>
+
+        <div className="review-item-field price-field">
+          <span className="review-item-field-label">{t('unitPrice') || 'Unit Price'}</span>
+          <div className="review-price-input-wrap">
+            <input
+              inputMode="decimal"
+              value={unitPrice}
+              onChange={(event) => patch({ unit_price: Number(normalizeNumberInput(event.target.value) || 0) })}
+            />
+            <div className="review-currency-toggle">
+              <button
+                type="button"
+                className={currency === 'KHR' ? 'active' : ''}
+                onClick={() => patch({ currency: 'KHR' })}
+              >
+                KHR
+              </button>
+              <button
+                type="button"
+                className={currency === 'USD' ? 'active' : ''}
+                onClick={() => patch({ currency: 'USD' })}
+              >
+                USD
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="review-item-total-row">
+        <span>{t('total') || 'Total'}</span>
+        <strong>{formatCurrencyValue(total, currency)}</strong>
+      </div>
+    </div>
+  );
+}
+
 export default function ReviewSalePanel({
   items = [],
-  onEdit,
+  onUpdateItem,
+  onDeleteItem,
   onConfirm,
   onRerecord,
+  onDeleteSale,
   deletedIds = [],
   error = '',
   isSaving = false,
   exchangeRate = 4050,
+  isEditingExisting = false,
 }) {
   const { t, language } = useLanguage();
   const isKm = language !== 'en';
@@ -57,9 +161,15 @@ export default function ReviewSalePanel({
             <Check size={18} strokeWidth={2.6} />
           </span>
           <div className="success-copy">
-            <strong>{t('aiExtractionComplete') || 'AI Extraction Complete!'}</strong>
+            <strong>
+              {isEditingExisting
+                ? (isKm ? 'កែប្រែកំណត់ត្រាលក់' : 'Editing Sale Record')
+                : (t('aiExtractionComplete') || 'AI Extraction Complete!')}
+            </strong>
             <small>
-              {t('reviewBeforeSaving') || "We've captured the details. Please review before saving."}
+              {isKm
+                ? 'អ្នកអាចកែប្រែទំនិញនីមួយៗដោយផ្ទាល់ខាងក្រោម រួចរក្សាទុក។'
+                : 'Edit any item directly below, then save when ready.'}
             </small>
           </div>
         </div>
@@ -83,42 +193,16 @@ export default function ReviewSalePanel({
           </span>
         </div>
 
-        <div className="review-table-wrap">
-          <div className="review-table-head">
-            <span className="col-product">{t('product') || 'Product'}</span>
-            <span className="col-qty">{t('qty') || 'Qty'}</span>
-            <span className="col-price">{t('unitPrice') || 'Unit Price'}</span>
-            <span className="col-total">{t('total') || 'Total'}</span>
-          </div>
-
-          <div className="review-table-body">
-            {visibleItems.length === 0 ? (
-              <div className="empty-review-text">
-                {isKm ? 'មិនមានទំនិញសម្រាប់ពិនិត្យទេ។' : 'No items found to review.'}
-              </div>
-            ) : (
-              visibleItems.map((item) => {
-                const unitPrice = getUnitPrice(item);
-                const currency = getCurrency(item);
-                const total = Number(item.quantity || 0) * unitPrice;
-
-                return (
-                  <div
-                    className="review-table-row clickable"
-                    key={item.id}
-                    onClick={() => onEdit && onEdit(item)}
-                  >
-                    <span className="col-product row-product-name">
-                      {item.product || item.description || (isKm ? 'ទំនិញទូទៅ' : 'Item')}
-                    </span>
-                    <span className="col-qty">{item.quantity}</span>
-                    <span className="col-price">{formatCurrencyValue(unitPrice, currency)}</span>
-                    <strong className="col-total">{formatCurrencyValue(total, currency)}</strong>
-                  </div>
-                );
-              })
-            )}
-          </div>
+        <div className="review-items-list">
+          {visibleItems.length === 0 ? (
+            <div className="empty-review-text">
+              {isKm ? 'មិនមានទំនិញសម្រាប់ពិនិត្យទេ។' : 'No items found to review.'}
+            </div>
+          ) : (
+            visibleItems.map((item) => (
+              <EditableItemRow key={item.id} item={item} onUpdate={onUpdateItem} onDelete={onDeleteItem} />
+            ))
+          )}
         </div>
       </div>
 
@@ -133,7 +217,7 @@ export default function ReviewSalePanel({
         <div className="totals-currency-grid">
           <div className="totals-currency-block khr-block">
             <span className="totals-label">{t('totalKhrLabel') || 'Total (KHR)'}</span>
-            <strong className="totals-value khr-text">{Math.round(totals.totalKHR).toLocaleString()} KHR</strong>
+            <strong className="totals-value khr-text">{Math.round(totals.totalKHR).toLocaleString()}៛</strong>
           </div>
           <div className="totals-currency-block usd-block">
             <span className="totals-label">{t('totalUsdLabel') || 'Total (USD)'}</span>
@@ -146,16 +230,17 @@ export default function ReviewSalePanel({
 
       {/* Action Buttons */}
       <section className="review-screen-actions">
-        <button
-          className="review-edit-btn"
-          type="button"
-          onClick={() => onEdit && onEdit(visibleItems[0])}
-          disabled={!visibleItems.length || isSaving}
-        >
-          <Pencil size={16} />
-          <span>{t('editItems') || 'Edit Items'}</span>
-        </button>
-
+        {isEditingExisting && onDeleteSale && (
+          <button
+            className="review-delete-sale-btn"
+            type="button"
+            onClick={onDeleteSale}
+            disabled={isSaving}
+          >
+            <Trash2 size={16} />
+            <span>{isKm ? 'លុបកំណត់ត្រា' : 'Delete Sale'}</span>
+          </button>
+        )}
         <button
           className="review-confirm-btn"
           type="button"

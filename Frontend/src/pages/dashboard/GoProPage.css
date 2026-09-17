@@ -9,6 +9,12 @@
   gap: 28px;
 }
 
+/* Embedded inline inside the Profile page's own panel (no full-page chrome) */
+.gopro-embedded .gopro-content {
+  padding: 0;
+  max-width: none;
+}
+
 /* Back to Profile Topbar & Button matching Change Password / Settings */
 .gopro-topbar {
   display: flex;
@@ -496,7 +502,22 @@ html[data-theme='dark'] .gopro-modal-state h3 {
   text-decoration: none;
 }
 
-/* Spinner used for the "generating KHQR" modal state */
+.gopro-verifying {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 12px;
+  border-radius: 16px;
+  background: var(--color-surface-muted);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-text-dark);
+  text-align: center;
+}
+
+/* Spinner used for the "generating KHQR" and "verifying payment" modal states */
 .spin {
   animation: gopro-spin 0.9s linear infinite;
   color: #581c87;

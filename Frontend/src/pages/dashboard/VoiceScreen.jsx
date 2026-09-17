@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
 import MobileAppShell from '../../components/dashboard/MobileAppShell';
+import PageHeader from '../../components/dashboard/PageHeader';
 import TransactionSavedView from '../../components/dashboard/TransactionSavedView';
 import Waveform from '../../components/dashboard/Waveform';
 import { useLanguage } from '../../context/LanguageContext';
@@ -461,18 +462,17 @@ export default function VoiceScreen() {
   }
 
   return (
-    <MobileAppShell activeTab="add">
+    <MobileAppShell
+      activeTab="add"
+      header={
+        <PageHeader
+          icon={<Mic size={18} />}
+          title={isKm ? 'បន្ថែមការលក់ថ្មី' : 'Add New Sale'}
+          subtitle={isKm ? 'កត់ត្រាការលក់តាមរយៈសំឡេង ឬបញ្ចូលដោយដៃ' : 'Record sale items via voice recognition or enter them manually.'}
+        />
+      }
+    >
       <div className="add-sale-wrapper font-kantomruy">
-        {/* Header Title */}
-        <div className="add-sale-header">
-          <h1>
-            <span className="add-sale-title-icon-badge">
-              <Mic size={18} />
-            </span>
-            {isKm ? 'បន្ថែមការលក់ថ្មី' : 'Add New Sale'}
-          </h1>
-          <p>{isKm ? 'កត់ត្រាការលក់តាមរយៈសំឡេង ឬបញ្ចូលដោយដៃ' : 'Record sale items via voice recognition or enter them manually.'}</p>
-        </div>
 
         {/* Mode Selector Toggle */}
         <div className="mode-toggle-grid">

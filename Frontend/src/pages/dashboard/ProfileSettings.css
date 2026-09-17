@@ -417,6 +417,46 @@ html[data-theme='dark'] .info-display-tile {
   margin-bottom: 14px;
 }
 
+.view-info-footer {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-top: 6px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background-color: rgba(126, 34, 206, 0.06);
+  border: 1px solid rgba(126, 34, 206, 0.15);
+}
+
+.view-info-footer p {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--color-text-muted);
+}
+
+.view-info-footer-icon {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background-color: rgba(126, 34, 206, 0.12);
+  color: #7e22ce;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+html[data-theme='dark'] .view-info-footer {
+  background-color: rgba(168, 85, 247, 0.08);
+  border-color: rgba(168, 85, 247, 0.22);
+}
+
+html[data-theme='dark'] .view-info-footer-icon {
+  background-color: rgba(168, 85, 247, 0.18);
+  color: #c084fc;
+}
+
 .info-tile-label {
   font-size: 11px;
   font-weight: 700;
@@ -494,6 +534,151 @@ html[data-theme='dark'] .floating-field input {
 html[data-theme='dark'] .floating-field input:focus {
   border-color: #9333ea;
   box-shadow: 0 0 0 3px rgba(147, 51, 234, 0.25);
+}
+
+.password-field-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.password-field-wrap input {
+  width: 100%;
+  padding-left: 38px;
+  padding-right: 42px;
+}
+
+.password-field-icon {
+  position: absolute;
+  left: 12px;
+  color: var(--color-text-muted);
+  pointer-events: none;
+}
+
+.password-toggle-btn {
+  position: absolute;
+  right: 10px;
+  background: none;
+  border: none;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+}
+
+.password-toggle-btn:hover {
+  color: #7e22ce;
+}
+
+html[data-theme='dark'] .password-toggle-btn:hover {
+  color: #c084fc;
+}
+
+/* Change Password panel — strength meter, match hint, link buttons */
+.password-panel-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.password-panel-form .view-info-footer {
+  margin-top: 0;
+}
+
+.password-strength-meter {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.password-strength-track {
+  display: flex;
+  gap: 4px;
+  flex: 1;
+}
+
+.password-strength-segment {
+  height: 4px;
+  flex: 1;
+  border-radius: 2px;
+  background-color: var(--color-border);
+  transition: background-color 0.2s ease;
+}
+
+.password-strength-segment.filled {
+  background-color: #ef4444;
+}
+
+.password-strength-meter.strength-2 .password-strength-segment.filled {
+  background-color: #f59e0b;
+}
+
+.password-strength-meter.strength-3 .password-strength-segment.filled {
+  background-color: #eab308;
+}
+
+.password-strength-meter.strength-4 .password-strength-segment.filled {
+  background-color: #22c55e;
+}
+
+.password-strength-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+.password-match-hint {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin: 8px 0 0;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.password-match-hint.match {
+  color: #15803d;
+}
+
+.password-match-hint.mismatch {
+  color: #dc2626;
+}
+
+html[data-theme='dark'] .password-match-hint.match {
+  color: #4ade80;
+}
+
+html[data-theme='dark'] .password-match-hint.mismatch {
+  color: #f87171;
+}
+
+.settings-primary-btn.full-width {
+  width: 100%;
+  text-align: center;
+}
+
+.form-link-btn {
+  background: none;
+  border: none;
+  color: #7e22ce;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: center;
+  padding: 4px;
+  align-self: center;
+}
+
+.form-link-btn:hover {
+  text-decoration: underline;
+}
+
+html[data-theme='dark'] .form-link-btn {
+  color: #c084fc;
 }
 
 .phone-prefix-input {

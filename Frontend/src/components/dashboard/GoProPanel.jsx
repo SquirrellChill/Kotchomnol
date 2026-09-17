@@ -1,17 +1,14 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { ArrowLeft, Check, Crown, X } from 'lucide-react';
-import MobileAppShell from '../../components/dashboard/MobileAppShell';
+import { Check, Crown, Loader2, X } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { buildDashboardProfile } from '../../utils/profile';
 import {
   createSubscription,
   getPaymentStatus,
-  checkPaymentNow,
   getPaymentQrImageUrl,
 } from '../../services/paymentService';
-import './GoProPage.css';
+import '../../pages/dashboard/GoProPage.css';
 
 const profileFallback = {
   name: 'Seller',
@@ -57,7 +54,7 @@ const PLANS = [
     labelKm: 'ផែនការចាប់ផ្តើម',
     taglineEn: 'For growing businesses',
     taglineKm: 'សម្រាប់អាជីវកម្មកំពុងរីកចម្រើន',
-    price: 3.99,
+    price: 2.99,
     periodEn: 'month',
     periodKm: 'ខែ',
     popular: true,
@@ -74,9 +71,7 @@ const PLANS = [
   },
 ];
 
-export default function GoProPage() {
-  const navigate = useNavigate();
-  const location = useLocation();
+export default function GoProPanel({ onDone }) {
   const { user } = useAuth();
   const { language } = useLanguage();
   const isKm = language !== 'en';
@@ -86,7 +81,6 @@ export default function GoProPage() {
 
   const [selectedPlanId, setSelectedPlanId] = useState('starter');
   const [isProcessing, setIsProcessing] = useState(false);
-  const [isChecking, setIsChecking] = useState(false);
   const [errorMsg, setErrorMsg] = useState(null);
 
   const [payment, setPayment] = useState(null);
@@ -131,16 +125,6 @@ export default function GoProPage() {
     };
   }, []);
 
-  const autoStartRequested = Boolean(location.state?.autoStart);
-  const autoStartFiredRef = useRef(false);
-
-  useEffect(() => {
-    if (!autoStartRequested || autoStartFiredRef.current) return;
-    autoStartFiredRef.current = true;
-    navigate(location.pathname, { replace: true, state: {} });
-    handleContinue();
-  }, [autoStartRequested]);
-
   const handleContinue = async () => {
     if (!selectedPlan.purchasable) return;
     setIsProcessing(true);
@@ -164,20 +148,6 @@ export default function GoProPage() {
     }
   };
 
-  const handleCheckNow = async () => {
-    if (!payment) return;
-    setIsChecking(true);
-    try {
-      const { data } = await checkPaymentNow(payment.id);
-      setPayment((prev) => (prev ? { ...prev, status: data.status } : prev));
-      if (data.status !== 'pending') stopPolling();
-    } catch {
-      // background polling handles retry
-    } finally {
-      setIsChecking(false);
-    }
-  };
-
   const closeModal = () => {
     stopPolling();
     if (qrImageUrl) URL.revokeObjectURL(qrImageUrl);
@@ -186,36 +156,23 @@ export default function GoProPage() {
   };
 
   return (
-    <MobileAppShell activeTab="profile">
-      <div className="gopro-page font-kantumruy">
+    <>
+      <header className="content-card-header">
+        <div className="header-icon-shield">
+          <Crown size={18} />
+        </div>
+        <div className="header-text-block">
+          <h1>{isKm ? 'ក្លាយជា Pro' : 'Go Pro'}</h1>
+          <p>
+            {isKm
+              ? 'ជ្រើសរើសគម្រោងមួយ ដើម្បីដោះសោការបញ្ចូលគ្មានដែនកំណត់ និងការកត់ត្រាដោយសំឡេង។'
+              : 'Choose a plan to unlock unlimited entries and voice logging.'}
+          </p>
+        </div>
+      </header>
+
+      <div className="gopro-page gopro-embedded font-kantumruy">
         <div className="gopro-content">
-          <div className="gopro-topbar">
-            <button
-              type="button"
-              className="gopro-back-btn"
-              onClick={() => navigate('/dashboard/profile')}
-            >
-              <ArrowLeft size={18} />
-              <span>{isKm ? 'ត្រឡប់ទៅគណនី' : 'Back to Profile'}</span>
-            </button>
-          </div>
-
-          <div className="gopro-heading">
-            <div className="page-title-row">
-              <span className="page-icon-badge gold">
-                <Crown size={22} />
-              </span>
-              <div>
-                <h1>{isKm ? 'ក្លាយជា Pro' : 'Go Pro'}</h1>
-                <p>
-                  {isKm
-                    ? 'ជ្រើសរើសគម្រោងមួយ ដើម្បីដោះសោការបញ្ចូលគ្មានដែនកំណត់ និងការកត់ត្រាដោយសំឡេង។'
-                    : 'Choose a plan to unlock unlimited entries and voice logging.'}
-                </p>
-              </div>
-            </div>
-          </div>
-
           <div className="gopro-hero">
             <div className="gopro-hero-orb" aria-hidden="true" />
             <div className="gopro-hero-copy">
@@ -340,9 +297,20 @@ export default function GoProPage() {
               {payment.status === 'paid' ? (
                 <div className="gopro-modal-state">
                   <Check size={36} className="gopro-feature-check" />
-                  <h3>{isKm ? 'ការទូទាត់ជោគជ័យ!' : 'Payment successful!'}</h3>
-                  <p>{isKm ? 'គណនីរបស់អ្នកឥឡូវនេះគឺជា Pro រួចហើយ។' : 'Your account is now Pro.'}</p>
-                  <button type="button" className="gopro-continue-btn" onClick={() => navigate('/dashboard/profile')}>
+                  <h3>{isKm ? 'គណនីត្រូវបានតម្លើងកម្រិត!' : 'Account upgraded!'}</h3>
+                  <p>
+                    {isKm
+                      ? 'Bakong បានបញ្ជាក់ការទូទាត់របស់អ្នក ហើយគណនីរបស់អ្នកឥឡូវនេះគឺជា Pro រួចហើយ។'
+                      : 'Bakong confirmed your payment — your account is now Pro.'}
+                  </p>
+                  <button
+                    type="button"
+                    className="gopro-continue-btn"
+                    onClick={() => {
+                      closeModal();
+                      onDone?.();
+                    }}
+                  >
                     {isKm ? 'ទៅកាន់គណនី' : 'Go to profile'}
                   </button>
                 </div>
@@ -372,29 +340,18 @@ export default function GoProPage() {
                       {isKm ? 'បើកកម្មវិធី Bakong' : 'Open in Bakong app'}
                     </a>
                   )}
-                  <button
-                    type="button"
-                    className="gopro-continue-btn"
-                    onClick={handleCheckNow}
-                    disabled={isChecking}
-                  >
-                    {isChecking
-                      ? isKm
-                        ? 'កំពុងពិនិត្យ...'
-                        : 'Checking...'
-                      : isKm
-                      ? 'ខ្ញុំបានទូទាត់រួច'
-                      : "I've paid"}
-                  </button>
-                  <p className="gopro-cta-note">
-                    {isKm ? 'កំពុងរង់ចាំការទូទាត់ដោយស្វ័យប្រវត្តិ...' : 'Waiting for payment automatically...'}
-                  </p>
+                  <div className="gopro-verifying">
+                    <Loader2 size={20} className="spin" />
+                    <span>
+                      {isKm ? 'កំពុងផ្ទៀងផ្ទាត់ការទូទាត់ជាមួយ Bakong...' : 'Verifying your payment with Bakong...'}
+                    </span>
+                  </div>
                 </div>
               )}
             </div>
           </div>
         )}
       </div>
-    </MobileAppShell>
+    </>
   );
 }
