@@ -6,7 +6,7 @@ from app.models.payment import PlanType, PaymentStatus, SubscriptionStatus  # ad
 from uuid import UUID
 
 PLAN_PRICES_USD = {
-    PlanType.starter: 3.99,
+    PlanType.starter: 0.01,
     PlanType.business: 24.99,
 }
 
@@ -46,3 +46,4 @@ class SubscriptionResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
