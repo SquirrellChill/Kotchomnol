@@ -8,7 +8,7 @@ from sqlalchemy.exc import OperationalError
 from supabase_auth.errors import AuthRetryableError
 
 from app.core.config import settings
-from app.routers import auth, auth_telegram,dashboard, transactions, voice, telegram_test_page,payment,products
+from app.routers import assistant, auth, auth_telegram,dashboard, transactions, voice, telegram_test_page,payment,products
 app = FastAPI(title="KotChomnol API")
 
 logger = logging.getLogger(__name__)
@@ -68,6 +68,7 @@ app.include_router(transactions.router)
 app.include_router(voice.router)
 app.include_router(payment.router)
 app.include_router(products.router)
+app.include_router(assistant.router)
 
 
 @app.get("/")

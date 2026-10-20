@@ -269,6 +269,43 @@
 }
 
 /* =========================================
+   TERMS AGREEMENT
+   ========================================= */
+
+.register-terms {
+  margin: 2px 0 8px;
+}
+
+.register-terms-label {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  color: #4b5563;
+  font-size: 12px;
+  line-height: 1.5;
+  cursor: pointer;
+}
+
+.register-terms-label input {
+  width: 16px;
+  height: 16px;
+  margin: 1px 0 0;
+  flex-shrink: 0;
+  accent-color: #7c3aed;
+  cursor: pointer;
+}
+
+.register-terms-label a {
+  color: #7c3aed;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.register-terms-label a:hover {
+  text-decoration: underline;
+}
+
+/* =========================================
    REGISTER BUTTON
    ========================================= */
 
@@ -526,5 +563,13 @@ html[data-theme='dark'] .register-footer {
 }
 
 html[data-theme='dark'] .register-footer a {
+  color: #c084fc;
+}
+
+html[data-theme='dark'] .register-terms-label {
+  color: #cbd5e1;
+}
+
+html[data-theme='dark'] .register-terms-label a {
   color: #c084fc;
 }

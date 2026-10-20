@@ -50,6 +50,14 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
 
+  // Required before either Register or Continue with Google.
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
+
+  const handleAgreeChange = (event) => {
+    setAgreedToTerms(event.target.checked);
+    setFieldErrors((current) => ({ ...current, terms: '' }));
+  };
+
   // --------------------------------------------------
   // INPUT CHANGE
   // --------------------------------------------------
@@ -132,6 +140,10 @@ export default function RegisterPage() {
       formData.password !== formData.confirmPassword
     ) {
       nextErrors.confirmPassword = t('passwordsNoMatch');
+    }
+
+    if (!agreedToTerms) {
+      nextErrors.terms = t('mustAgreeTerms');
     }
 
     return nextErrors;
@@ -274,6 +286,12 @@ export default function RegisterPage() {
 
   const handleGoogleLogin = async () => {
     setError('');
+
+    if (!agreedToTerms) {
+      setFieldErrors((current) => ({ ...current, terms: t('mustAgreeTerms') }));
+      return;
+    }
+
     setGoogleLoading(true);
 
     try {
@@ -589,6 +607,35 @@ export default function RegisterPage() {
 
                   </div>
 
+                </div>
+
+                {/* TERMS + PRIVACY AGREEMENT */}
+                {/* Links open in a new tab so the half-filled form isn't lost. */}
+                <div className="register-terms">
+                  <label className="register-terms-label">
+                    <input
+                      type="checkbox"
+                      checked={agreedToTerms}
+                      onChange={handleAgreeChange}
+                      aria-invalid={Boolean(fieldErrors.terms)}
+                    />
+                    <span>
+                      {t('agreeTermsPrefix')}{' '}
+                      <Link to="/terms" target="_blank" rel="noopener noreferrer">
+                        {t('termsOfService')}
+                      </Link>{' '}
+                      {t('and')}{' '}
+                      <Link to="/privacy" target="_blank" rel="noopener noreferrer">
+                        {t('privacyPolicy')}
+                      </Link>
+                    </span>
+                  </label>
+
+                  {fieldErrors.terms && (
+                    <span className="register-field-error">
+                      {fieldErrors.terms}
+                    </span>
+                  )}
                 </div>
 
                 {/* REGISTER BUTTON */}

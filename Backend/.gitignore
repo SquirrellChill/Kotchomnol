@@ -1,3 +1,6 @@
 
 ca.pem
 *.pem
+
+# Help-assistant embedding cache (rebuilt from app/knowledge/*.md)
+app/knowledge/.embeddings-cache.json

@@ -12,6 +12,7 @@ import { LanguageProvider } from '../context/LanguageContext';
 import { ThemeProvider } from '../context/ThemeContext';
 import ProtectedRoute from './ProtectedRoute';
 import GuestOnlyRoute from './GuestOnlyRoute';
+import HelpChat from '../components/assistant/HelpChat.jsx';
 
 // Pages directly under src/pages/
 import LandingPage from '../pages/LandingPage.jsx';
@@ -194,6 +195,9 @@ export default function AppRoutes() {
               />
 
             </Routes>
+
+            {/* Help chat on every page, signed in or not */}
+            <HelpChat />
           </AuthProvider>
         </LanguageProvider>
       </ThemeProvider>

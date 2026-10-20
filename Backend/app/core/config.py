@@ -125,6 +125,19 @@ class Settings(BaseSettings):
     MAX_RETRIES: int = 2
     RETRY_BASE_DELAY_S: float = 0.75
 
+    # --- Help assistant (RAG over app/knowledge/*.md) --------------------
+    ASSISTANT_MODEL: str = "gemini-3.5-flash-lite"
+    EMBEDDING_MODEL: str = "gemini-embedding-001"
+    # Truncated embedding size. 768 keeps the cache small with no noticeable
+    # retrieval loss on a knowledge base this size.
+    EMBEDDING_DIM: int = 768
+    # Help sections passed to the model per question.
+    ASSISTANT_TOP_K: int = 4
+    # Per-IP cap on /assistant/chat. The route is public (people ask how to
+    # register before they have an account), so this is what stops one
+    # client from burning the Gemini quota.
+    ASSISTANT_RATE_LIMIT_PER_MINUTE: int = 12
+
     # --- Bakong KHQR ---
     BAKONG_TOKEN: str                      # Bakong Open API developer token (get from https://api-bakong.nbc.gov.kh)
     BAKONG_ACCOUNT_ID: str                  # e.g. "your_username@bank" (from Bakong app profile)
