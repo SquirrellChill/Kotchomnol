@@ -478,6 +478,8 @@ def login(
         "message": "Login successful",
         "data": {
             "token": result.session.access_token,
+            # Lets the app renew the hour-long access token without a new login.
+            "refresh_token": result.session.refresh_token,
             "user": UserOut.model_validate(user),
         },
     }
@@ -607,6 +609,11 @@ def update_me(
     if payload.profile_picture is not None:
         current_user.profile_picture = (
             payload.profile_picture
+        )
+
+    if payload.shop_name is not None:
+        current_user.shop_name = (
+            payload.shop_name.strip() or None
         )
 
     try:

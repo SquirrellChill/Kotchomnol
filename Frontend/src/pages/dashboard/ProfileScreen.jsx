@@ -6,8 +6,8 @@ import {
   Crown,
   Eye,
   EyeOff,
-  Globe2,
   Info,
+  Store,
   KeyRound,
   Languages,
   Lock,
@@ -115,6 +115,7 @@ export default function ProfileScreen() {
     lastName: profile.lastName || '',
     phoneNumber: profile.phone || '',
     email: profile.email || '',
+    shopName: profile.businessName || '',
   });
 
   const [saving, setSaving] = useState(false);
@@ -235,6 +236,7 @@ export default function ProfileScreen() {
       lastName: profile.lastName || '',
       phoneNumber: profile.phone || '',
       email: profile.email || '',
+      shopName: profile.businessName || '',
     });
 
     setStatus({
@@ -260,6 +262,7 @@ export default function ProfileScreen() {
         firstName: form.firstName,
         lastName: form.lastName,
         profile_picture: activeAvatar,
+        shopName: (form.shopName || '').trim(),
       };
 
       if (form.email && form.email.trim()) {
@@ -578,28 +581,6 @@ export default function ProfileScreen() {
                 </div>
               </button>
 
-              <button
-                type="button"
-                className="settings-nav-item"
-                onClick={() => navigate('/')}
-              >
-                <Globe2 size={18} />
-
-                <div className="nav-item-dual">
-                  <span>
-                    {t('backToWebsite') ||
-                      (isKm
-                        ? 'ត្រឡប់ទៅគេហទំព័រដើម'
-                        : 'Back to Website')}
-                  </span>
-
-                  <ChevronRight
-                    size={16}
-                    className="mobile-chevron"
-                  />
-                </div>
-              </button>
-
               <div className="settings-nav-divider" />
 
               <button
@@ -900,6 +881,23 @@ export default function ProfileScreen() {
             {!isEditing ? (
               <div className="profile-view-container">
 
+                <div className="info-display-tile full-width">
+                  <span className="info-tile-label">
+                    {t('shopName')}
+                  </span>
+
+                  <div className="info-tile-iconic">
+                    <Store
+                      size={16}
+                      className="info-icon"
+                    />
+
+                    <strong className="info-tile-value">
+                      {profile.businessName || '—'}
+                    </strong>
+                  </div>
+                </div>
+
                 <div className="view-grid">
 
                   <div className="info-display-tile">
@@ -976,8 +974,8 @@ export default function ProfileScreen() {
                   </span>
                   <p>
                     {isKm
-                      ? 'ចុចប៊ូតុង «កែ» ខាងលើនៅពេលណាដែលអ្នកចង់ធ្វើបច្ចុប្បន្នភាពលេខទូរស័ព្ទ ឬឈ្មោះរបស់អ្នក។'
-                      : 'Click "Edit" above whenever you need to update your phone number or name.'}
+                      ? 'ចុចប៊ូតុង «កែ» ខាងលើនៅពេលណាដែលអ្នកចង់ធ្វើបច្ចុប្បន្នភាពឈ្មោះហាង លេខទូរស័ព្ទ ឬឈ្មោះរបស់អ្នក។'
+                      : 'Click "Edit" above whenever you need to update your shop name, phone number or name.'}
                   </p>
                 </div>
 
@@ -988,6 +986,25 @@ export default function ProfileScreen() {
                 className="reference-form"
                 onSubmit={handleSave}
               >
+
+                <div className="floating-field full-width">
+                  <label htmlFor="shopName">
+                    {t('shopName')}
+                  </label>
+
+                  <input
+                    id="shopName"
+                    name="shopName"
+                    value={form.shopName}
+                    onChange={handleChange}
+                    maxLength={150}
+                    placeholder={t('shopNamePlaceholder')}
+                  />
+
+                  <p className="form-explanatory-copy">
+                    {t('shopNameHint')}
+                  </p>
+                </div>
 
                 <div className="form-row-grid">
 

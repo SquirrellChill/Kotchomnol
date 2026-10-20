@@ -9,6 +9,7 @@ Three kinds of thing live here:
 
 import time
 from functools import lru_cache
+from pathlib import Path
 
 from pydantic_settings import BaseSettings
 
@@ -135,7 +136,8 @@ class Settings(BaseSettings):
 
 
     class Config:
-        env_file = ".env"
+        # Backend/.env, wherever the server is started from.
+        env_file = Path(__file__).resolve().parents[2] / ".env"
 
 
 settings = Settings()

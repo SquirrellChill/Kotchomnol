@@ -22,6 +22,9 @@ export const updateMe = (data) => {
   const lastName = data.lastName ?? data.last_name;
   const phoneNumber = data.phoneNumber ?? data.phone_number;
   const profilePicture = data.profilePicture ?? data.profile_picture;
+  // Left undefined (and so omitted) when the caller isn't editing it, which
+  // keeps the saved shop name; an empty string clears it.
+  const shopName = data.shopName ?? data.shop_name;
 
   return nodeApi.put('/auth/me', {
     first_name: firstName,
@@ -29,6 +32,7 @@ export const updateMe = (data) => {
     phone_number: phoneNumber,
     email: data.email || null,
     profile_picture: profilePicture ?? null,
+    shop_name: shopName,
   });
 };
 

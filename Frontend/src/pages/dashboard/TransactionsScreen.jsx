@@ -497,14 +497,14 @@ export default function TransactionsScreen() {
                         >
                           <td className="records-table-date">{formattedDate}</td>
                           <td className="records-table-title">{row.name}</td>
-                          <td className="text-center">{row.quantity}</td>
+                          <td className="text-center records-table-qty" data-label={isKm ? 'ចំនួន' : 'Qty'}>{row.quantity}</td>
                           <td className="text-right records-table-usd">
                             ${row.totalUSD.toFixed(2)}
                           </td>
                           <td className="text-right records-table-khr">
                             {Math.round(row.totalKHR).toLocaleString()}៛
                           </td>
-                          <td className="text-center">
+                          <td className="text-center records-table-actions">
                             <div className="records-row-actions">
                               <button
                                 className="view-detail-link icon-only"

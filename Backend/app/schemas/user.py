@@ -42,6 +42,8 @@ class UpdateProfileRequest(BaseModel):
     phone_number: str = Field(min_length=1, max_length=20)
     email: EmailStr | None = None
     profile_picture: str | None = None
+    # None leaves the shop name unchanged; an empty string clears it.
+    shop_name: str | None = Field(default=None, max_length=150)
 
 
 class ChangePasswordRequest(BaseModel):
@@ -56,6 +58,7 @@ class UserOut(BaseModel):
     email: EmailStr | None
     phone_number: str | None
     profile_picture: str | None = None
+    shop_name: str | None = None
     is_verified: bool
 
     class Config:

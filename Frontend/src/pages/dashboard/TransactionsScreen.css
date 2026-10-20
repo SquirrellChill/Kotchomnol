@@ -553,6 +553,76 @@ html[data-theme='dark'] .records-table thead th {
   color: #7e22ce;
 }
 
+/* Phones: a 6-column table doesn't fit, and its prices and edit buttons
+   ended up off-screen behind a sideways scroll. Show each row as a card:
+     Product ........ $2.96
+     Oct 20, 2026 .. 12,000៛
+     Qty 2 ......... [view][edit][delete]                                  */
+@media (max-width: 600px) {
+  .records-table {
+    min-width: 0;
+  }
+
+  .records-table thead {
+    display: none;
+  }
+
+  .records-table,
+  .records-table tbody {
+    display: block;
+  }
+
+  .records-table tbody tr.records-table-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      'title usd'
+      'date khr'
+      'qty actions';
+    align-items: center;
+    column-gap: 12px;
+    row-gap: 2px;
+    padding: 12px 14px;
+  }
+
+  .records-table td {
+    display: block;
+    padding: 0;
+    text-align: left;
+  }
+
+  .records-table-title { grid-area: title; }
+  .records-table-date { grid-area: date; }
+
+  .records-table .records-table-usd {
+    grid-area: usd;
+    text-align: right;
+  }
+
+  .records-table .records-table-khr {
+    grid-area: khr;
+    text-align: right;
+    font-size: 12px;
+  }
+
+  .records-table .records-table-qty {
+    grid-area: qty;
+    text-align: left;
+    font-size: 12px;
+    color: var(--color-text-muted);
+  }
+
+  .records-table-qty::before {
+    content: attr(data-label) ' ';
+  }
+
+  .records-table .records-table-actions {
+    grid-area: actions;
+    text-align: right;
+    margin-top: 4px;
+  }
+}
+
 .records-row-actions {
   display: inline-flex;
   align-items: center;

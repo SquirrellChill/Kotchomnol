@@ -68,6 +68,11 @@ export default function AuthCallback() {
         );
 
         localStorage.setItem(
+          'kc_refresh_token',
+          session.refresh_token
+        );
+
+        localStorage.setItem(
           'kc_user',
           JSON.stringify(user)
         );

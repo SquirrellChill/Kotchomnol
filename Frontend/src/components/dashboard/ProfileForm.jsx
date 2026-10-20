@@ -8,6 +8,7 @@ export default function ProfileForm({ profile, onSubmit, saving = false, status 
     lastName: profile.lastName || '',
     phoneNumber: profile.phone || '',
     email: profile.email || '',
+    shopName: profile.businessName || '',
   });
 
   useEffect(() => {
@@ -16,6 +17,7 @@ export default function ProfileForm({ profile, onSubmit, saving = false, status 
       lastName: profile.lastName || '',
       phoneNumber: profile.phone || '',
       email: profile.email || '',
+      shopName: profile.businessName || '',
     });
   }, [profile]);
 
@@ -31,6 +33,10 @@ export default function ProfileForm({ profile, onSubmit, saving = false, status 
   return (
     <form className="profile-form" onSubmit={handleSubmit}>
       {status && <p className="review-error-message">{status}</p>}
+      <label className="dash-field">
+        <span>{t('shopName')}</span>
+        <input name="shopName" value={form.shopName} onChange={handleChange} maxLength={150} placeholder={t('shopNamePlaceholder')} />
+      </label>
       <label className="dash-field">
         <span>{t('firstName')}</span>
         <input name="firstName" value={form.firstName} onChange={handleChange} required />

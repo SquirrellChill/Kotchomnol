@@ -11,6 +11,7 @@ import { AuthProvider } from '../context/AuthContext';
 import { LanguageProvider } from '../context/LanguageContext';
 import { ThemeProvider } from '../context/ThemeContext';
 import ProtectedRoute from './ProtectedRoute';
+import GuestOnlyRoute from './GuestOnlyRoute';
 
 // Pages directly under src/pages/
 import LandingPage from '../pages/LandingPage.jsx';
@@ -49,7 +50,11 @@ export default function AppRoutes() {
 
               <Route
                 path="/"
-                element={<LandingPage />}
+                element={
+                  <GuestOnlyRoute>
+                    <LandingPage />
+                  </GuestOnlyRoute>
+                }
               />
 
               <Route

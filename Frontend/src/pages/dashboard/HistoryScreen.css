@@ -759,6 +759,217 @@ html[data-theme='dark'] .export-dropdown-menu {
   color: #4f46e5;
 }
 
+.export-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Export sits to the right of Share, so its menu always hangs from its right
+   edge to stay on screen on phones. */
+.export-actions .export-dropdown:last-child .export-dropdown-menu {
+  left: auto;
+  right: 0;
+}
+
+/* Share is the main action here, so it gets the strongest colour. Telegram
+   blue, since that's where most invoices end up. */
+.share-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 18px;
+  border: none;
+  border-radius: 9999px;
+  background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+  color: #ffffff;
+  font-size: 13.5px;
+  font-weight: 700;
+  font-family: 'Kantumruy Pro', sans-serif;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(2, 132, 199, 0.4);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.share-trigger:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(2, 132, 199, 0.5);
+}
+
+.share-trigger:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Invoice language switch at the top of the Share / Export menus */
+.invoice-lang-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 6px 8px 8px;
+  margin-bottom: 2px;
+  border-bottom: 1px solid var(--color-border);
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+.invoice-lang-toggle {
+  display: inline-flex;
+  padding: 2px;
+  border-radius: 9999px;
+  background-color: rgba(126, 34, 206, 0.08);
+}
+
+.invoice-lang-toggle button {
+  padding: 3px 10px;
+  border: none;
+  border-radius: 9999px;
+  background: transparent;
+  color: var(--color-text-muted);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.invoice-lang-toggle button.active {
+  background-color: #7e22ce;
+  color: #ffffff;
+}
+
+html[data-theme='dark'] .invoice-lang-row {
+  border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+
+html[data-theme='dark'] .invoice-lang-toggle {
+  background-color: rgba(168, 85, 247, 0.15);
+}
+
+.export-option-icon.share {
+  background-color: rgba(14, 165, 233, 0.12);
+  color: #0284c7;
+}
+
+/* "▲ 12% vs last week" under each stat value */
+.stat-trend {
+  display: block;
+  margin-top: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.stat-trend.up { color: #16a34a; }
+.stat-trend.down { color: #dc2626; }
+.stat-trend.flat { color: var(--color-text-muted); }
+
+.stat-trend-label {
+  font-weight: 500;
+  color: var(--color-text-muted);
+}
+
+html[data-theme='dark'] .stat-trend.up { color: #4ade80; }
+html[data-theme='dark'] .stat-trend.down { color: #f87171; }
+
+.stat-trend-caption {
+  display: none;
+  margin: -4px 2px 0;
+  font-size: 11.5px;
+  color: var(--color-text-muted);
+}
+
+/* Phones: cards are too narrow for "▼ 45% vs yesterday", so keep just the
+   percentage in each card and show the comparison once below them. */
+@media (max-width: 479px) {
+  .stat-trend-label {
+    display: none;
+  }
+
+  .stat-trend-caption {
+    display: block;
+  }
+}
+
+.chart-badge {
+  white-space: nowrap;
+}
+
+.export-option-hint.plain {
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+/* Phones: Share and Export split the row as two large tap targets. */
+@media (max-width: 639px) {
+  .export-actions {
+    width: 100%;
+  }
+
+  .export-actions .export-dropdown {
+    flex: 1;
+  }
+
+  .share-trigger,
+  .export-actions .export-dropdown-trigger {
+    width: 100%;
+    justify-content: center;
+    padding-top: 11px;
+    padding-bottom: 11px;
+  }
+}
+
+/* Shown when the browser needs one more tap before opening the share sheet */
+.share-ready-bar {
+  position: fixed;
+  left: 50%;
+  bottom: calc(88px + env(safe-area-inset-bottom, 0px));
+  transform: translateX(-50%);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: max-content;
+  max-width: calc(100vw - 32px);
+  padding: 10px 10px 10px 16px;
+  border-radius: 14px;
+  background-color: #1f1a2e;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 600;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.25);
+}
+
+.share-ready-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border: none;
+  border-radius: 10px;
+  background-color: #7e22ce;
+  color: #ffffff;
+  font: inherit;
+  cursor: pointer;
+}
+
+.share-ready-close {
+  display: inline-flex;
+  padding: 6px;
+  border: none;
+  background: none;
+  color: rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+}
+
+html[data-theme='dark'] .share-ready-bar {
+  background-color: #2a2340;
+  border: 1px solid rgba(168, 85, 247, 0.3);
+}
+
 .export-option-label {
   font-size: 12.5px;
   font-weight: 700;

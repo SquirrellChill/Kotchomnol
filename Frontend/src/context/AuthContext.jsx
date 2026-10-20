@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import * as authService from '../services/authService.js';
-import { isTimeoutError } from '../services/api.js';
+import { isTimeoutError, SESSION_EXPIRED_EVENT } from '../services/api.js';
 import { supabase } from '../lib/supabase';
 
 const AuthContext = createContext(null);
@@ -47,6 +47,17 @@ export function AuthProvider({ children }) {
       .finally(() => setLoading(false));
   }, []);
 
+  // The API client couldn't renew the session: drop to logged-out (which
+  // sends protected pages to /login) and leave a note for the login page.
+  useEffect(() => {
+    const handleExpired = () => {
+      sessionStorage.setItem('kc_session_expired', '1');
+      setUser(null);
+    };
+    window.addEventListener(SESSION_EXPIRED_EVENT, handleExpired);
+    return () => window.removeEventListener(SESSION_EXPIRED_EVENT, handleExpired);
+  }, []);
+
   // EMAIL + PASSWORD LOGIN
   const login = async ({ email, password }) => {
     const res = await authService.login({
@@ -54,9 +65,10 @@ export function AuthProvider({ children }) {
       password,
     });
 
-    const { token, user: loggedInUser } = res.data.data;
+    const { token, refresh_token: refreshToken, user: loggedInUser } = res.data.data;
 
     localStorage.setItem('kc_token', token);
+    if (refreshToken) localStorage.setItem('kc_refresh_token', refreshToken);
     localStorage.setItem('kc_user', JSON.stringify(loggedInUser));
 
     setUser(loggedInUser);
@@ -94,6 +106,7 @@ export function AuthProvider({ children }) {
     }
 
     localStorage.removeItem('kc_token');
+    localStorage.removeItem('kc_refresh_token');
     localStorage.removeItem('kc_user');
 
     setUser(null);

@@ -331,7 +331,7 @@ export default function RegisterPage() {
               </h1>
 
               <p className="register-description">
-                {t('signInSubtitle') ||
+                {t('signUpSubtitle') ||
                   'Sign up to manage your sales voice records and track revenue.'}
               </p>
 

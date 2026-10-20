@@ -17,6 +17,9 @@ class User(Base):
     # Profile Avatar
     profile_picture = Column(String(500), nullable=True)
 
+    # Shop name shown on exported invoices. Set from the profile page, not at signup.
+    shop_name = Column(String(150), nullable=True)
+
     # Links this profile row to its Supabase auth.users record. Every user
     # has one — including Telegram logins, which get a Supabase "shadow"
     # account created via the admin API (see auth_telegram.py) so that

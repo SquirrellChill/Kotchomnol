@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { ArrowLeft, KeyRound, ShieldCheck, Eye, EyeOff } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
@@ -21,6 +21,14 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+
+  // Set by AuthContext when the session couldn't be renewed.
+  useEffect(() => {
+    if (sessionStorage.getItem('kc_session_expired')) {
+      sessionStorage.removeItem('kc_session_expired');
+      setError(t('sessionExpired'));
+    }
+  }, [t]);
 
   const handleChange = (e) => {
     setFormData({

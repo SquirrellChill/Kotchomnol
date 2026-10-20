@@ -12,7 +12,7 @@ export function buildDashboardProfile(user, fallback) {
     lastName,
     email: user.email || fallback.email,
     phone: user.phoneNumber || user.phone_number || user.phone || fallback.phone,
-    businessName: user.businessName || user.business_name || user.shopName || fallback.businessName,
+    businessName: user.shop_name || user.shopName || user.businessName || user.business_name || fallback.businessName,
     role: user.role || fallback.role,
     address: user.address || fallback.address,
   };

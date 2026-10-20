@@ -205,7 +205,7 @@ export default function DashboardPage() {
       {/* Desktop Sidebar / Mobile Bottom Nav */}
       <aside className="dash-sidebar">
         <div>
-          <div className="dash-sidebar-brand" onClick={() => navigate('/')}>
+          <div className="dash-sidebar-brand" onClick={() => navigate('/dashboard')}>
             <img src="/logo-mascot.png" alt="KOTCHOMNOL" className="dash-brand-icon" />
             <span className="dash-brand-title">KOTCHOMNOL</span>
           </div>
